@@ -1,0 +1,13 @@
+.title {
+	font-size: 1.2rem;
+	flex-grow: 1;
+	user-select: none;
+	padding-left: 50px;
+}
+
+.bodyContainer {
+	width: 100%;
+	flex-grow: 1;
+	padding: 20px;
+	gap: 5px;
+}

@@ -1,0 +1,19 @@
+.container {
+	display: flex;
+	height: 55px;
+	width: 100%;
+	background-color: #fff;
+	border: solid 1px #e5e5e5;
+	border-radius: 5px;
+	align-items: center;
+	padding: 20px;
+	gap: 20px;
+}
+
+.users, .model {
+	flex-grow: 1;
+}
+
+.container svg {
+	cursor: pointer;
+}
