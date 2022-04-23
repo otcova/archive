@@ -10,6 +10,6 @@ export function PageCotxe() {
 	
 	return <>
 		<CotxesBar filter={filter} onFilterChange={setFilter} />
-		<CotxesBody />
+		<CotxesBody filter={filter} />
 	</>
 }

@@ -11,18 +11,13 @@ type Props = {
 }
 
 export function CotxesBar({ filter, onFilterChange }: Props) {
+	const usuarisClick = () => {
+	}
+
 	return <NavBar>
-		<CheckBox checked={filter.checked} onChange={checked => onFilterChange({checked})} />
-		<Title />
-		<button>Usuaris</button>
+		<CheckBox checked={filter.checked} onChange={checked => onFilterChange({ checked })} />
+		<div data-tauri-drag-region className={style.title}>Cotxes</div>
+		<button onClick={usuarisClick}>Usuaris</button>
 		<button className="primary-button">Obrir Expedient</button>
 	</NavBar>
-}
-
-function Title() {
-	return <div
-		data-tauri-drag-region
-		className={style.title}>
-		Cotxes
-	</div>
 }

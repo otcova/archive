@@ -1,6 +1,7 @@
 .checkBox {
-	width: 20px;
-	height: 20px;
+	margin-top: 0px;
+	width: 18px;
+	height: 18px;
 	border-radius: 100%;
 	background: none;
 	border: solid 2px var(--color-primary);

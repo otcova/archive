@@ -1,42 +1,69 @@
+import { useState } from "preact/compat"
+import { Compra, Expedient } from "../utils/expedient"
 import { CheckBox } from "./checkbox"
 import style from "./styles/expedientRow.module.css"
+import openIcon from "./img/openIcon"
+import folderIcon from "./img/folderIcon"
 
 type Props = {
+	expedient: Expedient,
+	onChange: (expedient: Expedient) => void
 }
 
-export function ExpedientRow({ }: Props) {
+export function ExpedientRow({ expedient, onChange }: Props) {
+
+	const [open, setOpen] = useState(false)
+
+	const checkbox_changed = (checked: boolean) => {
+		expedient.check(checked)
+		onChange(expedient)
+	}
 	return <div className={style.container}>
-		<CheckBox checked />
-		<div className={style.users}>Some</div>
-		<div className={style.model}>Some</div>
-		<div>1242 GET</div>
-		{openIcon}
+		<div className={style.header} onClick={() => setOpen(!open)}>
+			<CheckBox checked={expedient.is_checked()} onChange={checkbox_changed} />
+			<div>{expedient.compres.length}</div>
+			<div className={style.users}>{expedient.users}</div>
+			<div className={style.model}>{expedient.model}</div>
+			<div>{expedient.matricula}</div>
+			{
+				expedient.hasFolder() ?
+					<div onClick={e => { e.stopPropagation(); expedient.openFolder() }} className="hand">{folderIcon}</div>
+					: <div style={{opacity: 0}}>{folderIcon}</div>
+			}
+			<div onClick={e => { e.stopPropagation(); }} className="hand">{openIcon}</div>
+		</div>
+		{
+			open &&
+			<>
+				<div className={style.description}>{expedient.description}</div>
+				<div className={style.compresContainer}>
+					{
+						expedient.compres.map((compra, i) =>
+							<CompraRow
+								key={i}
+								compra={compra}
+								onChange={() => onChange(expedient)} />)
+					}
+				</div>
+			</>
+		}
 	</div>
 }
 
-const openIcon = <svg
-	width="20.399544"
-	height="20.501972"
-	viewBox="0 0 5.3973791 5.4244804">
-	<rect
-		style="fill:none;fill-opacity:1;stroke:#5c5c5c;stroke-width:0.529167;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal;stop-color:#000000"
-		id="rect6941"
-		width="3.96875"
-		height="3.96875"
-		x="0.2645835"
-		y="1.1911465"
-		rx="1.3229166"
-		ry="1.3229166" />
-	<path
-		style="fill:none;stroke:#ffffff;stroke-width:1.32292;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-		d="M 2.283826,3.1135556 4.929656,0.46772257"
-		id="path6943" />
-	<path
-		style="fill:none;stroke:#5c5c5c;stroke-width:0.529167;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-		d="m 2.283826,3.1135556 2.64583,-2.64583303 0.0165,1.95143403"
-		id="path6945" />
-	<path
-		style="fill:none;stroke:#5c5c5c;stroke-width:0.529167;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-		d="m 2.283826,3.1135556 2.6457,-2.64570103 h -1.9513"
-		id="path6947" />
-</svg>
+type CompraProps = {
+	compra: Compra,
+	onChange: (compra: Compra) => void
+}
+
+function CompraRow({ compra, onChange }: CompraProps) {
+
+	const checkbox_changed = (checked: boolean) => {
+		compra.check(checked)
+		onChange(compra)
+	}
+
+	return <div className={style.compraRow}>
+		<CheckBox checked={compra.checked} onChange={checkbox_changed} />
+		<div className={style.compraDescription}>{compra.description}</div>
+	</div>
+}

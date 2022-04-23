@@ -1,3 +1,4 @@
+import "preact/debug";
 import { render } from 'preact/compat'
 import { App } from './app'
 import './index.css'

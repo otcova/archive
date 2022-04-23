@@ -34,7 +34,6 @@ body,
 button {
     border: solid 1px #bfbfbf;
     border-radius: 5px;
-    padding: 10px;
     font: inherit;
     outline: none;
     user-select: none;
@@ -42,10 +41,16 @@ button {
 
 button {
     cursor: pointer;
+    padding: 8px 15px 8px 15px;
     background-color: #fff;
 }
 
 .primary-button {
     background-color: var(--color-primary);
+    border: none;
     color: #fff;
+}
+
+.hand {
+    cursor: pointer;
 }

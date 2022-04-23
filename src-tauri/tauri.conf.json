@@ -56,7 +56,7 @@
         "title": "Archive",
         "width": 1000,
         "height": 700,
-        "resizable": true,
+        "resizable": false,
         "fullscreen": false,
         "decorations": false
       }
