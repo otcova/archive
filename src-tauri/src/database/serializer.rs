@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fs::File, path::PathBuf};
 use zstd::{decode_all, Encoder};
@@ -23,40 +21,8 @@ fn load_data<T: DeserializeOwned>(file_path: &PathBuf) -> T {
 
 #[cfg(test)]
 mod tests {
-    use crate::database::serializer::{load_data, save_data};
-    use std::path::PathBuf;
-
-    fn gen_id() -> usize {
-        use std::sync::atomic::{AtomicUsize, Ordering};
-        static ID: AtomicUsize = AtomicUsize::new(0);
-        ID.fetch_add(1, Ordering::SeqCst)
-    }
-
-    fn test_dir() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-    }
-
-    fn gen_unique_test_dir() -> PathBuf {
-        test_dir().join(format!("test-{}", gen_id()))
-    }
-
-    struct TempDir {
-        path: PathBuf,
-    }
-
-    impl TempDir {
-        fn new() -> Self {
-            let path = gen_unique_test_dir();
-            std::fs::create_dir_all(&path).unwrap();
-            Self { path }
-        }
-    }
-
-    impl Drop for TempDir {
-        fn drop(&mut self) {
-            std::fs::remove_dir_all(&self.path).unwrap();
-        }
-    }
+    use super::{load_data, save_data};
+    use crate::database::test_utils::TempDir;
 
     #[test]
     fn serialize_and_deserilize() {
@@ -65,7 +31,7 @@ mod tests {
         {
             type Data = [i32; 4];
             let data: Data = [1, 2, 3, 4];
-            
+
             save_data(&path, &data);
             let loaded: Data = load_data(&path);
 
@@ -78,7 +44,7 @@ mod tests {
         {
             type Data = Vec<u8>;
             let data: Data = vec![3, 1, 4, 1, 5, 9, 2, 7];
-            
+
             save_data(&path, &data);
             let loaded: Data = load_data(&path);
 
