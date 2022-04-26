@@ -3,20 +3,17 @@
 #[cfg(test)]
 mod test_utils;
 
+mod error;
 mod lock;
 mod serializer;
 
-use self::lock::Lock;
-use std::{path::PathBuf, io};
+use self::{error::Result, lock::Lock};
+use std::path::PathBuf;
 
-pub struct Database {
+pub struct Database<T> {
     lock: Lock,
-    path: PathBuf,
+    data: T,
 }
 
 impl Database {
-    pub fn init(path: PathBuf) -> io::Result<Self> {
-        let lock = Lock::new(&path)?;
-        Ok(Self { lock, path })
-    }
 }
