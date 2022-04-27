@@ -6,7 +6,7 @@ pub struct Lock {
 }
 
 impl Lock {
-    pub fn new(path: &PathBuf) -> io::Result<Self> {
+    pub fn directory(path: &PathBuf) -> io::Result<Self> {
         let lock_file = File::create(path.join(".lock"))?;
         lock_file.try_lock_exclusive()?;
         Ok(Self { lock_file })
@@ -21,15 +21,15 @@ mod tests {
     #[test]
     fn lock_empty_directory() {
         let tempdir = TempDir::new();
-        let lock = Lock::new(&tempdir.path);
+        let lock = Lock::directory(&tempdir.path);
         assert_eq!(lock.is_ok(), true);
     }
 
     #[test]
     fn two_locks_on_same_directory() {
         let tempdir = TempDir::new();
-        let lock1 = Lock::new(&tempdir.path);
-        let lock2 = Lock::new(&tempdir.path);
+        let lock1 = Lock::directory(&tempdir.path);
+        let lock2 = Lock::directory(&tempdir.path);
         assert_eq!(lock1.is_ok(), true);
         assert_eq!(lock2.is_ok(), false);
     }
@@ -38,11 +38,11 @@ mod tests {
     fn release_lock_on_drop() {
         let tempdir = TempDir::new();
         {
-            let lock = Lock::new(&tempdir.path);
+            let lock = Lock::directory(&tempdir.path);
             assert_eq!(lock.is_ok(), true);
         }
         {
-            let lock = Lock::new(&tempdir.path);
+            let lock = Lock::directory(&tempdir.path);
             assert_eq!(lock.is_ok(), true);
         }
     }
