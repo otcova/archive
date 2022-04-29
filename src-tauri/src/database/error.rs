@@ -5,7 +5,7 @@ pub type Error = Box<ErrorKind>;
 
 #[derive(Debug)]
 pub enum ErrorKind {
-    DatabaseAlreadyExist,
+    AlreadyExist,
     NotFound,
     DataIsCorrupted,
 	Io(io::Error),

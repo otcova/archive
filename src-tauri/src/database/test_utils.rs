@@ -24,6 +24,9 @@ impl TempDir {
         std::fs::create_dir_all(&path).unwrap();
         Self { path }
     }
+    pub fn is_empty(&self) -> bool {
+        self.path.read_dir().unwrap().next().is_none()
+    }
 }
 
 impl Drop for TempDir {
