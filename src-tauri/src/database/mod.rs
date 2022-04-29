@@ -11,15 +11,25 @@ mod history;
 use self::{error::Result, lock::Lock};
 use std::path::PathBuf;
 
-pub struct Database<T> {
+pub struct Database<T: Default> {
     lock: Lock,
     data: T,
 }
 
-impl<T> Database<T> {
+impl<T: Default> Database<T> {
     pub fn open(path: PathBuf) -> Result<Self> {
         let lock = Lock::directory(&path)?;
         let data: T = history::load_data(&path.join("data-history"))?;
         Ok(Self { lock, data })
     }
+    pub fn create(path: PathBuf) -> Result<Self> {
+        let lock = Lock::directory(&path)?;
+        let data: T = Default::default();
+        Ok(Self { lock, data })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    
 }
