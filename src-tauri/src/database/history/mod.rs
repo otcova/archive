@@ -1,5 +1,9 @@
+mod time;
+
 use super::error::{ErrorKind, Result};
 use std::path::PathBuf;
+
+pub struct Date(String);
 
 pub fn load_data<T>(_dir: &PathBuf) -> Result<T> {
     Err(ErrorKind::NotFound.into())
@@ -7,6 +11,14 @@ pub fn load_data<T>(_dir: &PathBuf) -> Result<T> {
 
 pub fn save_data<T>(_dir: &PathBuf, _data: T) -> Result<T> {
     Err(ErrorKind::NotFound.into())
+}
+
+pub fn load_timeline() {
+    
+}
+
+pub fn recover_data<T>(_dir: &PathBuf) {
+    
 }
 
 #[cfg(test)]
