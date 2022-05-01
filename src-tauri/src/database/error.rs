@@ -17,6 +17,12 @@ impl From<io::Error> for Error {
     }
 }
 
+impl<T> Into<Result<T>> for ErrorKind {
+    fn into(self) -> Result<T> {
+        Err(Box::new(self))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Error;
