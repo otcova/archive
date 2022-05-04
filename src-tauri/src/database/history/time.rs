@@ -2,8 +2,8 @@ use crate::database::error::{ErrorKind, Result};
 use chrono::prelude::*;
 use std::cmp::Ordering;
 
-const UTC_INSTANT_FORMAT: &str = "%Y/%m/%d %H:%M:%S";
-const LOCAL_INSTANT_FORMAT: &str = "%Y/%m/%d %H:%M:%S";
+const UTC_INSTANT_FORMAT: &str = "%Y_%m_%d %H_%M_%S";
+const LOCAL_INSTANT_FORMAT: &str = "%Y_%m_%d %H_%M_%S";
 
 #[derive(Debug, PartialEq)]
 pub struct Instant(DateTime<Utc>);
@@ -21,14 +21,6 @@ impl Instant {
 
     pub fn to_local_time(&self) -> String {
         let local = DateTime::<Local>::from(self.0);
-        // let parsed = DateTime::parse_from_str(
-        //     format!("{} +0000", self.0).as_str(),
-        //     format!("{} %z", UTC_INSTANT_FORMAT).as_str(),
-        // )
-        // .unwrap();
-
-        // let local_time = Local::now().offset().from_utc_datetime(&parsed.naive_utc());
-        // local_time.format(LOCAL_INSTANT_FORMAT).to_string()
         local.format(LOCAL_INSTANT_FORMAT).to_string()
     }
 
@@ -43,9 +35,7 @@ impl Instant {
 
 impl PartialOrd for Instant {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let date1 = NaiveDateTime::parse_from_str(self.str().as_str(), UTC_INSTANT_FORMAT).unwrap();
-        let date2 = NaiveDateTime::parse_from_str(other.str().as_str(), UTC_INSTANT_FORMAT).unwrap();
-        date1.partial_cmp(&date2)
+        self.0.partial_cmp(&other.0)
     }
 }
 
@@ -60,7 +50,19 @@ mod tests {
         let time = NaiveDateTime::parse_from_str(now.str().as_str(), UTC_INSTANT_FORMAT).unwrap();
         assert_eq!(now.str(), time.format(UTC_INSTANT_FORMAT).to_string());
     }
-
+    
+    #[test]
+    fn instant_from_invalid_format_throws_data_corrupted_error() {
+        let instant1 = Instant::from_utc("2022_00_01 17_02_29");
+        assert_eq!(format!("{:?}", instant1), "Err(DataIsCorrupted)");
+        
+        let instant2 = Instant::from_utc("2022/02/01 17:02:29");
+        assert_eq!(format!("{:?}", instant2), "Err(DataIsCorrupted)");
+        
+        let instant2 = Instant::from_utc("2022_02_00 17_02_29");
+        assert_eq!(format!("{:?}", instant2), "Err(DataIsCorrupted)");
+    }
+    
     #[test]
     fn instant_from_random_string_throws_data_corrupted_error() {
         let instant = Instant::from_utc("Hello World!");
@@ -69,8 +71,8 @@ mod tests {
 
     #[test]
     fn instant_from_converts_to_local_time() {
-        let instant = Instant::from_utc("2022/05/01 15:02:29").unwrap();
-        assert_eq!(instant.to_local_time(), "2022/05/01 17:02:29");
+        let instant = Instant::from_utc("2022_05_01 15_02_29").unwrap();
+        assert_eq!(instant.to_local_time(), "2022_05_01 17_02_29");
     }
     
     #[test]
@@ -84,32 +86,27 @@ mod tests {
     
     #[test]
     fn instant_cmp() {
-        let instant1 = Instant::from_utc("2020/05/01 15:02:29").unwrap();
-        let instant2 = Instant::from_utc("2022/05/01 15:02:29").unwrap();
-        let instant3 = Instant::from_utc("2022/05/01 15:02:29").unwrap();
-        let instant4 = Instant::from_utc("2022/05/01 15:02:29").unwrap();
-        let instant5 = Instant::from_utc("2022/05/03 15:02:29").unwrap();
+        let instant1 = Instant::from_utc("2020_05_01 15_02_29").unwrap();
+        let instant2 = Instant::from_utc("2022_05_01 15_02_29").unwrap();
+        let instant3 = Instant::from_utc("2022_05_01 15_02_29").unwrap();
+        let instant4 = Instant::from_utc("2022_05_01 15_02_30").unwrap();
+        let instant5 = Instant::from_utc("2022_05_03 15_02_29").unwrap();
         
         assert!(instant1 < instant2);
         assert!(instant2 == instant3);
         assert!(instant3 < instant4);
         assert!(instant4 < instant5);
-        
-        assert_eq!(false, instant1 > instant2);
-        assert_eq!(false, instant2 != instant3);
-        assert_eq!(false, instant3 > instant4);
-        assert_eq!(false, instant4 > instant5);
     }
     
-    // #[test]
-    // fn instant_from_parses_year() {
-    //     let instant1 = Instant::from_utc("2022/05/01 15:02:29").unwrap();
-    //     assert_eq!(instant1.year(), "2022");
+    #[test]
+    fn instant_from_parses_year() {
+        let instant1 = Instant::from_utc("2022_05_01 15_02_29").unwrap();
+        assert_eq!(instant1.year(), 2022);
         
-    //     let instant2 = Instant::from_utc("1921/15/01 23:02:29").unwrap();
-    //     assert_eq!(instant2.year(), "1921");
+        let instant2 = Instant::from_utc("1921_12_01 23_02_29").unwrap();
+        assert_eq!(instant2.year(), 1921);
         
-    //     let instant3 = Instant::from_utc("4021/01/00 00:00:0").unwrap();
-    //     assert_eq!(instant3.year(), "4021");
-    // }
+        let instant3 = Instant::from_utc("4021_01_01 00_00_00").unwrap();
+        assert_eq!(instant3.year(), 4021);
+    }
 }

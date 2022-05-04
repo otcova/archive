@@ -1,35 +1,48 @@
 mod time;
 
-use super::error::{ErrorKind, Result};
-use std::path::PathBuf;
-
-pub struct Date(String);
+use self::time::Instant;
+use super::{
+    error::{ErrorKind, Result},
+    serializer,
+};
+use serde::Serialize;
+use std::{fs::create_dir, path::PathBuf};
 
 pub fn load_data<T>(_dir: &PathBuf) -> Result<T> {
     Err(ErrorKind::NotFound.into())
 }
 
-pub fn save_data<T>(_dir: &PathBuf, _data: T) -> Result<T> {
-    Err(ErrorKind::NotFound.into())
+pub fn save_data<T: Serialize>(database_path: &PathBuf, data: T) -> Result<PathBuf> {
+    if !database_path.exists() {
+        return Err(ErrorKind::NotFound.into());
+    }
+
+    let now = Instant::now();
+
+    let year_folder = database_path.join(now.year().to_string());
+    create_dir(&year_folder)?;
+
+    let file_path = year_folder.join(now.str()).with_extension("bin");
+    serializer::save_data(&file_path, &data)?;
+    Ok(file_path)
 }
 
-pub fn load_timeline() {
-    
-}
+pub fn load_timeline() {}
 
-pub fn recover_data<T>(_dir: &PathBuf) {
-    
-}
+pub fn recover_data<T>(_dir: &PathBuf) {}
 
 #[cfg(test)]
 mod tests {
-    use crate::database::{error::ErrorKind, history as h, test_utils::TempDir};
+    use super::time::Instant;
+    use crate::database::{history as h, serializer, test_utils::TempDir};
+    use serde::{Serialize, Deserialize};
+    use std::path::Path;
 
     type DataType1 = usize;
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, Serialize)]
     struct DataType2(Vec<usize>);
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
     struct DataType3 {
         name: String,
         matrix: Vec<Vec<f32>>,
@@ -62,33 +75,29 @@ mod tests {
         assert_eq!(format!("{:?}", result), "Err(NotFound)");
     }
 
+    /// This test might fail if
+    /// you are working in new year
+    /// and you are very unlucky
     #[test]
-    fn create_data_on_empty_dir() {
-        let dir1 = TempDir::new();
-        assert!(h::save_data(&dir1.path, gen_data1()).is_ok());
-        assert!(!dir1.is_empty());
+    fn save_data_creates_year_folder() {
+        let tempdir = TempDir::new();
 
-        let dir2 = TempDir::new();
-        assert!(h::save_data(&dir2.path, gen_data2()).is_ok());
-        assert!(!dir2.is_empty());
+        let now = Instant::now();
+        h::save_data(&tempdir.path, gen_data1()).unwrap();
 
-        let dir3 = TempDir::new();
-        assert!(h::save_data(&dir3.path, gen_data3()).is_ok());
-        assert!(!dir3.is_empty());
+        let year_folder = Path::new(&tempdir.path).join(now.year().to_string());
+        assert!(year_folder.exists());
     }
 
     #[test]
-    fn create_data_on_non_empty_dir() {
+    fn saved_data_can_be_deserialized() {
         let tempdir = TempDir::new();
-        assert!(h::save_data(&tempdir.path, gen_data1()).is_ok());
-
-        let err1 = h::save_data(&tempdir.path, gen_data1()).unwrap_err();
-        assert!(matches!(err1.as_ref(), ErrorKind::AlreadyExist));
+ 
+        let saved_data = gen_data3();
+        let path = h::save_data(&tempdir.path, &saved_data).unwrap();
+        let loaded_data = serializer::load_data::<DataType3>(&path).unwrap();
         
-        let err2 = h::save_data(&tempdir.path, gen_data2()).unwrap_err();
-        assert!(matches!(err2.as_ref(), ErrorKind::AlreadyExist));
-        
-        let err3 = h::save_data(&tempdir.path, gen_data3()).unwrap_err();
-        assert!(matches!(err3.as_ref(), ErrorKind::AlreadyExist));
+        assert_eq!(saved_data, loaded_data);
+ 
     }
 }
