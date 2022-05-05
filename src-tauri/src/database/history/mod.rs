@@ -6,7 +6,7 @@ use super::{
     serializer,
 };
 use serde::Serialize;
-use std::{fs::create_dir, path::PathBuf};
+use std::{fs::create_dir_all, path::PathBuf};
 
 pub fn load_data<T>(_dir: &PathBuf) -> Result<T> {
     Err(ErrorKind::NotFound.into())
@@ -16,11 +16,10 @@ pub fn save_data<T: Serialize>(database_path: &PathBuf, data: T) -> Result<PathB
     if !database_path.exists() {
         return Err(ErrorKind::NotFound.into());
     }
-
     let now = Instant::now();
-
+    
     let year_folder = database_path.join(now.year().to_string());
-    create_dir(&year_folder)?;
+    create_dir_all(&year_folder)?;
 
     let file_path = year_folder.join(now.str()).with_extension("bin");
     serializer::save_data(&file_path, &data)?;
@@ -99,5 +98,31 @@ mod tests {
         
         assert_eq!(saved_data, loaded_data);
  
+    }
+    
+    #[test]
+    fn multiple_save_data_calls_on_same_second_overlap() {
+        let tempdir = TempDir::new();
+        
+        let saved_data_1 = gen_data1();
+        let saved_data_2 = gen_data2();
+        let saved_data_3 = gen_data2();
+        
+        let start = std::time::Instant::now();
+        
+        let path_1 = h::save_data(&tempdir.path, &saved_data_1).unwrap();
+        let path_2 = h::save_data(&tempdir.path, &saved_data_2).unwrap();
+        let path_3 = h::save_data(&tempdir.path, &saved_data_3).unwrap();
+        
+        let end = std::time::Instant::now();
+        let duration = (end - start).as_secs_f32();
+        
+        assert!(duration < 1., "save_data is to slow");
+        
+        // If the tree calls have been done in less than a second
+        // at least two of them are in the same second
+        // so at least two of them have overlaped
+        
+        assert!(path_1 == path_2 || path_2 == path_3);
     }
 }

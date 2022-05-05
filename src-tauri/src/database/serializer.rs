@@ -71,4 +71,22 @@ mod tests {
         
         assert_eq!(format!("{:?}", result), "Err(DataIsCorrupted)");
     }
+    
+    #[test]
+    fn save_data_overwrites_content() {
+        let tempdir = TempDir::new();
+        let path = tempdir.path.join("data");
+        
+        type Data = Vec<u8>;
+        let data_a: Data = vec![3, 1, 4, 1, 5, 9, 2, 7];
+        let data_b: Data = vec![6, 5, 2, 1];
+
+        save_data(&path, &data_a).unwrap();
+        save_data(&path, &data_b).unwrap();
+        
+        let loaded: Data = load_data(&path).unwrap();
+
+        assert_eq!(data_b.len(), loaded.len());
+        assert!(data_b.iter().zip(loaded.iter()).all(|(a, b)| a == b));
+    }
 }
