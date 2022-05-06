@@ -1,4 +1,8 @@
-use std::path::PathBuf;
+use std::io::prelude::*;
+use std::{
+    fs::{create_dir_all, File},
+    path::PathBuf,
+};
 
 fn gen_id() -> usize {
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -14,6 +18,14 @@ fn gen_unique_test_dir() -> PathBuf {
     test_dir().join(format!("test-{}", gen_id()))
 }
 
+pub enum TemplateItem<'a> {
+    File {
+        path: &'a str,
+        name: &'a str,
+        content: &'a [u8],
+    },
+}
+
 pub struct TempDir {
     pub path: PathBuf,
 }
@@ -26,6 +38,26 @@ impl TempDir {
     }
     pub fn is_empty(&self) -> bool {
         self.path.read_dir().unwrap().next().is_none()
+    }
+    pub fn from_template(template: &[TemplateItem]) -> Self {
+        let dir = Self::new();
+        for item in template {
+            match item {
+                TemplateItem::File {
+                    path,
+                    name,
+                    content,
+                } => {
+                    let absolute_path = dir.path.join(path.replace("/", "\\"));
+                    create_dir_all(&absolute_path).unwrap();
+                    let mut file = File::create(&absolute_path.join(name)).unwrap();
+                    if content.len() > 0 {
+                        file.write_all(content).unwrap();
+                    }
+                }
+            }
+        }
+        dir
     }
 }
 
