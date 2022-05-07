@@ -6,7 +6,10 @@ use super::{
     serializer,
 };
 use serde::Serialize;
-use std::{fs::create_dir_all, path::PathBuf};
+use std::{
+    fs::create_dir_all,
+    path::{Path, PathBuf},
+};
 
 pub fn load_data<T>(_dir: &PathBuf) -> Result<T> {
     Err(ErrorKind::NotFound.into())
@@ -26,13 +29,38 @@ pub fn save_data<T: Serialize>(database_path: &PathBuf, data: T) -> Result<PathB
     Ok(file_path)
 }
 
-/// Reads database tree (folders and files)
-/// and returns the path of an specified instant or older
-fn get_newest_file_path_since(
-    _dir: &PathBuf,
-    _since_instant: &Instant,
-) -> Result<(PathBuf, Instant)> {
-    Err(ErrorKind::NotFound.into())
+/// Concats all files and folders of a directory
+/// filter_map all the folder names and file stem
+/// and sorts the content (greater to smaller)
+fn scan_dir<T, F>(dir: &PathBuf, mut filter_map: F) -> Result<Vec<(PathBuf, T)>>
+where
+    T: PartialOrd,
+    F: FnMut(&str) -> Option<T>,
+{
+    let mut content: Vec<(PathBuf, T)> = dir
+        .read_dir()?
+        .flatten()
+        .filter_map(|dir| {
+            Some((
+                dir.path(),
+                filter_map(Path::new(&dir.file_name()).file_stem()?.to_str()?)?,
+            ))
+        })
+        .collect();
+    content.sort_unstable_by(|a, b| a.1.partial_cmp(&b.1).unwrap().reverse());
+    Ok(content)
+}
+
+/// Reads database tree and returns the path of the selected file
+fn select_database_backup<T, F>(dir: &PathBuf, select: F) -> Result<Option<T>>
+where
+    F: FnMut((PathBuf, Instant)) -> Option<T>,
+{
+    Ok(scan_dir::<i32, _>(dir, |name| name.parse().ok())?
+        .iter()
+        .flat_map(|(path, _)| scan_dir(&path, |name| Instant::from_utc(name).ok()))
+        .flatten()
+        .find_map(select))
 }
 
 pub fn recover_data<T>(_dir: &PathBuf) {}
@@ -41,12 +69,12 @@ pub fn recover_data<T>(_dir: &PathBuf) {}
 mod tests {
     use super::time::Instant;
     use crate::database::{
-        history::{self as h, get_newest_file_path_since},
+        history::{self as h, select_database_backup},
         serializer,
         test_utils::{TempDir, TemplateItem},
     };
     use serde::{Deserialize, Serialize};
-    use std::{path::Path};
+    use std::path::Path;
 
     type DataType1 = usize;
     #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -147,7 +175,11 @@ mod tests {
     }
 
     #[test]
-    fn get_newest_file_path_since_use_case() {
+    fn select_database_backup_use_case() {
+        let instant_1 = Instant::from_utc("2021_05_06 13_52_05").unwrap();
+        let instant_2 = Instant::from_utc("2021_05_06 13_51_05").unwrap();
+        let instant_3 = Instant::from_utc("2020_05_06 13_51_05").unwrap();
+
         let tempdir = TempDir::from_template(&[
             TemplateItem::File {
                 path: "2021",
@@ -156,31 +188,64 @@ mod tests {
             },
             TemplateItem::File {
                 path: "2021",
-                name: "2021_05_06 13_51_05.bin",
+                name: (instant_1.str() + ".bin").as_str(),
                 content: &[],
             },
             TemplateItem::File {
                 path: "2021",
-                name: "2021_05_06 13_52_05.bin",
+                name: (instant_2.str() + ".bin").as_str(),
                 content: &[],
             },
             TemplateItem::File {
                 path: "2020",
-                name: "2020_05_06 13_51_05.bin",
+                name: (instant_3.str() + ".bin").as_str(),
                 content: &[],
             },
         ]);
 
-        let (path_a, instant_a) = get_newest_file_path_since(&tempdir.path, &Instant::now()).unwrap();
-        assert_eq!(path_a, tempdir.path.join("2021//2021_05_06 13_51_05.bin"));
-        assert_eq!(instant_a, Instant::from_utc("2021_05_06 13_51_05").unwrap());
-        
-        let (path_b, instant_b) = get_newest_file_path_since(&tempdir.path, &Instant::now()).unwrap();
-        assert_eq!(path_b, tempdir.path.join("2021//2021_05_06 13_52_05.bin"));
-        assert_eq!(instant_b, Instant::from_utc("2021_05_06 13_52_05").unwrap());
-        
-        let (path_c, instant_c) = get_newest_file_path_since(&tempdir.path, &Instant::now()).unwrap();
-        assert_eq!(path_c, tempdir.path.join("2020//2020_05_06 13_51_05.bin"));
-        assert_eq!(instant_c, Instant::from_utc("2020_05_06 13_51_05").unwrap());
+        // Select first
+        assert_eq!(
+            select_database_backup(&tempdir.path, |(_, instant)| {
+                assert!(instant == instant_1, "Newest backup is not first");
+                Some(123)
+            })
+            .unwrap()
+            .unwrap(),
+            123
+        );
+
+        // Select second
+        let mut index = 0;
+        assert_eq!(
+            select_database_backup(&tempdir.path, |(_, instant)| {
+                if instant == instant_2 {
+                    assert!(index == 1, "Backups are not in order");
+                    return Some("abAca");
+                }
+                assert!(index < 1, "Backups are not in order");
+                index += 1;
+                None
+            })
+            .unwrap()
+            .unwrap(),
+            "abAca"
+        );
+
+        // Select
+        let mut index = 0;
+        assert_eq!(
+            select_database_backup(&tempdir.path, |(_, instant)| {
+                if instant == instant_3 {
+                    assert!(index == 2, "Backups are not in order");
+                    return Some(instant);
+                }
+                assert!(index < 2, "Backups are not in order");
+                index += 1;
+                None
+            })
+            .unwrap()
+            .unwrap(),
+            instant_3
+        );
     }
 }
