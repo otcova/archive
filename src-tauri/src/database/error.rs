@@ -1,6 +1,6 @@
 use std::io;
 
-pub type Result<T> = ::std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 pub type Error = Box<ErrorKind>;
 
 #[derive(Debug)]
@@ -8,12 +8,15 @@ pub enum ErrorKind {
     AlreadyExist,
     NotFound,
     DataIsCorrupted,
-	UnexpectedIoError(io::Error),
+    UnexpectedIoError(io::Error),
 }
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
-        ErrorKind::UnexpectedIoError(err).into()
+        match err.kind() {
+            io::ErrorKind::NotFound => ErrorKind::NotFound.into(),
+            _ => ErrorKind::UnexpectedIoError(err).into(),
+        }
     }
 }
 

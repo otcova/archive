@@ -19,7 +19,7 @@ pub fn load_newest<T: DeserializeOwned>(dir: &PathBuf) -> Result<T> {
 }
 
 /// Stores the data on the database as the newest backup
-pub fn save_data<T: Serialize>(database_path: &PathBuf, data: T) -> Result<PathBuf> {
+pub fn save_data<T: Serialize>(database_path: &PathBuf, data: &T) -> Result<PathBuf> {
     if !database_path.exists() {
         return ErrorKind::NotFound.into();
     }
@@ -39,32 +39,8 @@ pub fn load_newest_noncurrupted<T: DeserializeOwned>(dir: &PathBuf) -> Result<T>
 #[cfg(test)]
 mod tests {
     use super::time::Instant;
-    use crate::database::{backup::*, serializer, test_utils::TempDir};
-    use serde::{Deserialize, Serialize};
+    use crate::database::{backup::*, serializer, test_utils::*};
     use std::{fs::File, io::Write, path::Path};
-
-    type DataType1 = usize;
-    #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-    struct DataType2(Vec<usize>);
-
-    #[derive(Debug, PartialEq, Serialize, Deserialize)]
-    struct DataType3 {
-        name: String,
-        matrix: Vec<Vec<f32>>,
-    }
-
-    fn gen_data1() -> DataType1 {
-        92810
-    }
-    fn gen_data2() -> DataType2 {
-        DataType2(vec![92810, 213, 1, 321312, 4, 0])
-    }
-    fn gen_data3() -> DataType3 {
-        DataType3 {
-            name: String::from("Some persone"),
-            matrix: vec![vec![2., 0., 1.], vec![0., 1e10, -5.], vec![1.3, 0.3, -1.]],
-        }
-    }
 
     #[test]
     fn load_newest_from_empty_dir() {
@@ -102,7 +78,7 @@ mod tests {
         let tempdir = TempDir::new();
 
         let now = Instant::now();
-        save_data(&tempdir.path, gen_data1()).unwrap();
+        save_data(&tempdir.path, &gen_data1()).unwrap();
 
         let year_folder = Path::new(&tempdir.path).join(now.year().to_string());
         assert!(year_folder.exists());

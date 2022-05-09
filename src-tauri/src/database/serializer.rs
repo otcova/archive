@@ -1,16 +1,27 @@
 use super::error::{ErrorKind, Result};
 use serde::{de::DeserializeOwned, Serialize};
-use std::{fs::File, path::PathBuf};
+use std::{
+    fs::{self, File},
+    path::PathBuf,
+};
 use zstd::{decode_all, Encoder};
 
 /// Converts data to binary,
 /// compresses the binary using zstd
 /// and saves it to a file
-pub fn save_data<T: Serialize>(file_path: &PathBuf, data: &T) -> Result<()> {
-    let file = File::create(file_path)?;
-    let mut encoder = Encoder::new(file, 1)?;
-    bincode::serialize_into(&mut encoder, data).unwrap();
-    encoder.finish()?;
+pub fn save_data<T: Serialize>(path: &PathBuf, data: &T) -> Result<()> {
+    let extension = String::from(path.extension().unwrap_or_default().to_string_lossy());
+    let tmp_path = path.with_extension(extension + ".tmp");
+
+    {
+        let file = File::create(&tmp_path)?;
+
+        let mut encoder = Encoder::new(file, 1)?;
+        bincode::serialize_into(&mut encoder, data).unwrap();
+        encoder.finish()?;
+    }
+
+    fs::rename(tmp_path, path)?;
     Ok(())
 }
 
