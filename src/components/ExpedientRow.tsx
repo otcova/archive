@@ -1,5 +1,5 @@
 import { useState } from "preact/compat"
-import { Compra, Expedient } from "../utils/expedient"
+import { Compra, Expedient } from "../logic/expedient"
 import { CheckBox } from "./checkbox"
 import style from "./styles/expedientRow.module.css"
 import openIcon from "./img/openIcon"

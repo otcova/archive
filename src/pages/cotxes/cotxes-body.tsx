@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { ExpedientRow } from "../../components/ExpedientRow";
-import { loadExpedients } from "../../utils/database";
-import { Expedient } from "../../utils/expedient";
+import { loadExpedients } from "../../logic/database";
+import { Expedient } from "../../logic/expedient";
 import { Filter } from "./cotxes-bar";
 import style from "./cotxes.module.css";
 

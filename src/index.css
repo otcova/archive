@@ -16,7 +16,7 @@ body,
 }
 
 #app {
-    border: solid 1px #bbb;
+    border: solid 1px #aaa;
     display: flex;
     flex-direction: column;
 }
