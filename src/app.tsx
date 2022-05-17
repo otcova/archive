@@ -1,15 +1,5 @@
-import { TabBar } from "./components";
-import { PageCotxe } from "./pages/cotxes";
-import { PageExpedient } from "./pages/expedient";
+import { TabContainer } from "./layouts/TabContainer";
 
 export function App() {
-    
-    const tabs = [
-        {name: "Cotxes", content: <PageCotxe/>},
-        {name: "Xenia Freixes", content: <PageExpedient/>},
-    ]
-    
-    return <>
-        <TabBar tabs={tabs}/>
-    </>
+    return <TabContainer />
 }

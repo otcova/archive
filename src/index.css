@@ -29,29 +29,3 @@ body,
 :root {
     --color-primary: #0078d4;
 }
-
-.round,
-button {
-    font-size: 1rem;
-    border: solid 1px #bfbfbf;
-    border-radius: 5px;
-    font: inherit;
-    outline: none;
-    user-select: none;
-}
-
-button {
-    cursor: pointer;
-    padding: 8px 15px 8px 15px;
-    background-color: #fff;
-}
-
-.primary-button {
-    background-color: var(--color-primary);
-    border: none;
-    color: #fff;
-}
-
-.hand {
-    cursor: pointer;
-}
