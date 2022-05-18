@@ -1,13 +1,13 @@
 import { useContext } from "preact/hooks"
-import { CloseWindow } from "../components/CloseWindow"
-import { MinimizeWindow } from "../components/MinimizeWindow"
+import { CloseWindow, MinimizeWindow } from "../../components/WindowButtons"
 import style from "../styles/TabBar.module.css"
-import { Tab, TabContext } from "./TabContainer"
+import { Tab } from "./tab";
+import { TabContext } from "./tabContext";
 
 
 export function TabBar() {
 	const tabCtx = useContext(TabContext);
-	
+
 	return <div className={style.container}>
 		<div className={style.tabsContainer}>
 			{
@@ -20,5 +20,11 @@ export function TabBar() {
 }
 
 function TabElement({ tab }: { tab: Tab }) {
-	return <div className={style.tabElement}>{tab.title}</div>
+	const tabCtx = useContext(TabContext);
+	let isSelected = tabCtx.selected.id == tab.id;
+	return <div
+		className={isSelected ? style.tab : style.selectedTab}
+		onClick={() => tabCtx.select(tab)}>
+		{tab.title}
+	</div>
 }
