@@ -29,3 +29,30 @@ body,
 :root {
     --color-primary: #0078d4;
 }
+
+.expX, .exp {
+    width: 100%;
+    flex-shrink: 1;
+}
+.expY, .exp {
+    height: 100%;
+    flex-shrink: 1;
+}
+
+.column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.row {
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+.gap {
+    gap: 20px;
+}
