@@ -8,6 +8,7 @@ type TabContextType = {
 	createTab: (template: TabTemplate<any>) => void,
 	selected: Tab<any>,
 	select: StateUpdater<Tab<any>>,
+	renameSelected: (title: string) => void,
 }
 
 export const TabContext = createContext<TabContextType>(undefined!);

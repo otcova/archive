@@ -13,6 +13,13 @@ export function TabContainer({ defaultTabTemplate }: Props) {
 	let [tabs, setTabs] = useState([defaultTab]);
 	let [selected, select] = useState(defaultTab);
 
+	const renameSelected = (title: string) => {
+		const tab = { ...selected, title }
+		const tabIndex = tabPos(selected)
+		setTabs([...tabs.slice(0, tabIndex), tab, ...tabs.slice(tabIndex + 1, tabs.length)])
+		select(tab)
+	}
+
 	const createTab = (tabTemplate: TabTemplate<any>) => {
 		const tab = { ...tabTemplate, id: genId() }
 		setTabs([...tabs, tab])
@@ -37,7 +44,7 @@ export function TabContainer({ defaultTabTemplate }: Props) {
 		}
 	});
 
-	return <TabContext.Provider value={{ tabs, deleteTab, createTab, selected, select,  }}>
+	return <TabContext.Provider value={{ tabs, deleteTab, createTab, selected, select, renameSelected }}>
 		<div className={"column exp"}>
 			<TabBar />
 			<div className="column exp" style={{ padding: "20px" }}>
