@@ -1,5 +1,5 @@
 
-import style from "../styles/button.module.css"
+import style from "../styles/buttons.module.css"
 import { useEvent } from "../utils/useEvent"
 
 type Props = {

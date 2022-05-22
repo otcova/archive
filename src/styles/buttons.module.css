@@ -1,0 +1,49 @@
+.normal,
+.important {
+	cursor: pointer;
+	user-select: none;
+	border-radius: 5px;
+	padding: 7px 20px 7px 20px;
+	border: 1px solid hsl(0, 0%, 75%);
+	background-color: #fff;
+	color: #000;
+}
+
+.important {
+	color: #fff;
+	border: none;
+	background-color: #0078d4;
+}
+
+
+.windowClose:hover {
+	background-color: #f00a;
+	color: #fff
+}
+
+.windowMinimize:hover {
+	background-color: #0003;
+}
+
+.windowClose:before,
+.windowMinimize:before {
+	font: normal normal normal 16px/1 codicon;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 5px;
+}
+
+.windowClose:before {
+	content: '\eab8';
+}
+
+.windowMinimize:before {
+	content: '\eaba';
+}
+
+@font-face {
+	font-family: "codicon";
+	font-display: block;
+	src: url("./codicon.ttf") format("truetype");
+}

@@ -45,12 +45,15 @@ body,
     align-items: center;
     flex-direction: column;
 }
-.row {
-    
+.row, .rowLeft {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: row;
+}
+
+.rowLeft {
+    justify-content: flex-start;
 }
 
 .gap {

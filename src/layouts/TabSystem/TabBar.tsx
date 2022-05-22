@@ -10,7 +10,7 @@ export function TabBar() {
 
 	console.log("R", tabCtx.selected)
 	return <div className={style.container}>
-		<div className={style.tabsContainer} data-tauri-drag-region>
+		<div className="exp rowLeft" data-tauri-drag-region>
 			{
 				tabCtx.tabs.map(tab => <TabElement key={tab.id} tab={tab} />)
 			}
@@ -22,7 +22,6 @@ export function TabBar() {
 
 function TabElement({ tab }: { tab: Tab<any> }) {
 	const tabCtx = useContext(TabContext);
-	console.log("   -", tab)
 	let isSelected = tabCtx.selected.id == tab.id;
 	return <div
 		className={isSelected ? style.selectedTab : style.tab}
