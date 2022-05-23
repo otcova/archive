@@ -1,8 +1,5 @@
 #![allow(dead_code)]
 
-#[cfg(test)]
-mod test_utils;
-
 mod backup;
 mod error;
 mod lock;
@@ -67,7 +64,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::database::{test_utils::*, Database};
+    use crate::test_utils::*;
+    use super::Database;
     
     #[test]
     fn open_database_on_empty_dir() {

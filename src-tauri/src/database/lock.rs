@@ -18,7 +18,7 @@ impl Lock {
 #[cfg(test)]
 mod tests {
     use super::Lock;
-    use crate::database::test_utils::TempDir;
+    use crate::test_utils::TempDir;
     
     #[test]
     fn lock_non_existing_directory() {

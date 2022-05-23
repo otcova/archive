@@ -39,7 +39,7 @@ pub fn load_data<T: DeserializeOwned>(file_path: &PathBuf) -> Result<T> {
 #[cfg(test)]
 mod tests {
     use super::{load_data, save_data};
-    use crate::database::test_utils::TempDir;
+    use crate::test_utils::TempDir;
 
     #[test]
     fn serialize_and_deserilize() {

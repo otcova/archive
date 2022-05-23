@@ -45,10 +45,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::database::{
-        backup::{datamodel::*, time::Instant},
-        test_utils::*,
-    };
+    use super::*;
+    use crate::database::backup::time::Instant;
+    use crate::test_utils::*;
 
     #[test]
     fn file_path_use_case() {

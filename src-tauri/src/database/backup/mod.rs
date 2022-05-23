@@ -39,7 +39,8 @@ pub fn load_newest_noncurrupted<T: DeserializeOwned>(dir: &PathBuf) -> Result<T>
 #[cfg(test)]
 mod tests {
     use super::time::Instant;
-    use crate::database::{backup::*, serializer, test_utils::*};
+    use crate::database::{backup::*, serializer};
+    use crate::test_utils::*;
     use std::{fs::File, io::Write, path::Path};
 
     #[test]
