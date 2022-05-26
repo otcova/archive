@@ -1,5 +1,12 @@
 use chrono::prelude::*;
 
+#[derive(Debug, PartialEq, Eq)]
+enum OrderState {
+    Done,
+    Todo,
+    Urgent,
+}
+
 #[derive(Debug)]
 struct Date(chrono::Date<Utc>);
 
@@ -14,6 +21,7 @@ pub struct User {
 pub struct Order {
     dates: Vec<Date>,
     description: String,
+    state: OrderState,
 }
 
 #[derive(Debug)]
@@ -111,6 +119,18 @@ impl Filter for User {
     }
 }
 
+impl Filter for Order {
+    fn filter(&self, filter: &Self) -> MatchType {
+        let description_match = self.description.filter(&filter.description);
+        if let MatchType::Similar(magnitude) = description_match {
+            if self.state != filter.state {
+                return MatchType::Similar(magnitude / 2.);
+            }
+        }
+        description_match
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -143,7 +163,7 @@ mod test {
             emails: vec![],
             phones: vec![String::from("932123456")],
         };
-        let juan_first_name = User {
+        let juan_name = User {
             name: String::from("Juan"),
             emails: vec![],
             phones: vec![],
@@ -170,10 +190,52 @@ mod test {
         };
 
         assert_eq!(format!("{:?}", juan.filter(&juan)), "Inclusive");
-        assert_eq!(format!("{:?}", juan.filter(&juan_first_name)), "Similar(1.0)");
+        assert_eq!(format!("{:?}", juan.filter(&juan_name)), "Similar(1.0)");
         assert_eq!(format!("{:?}", juan.filter(&juan_phone)), "Inclusive");
         assert_eq!(format!("{:?}", juan.filter(&mario)), "Similar(0.5)");
         assert_eq!(format!("{:?}", juan.filter(&pepa)), "Similar(0.0)");
         assert_eq!(format!("{:?}", mario.filter(&mario_emal)), "Inclusive");
+    }
+
+    #[test]
+    fn filter_order() {
+        let orders = [
+            Order {
+                dates: vec![Date(chrono::Utc.ymd(2022, 10, 2))],
+                description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
+                state: OrderState::Done,
+            },
+            Order {
+                dates: vec![
+                    Date(chrono::Utc.ymd(2020, 2, 12)),
+                    Date(chrono::Utc.ymd(2020, 1, 11)),
+                ],
+                description: String::from("frena JA!!!!"),
+                state: OrderState::Done,
+            },
+            Order {
+                dates: vec![
+                    Date(chrono::Utc.ymd(2020, 2, 12)),
+                    Date(chrono::Utc.ymd(2020, 1, 11)),
+                ],
+                description: String::from("Me aburro!!!\nEn Sasr"),
+                state: OrderState::Todo,
+            },
+        ];
+
+        assert_eq!(format!("{:?}", orders[0].filter(&orders[0])), "Inclusive");
+        assert_eq!(format!("{:?}", orders[1].filter(&orders[1])), "Inclusive");
+        assert_eq!(
+            format!("{:?}", orders[1].filter(&orders[0])),
+            "Similar(0.2857143)"
+        );
+        assert_eq!(
+            format!("{:?}", orders[0].filter(&orders[1])),
+            "Similar(0.0)"
+        );
+        assert_eq!(
+            format!("{:?}", orders[0].filter(&orders[2])),
+            "Similar(0.25)"
+        );
     }
 }
