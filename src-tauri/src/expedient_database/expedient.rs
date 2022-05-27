@@ -77,17 +77,17 @@ impl Filter for String {
             return MatchType::Inclusive;
         }
 
-        let mut keywords_count = 0;
+        let mut keywords_match_count = 0;
         let score = filter_lowercase
             .split_whitespace()
             .fold(0f32, |score, keyword| {
-                keywords_count += 1;
+                keywords_match_count += 1;
                 if self_lowercase.contains(keyword) {
                     return score + 1.;
                 }
                 score
             })
-            / keywords_count as f32;
+            / keywords_match_count as f32;
 
         MatchType::Similar(score)
     }
@@ -236,6 +236,191 @@ mod test {
         assert_eq!(
             format!("{:?}", orders[0].filter(&orders[2])),
             "Similar(0.25)"
+        );
+    }
+
+    #[test]
+    fn filter_expedient() {
+        // Same vin
+        assert_eq!(
+            format!(
+                "{:?}",
+                Expedient {
+                    description: String::from("any stuff"),
+                    license_plate: String::from(""),
+                    model: String::from("any stuff"),
+                    orders: vec![],
+                    users: vec![],
+                    vin: String::from("2HGES16503H591599"),
+                }
+                .filter(&Expedient {
+                    description: String::from("random"),
+                    license_plate: String::from(""),
+                    model: String::from("random"),
+                    orders: vec![],
+                    users: vec![],
+                    vin: String::from("2HGES16503H591599"),
+                })
+            ),
+            "Inclusive"
+        );
+        // Same vin diferent license_plate
+        assert_eq!(
+            format!(
+                "{:?}",
+                Expedient {
+                    description: String::from("any stuff"),
+                    license_plate: String::from("very"),
+                    model: String::from("any stuff"),
+                    orders: vec![],
+                    users: vec![],
+                    vin: String::from("2HGES16503H591599"),
+                }
+                .filter(&Expedient {
+                    description: String::from("random"),
+                    license_plate: String::from("different"),
+                    model: String::from("random"),
+                    orders: vec![],
+                    users: vec![],
+                    vin: String::from("2HGES16503H591599"),
+                })
+            ),
+            "Similar(1.0)"
+        );
+        // Same license_plate diferent vin
+        assert_eq!(
+            format!(
+                "{:?}",
+                Expedient {
+                    description: String::from("any stuff"),
+                    license_plate: String::from("5KEB573"),
+                    model: String::from("any stuff"),
+                    orders: vec![],
+                    users: vec![],
+                    vin: String::from("1RGEF16503R521594"),
+                }
+                .filter(&Expedient {
+                    description: String::from("random"),
+                    license_plate: String::from("5KEB573"),
+                    model: String::from("random"),
+                    orders: vec![],
+                    users: vec![],
+                    vin: String::from("2HGES16503H591599"),
+                })
+            ),
+            "Similar(1.0)"
+        );
+        // Same Users (Inclusive Users)
+        assert_eq!(
+            format!(
+                "{:?}",
+                Expedient {
+                    description: String::from(""),
+                    license_plate: String::from(""),
+                    model: String::from(""),
+                    orders: vec![],
+                    users: vec![User {
+                        name: String::from("Pepa"),
+                        emails: vec![],
+                        phones: vec![String::from("923149288")]
+                    }],
+                    vin: String::from(""),
+                }
+                .filter(&Expedient {
+                    description: String::from(""),
+                    license_plate: String::from(""),
+                    model: String::from(""),
+                    orders: vec![],
+                    users: vec![User {
+                        name: String::from("Pepa"),
+                        emails: vec![],
+                        phones: vec![String::from("923149288")]
+                    }],
+                    vin: String::from(""),
+                })
+            ),
+            "Inclusive"
+        );
+        // Same Users (Inclusive Users), Different license plate
+        assert_eq!(
+            format!(
+                "{:?}",
+                Expedient {
+                    description: String::from(""),
+                    license_plate: String::from("5KEB573"),
+                    model: String::from(""),
+                    orders: vec![],
+                    users: vec![User {
+                        name: String::from("Pepa"),
+                        emails: vec![],
+                        phones: vec![String::from("923149288")]
+                    }],
+                    vin: String::from(""),
+                }
+                .filter(&Expedient {
+                    description: String::from(""),
+                    license_plate: String::from("5WEC222"),
+                    model: String::from(""),
+                    orders: vec![],
+                    users: vec![User {
+                        name: String::from("Pepa"),
+                        emails: vec![],
+                        phones: vec![String::from("923149288")]
+                    }],
+                    vin: String::from(""),
+                })
+            ),
+            "Similar(0.0)"
+        );
+        // Filter By description
+        assert_eq!(
+            format!(
+                "{:?}",
+                Expedient {
+                    description: String::from("Audi vermell, de 4.2 persones"),
+                    license_plate: String::from("5KEB573"),
+                    model: String::from(""),
+                    orders: vec![],
+                    users: vec![User {
+                        name: String::from("Pepa"),
+                        emails: vec![],
+                        phones: vec![String::from("923149288")]
+                    }],
+                    vin: String::from(""),
+                }
+                .filter(&Expedient {
+                    description: String::from("Vermell Audi"),
+                    license_plate: String::from(""),
+                    model: String::from(""),
+                    orders: vec![],
+                    users: vec![],
+                    vin: String::from(""),
+                })
+            ),
+            "Similar(1.0)"
+        );
+        // Blanck expedients
+        assert_eq!(
+            format!(
+                "{:?}",
+                Expedient {
+                    description: String::from(""),
+                    license_plate: String::from(""),
+                    model: String::from(""),
+                    orders: vec![],
+                    users: vec![],
+                    vin: String::from(""),
+                }
+                .filter(&Expedient {
+                    description: String::from(""),
+                    license_plate: String::from(""),
+                    model: String::from(""),
+                    orders: vec![],
+                    users: vec![],
+                    vin: String::from(""),
+                })
+            ),
+            "Similar(0.0)"
         );
     }
 }
