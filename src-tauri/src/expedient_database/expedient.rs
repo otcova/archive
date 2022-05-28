@@ -34,6 +34,15 @@ pub struct Expedient {
     orders: Vec<Order>,
 }
 
+impl Expedient {
+    fn vin_is_complete(&self) -> bool {
+        self.vin.len() >= 17
+    }
+    fn license_is_complete(&self) -> bool {
+        self.license_plate.len() >= 7
+    }
+}
+
 // Match -----------------
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -58,6 +67,18 @@ impl MatchType {
             Self::Similar(_) => *self,
         }
     }
+    fn is_inclusive(&self) -> bool {
+        match self {
+            Self::Inclusive => true,
+            _ => false,
+        }
+    }
+    fn magnitude(&self) -> f32 {
+        match self {
+            Self::Inclusive => 1.0,
+            Self::Similar(v) => *v,
+        }
+    }
 }
 
 trait Filter {
@@ -66,10 +87,6 @@ trait Filter {
 
 impl Filter for String {
     fn filter(&self, filter: &Self) -> MatchType {
-        if filter == "" {
-            return MatchType::Similar(0.);
-        }
-
         let filter_lowercase = filter.to_lowercase();
         let self_lowercase = self.to_lowercase();
 
@@ -94,13 +111,44 @@ impl Filter for String {
 }
 
 impl Filter for Expedient {
-    fn filter(&self, _filter: &Self) -> MatchType {
-        MatchType::Similar(0.0)
+    fn filter(&self, filter: &Self) -> MatchType {
+        // Filter by Vin and License
+        let vin_match = self.vin.filter(&filter.vin);
+        let license_match = self.license_plate.filter(&filter.license_plate);
+        println!(
+            "{:?}; {:?}; {:?}; {:?}",
+            self, filter, vin_match, license_match
+        );
+        
+        if (filter.vin_is_complete() && vin_match.is_inclusive())
+            || (filter.license_is_complete() && license_match.is_inclusive())
+        {
+            return MatchType::Inclusive;
+        }
+        
+        if !vin_match.is_inclusive() || !license_match.is_inclusive() {
+            return MatchType::Similar(0.0);
+        }
+
+        
+
+        // Filter by user, model, description, orders
+        MatchType::Similar(
+            (self.users.filter(&filter.users).magnitude()
+                + self.model.filter(&filter.model).magnitude()
+                + self.description.filter(&filter.description).magnitude()
+                + self.orders.filter(&filter.orders).magnitude())
+                / 4.0,
+        )
     }
 }
 
-impl Filter for Vec<String> {
+impl<T: Filter + core::fmt::Debug> Filter for Vec<T> {
     fn filter(&self, filter: &Self) -> MatchType {
+        println!("{:?}", filter);
+        if filter.len() == 0 {
+            return MatchType::Inclusive;
+        }
         filter
             .iter()
             .fold(MatchType::Similar(0.0), |best_match, filter_str| {
@@ -113,8 +161,13 @@ impl Filter for Vec<String> {
 
 impl Filter for User {
     fn filter(&self, filter: &Self) -> MatchType {
-        let mut best_match = self.phones.filter(&filter.phones);
-        best_match = best_match.max(&self.emails.filter(&filter.emails));
+        let mut best_match = MatchType::Similar(0.0);
+        if filter.phones.len() > 0 {
+            best_match = best_match.max(&self.phones.filter(&filter.phones));
+        }
+        if filter.emails.len() > 0 {
+            best_match = best_match.max(&self.emails.filter(&filter.emails));
+        }
         best_match.max(&self.name.filter(&filter.name).downgrade_inclusive())
     }
 }
@@ -193,7 +246,7 @@ mod test {
         assert_eq!(format!("{:?}", juan.filter(&juan_name)), "Similar(1.0)");
         assert_eq!(format!("{:?}", juan.filter(&juan_phone)), "Inclusive");
         assert_eq!(format!("{:?}", juan.filter(&mario)), "Similar(0.5)");
-        assert_eq!(format!("{:?}", juan.filter(&pepa)), "Similar(0.0)");
+        assert_eq!(format!("{:?}", juan.filter(&pepa)), "Inclusive");
         assert_eq!(format!("{:?}", mario.filter(&mario_emal)), "Inclusive");
     }
 
@@ -264,7 +317,7 @@ mod test {
             ),
             "Inclusive"
         );
-        // Same vin diferent license_plate
+        // Same vin different license_plate
         assert_eq!(
             format!(
                 "{:?}",
@@ -285,9 +338,9 @@ mod test {
                     vin: String::from("2HGES16503H591599"),
                 })
             ),
-            "Similar(1.0)"
+            "Inclusive"
         );
-        // Same license_plate diferent vin
+        // Same license_plate different vin
         assert_eq!(
             format!(
                 "{:?}",
@@ -308,7 +361,7 @@ mod test {
                     vin: String::from("2HGES16503H591599"),
                 })
             ),
-            "Similar(1.0)"
+            "Inclusive"
         );
         // Same Users (Inclusive Users)
         assert_eq!(
@@ -339,7 +392,7 @@ mod test {
                     vin: String::from(""),
                 })
             ),
-            "Inclusive"
+            "Similar(1.0)"
         );
         // Same Users (Inclusive Users), Different license plate
         assert_eq!(
@@ -420,7 +473,39 @@ mod test {
                     vin: String::from(""),
                 })
             ),
-            "Similar(0.0)"
+            "Similar(1.0)"
+        );
+    }
+
+    #[test]
+    fn filte_vec_users() {
+        assert_eq!(
+            format!(
+                "{:?}",
+                vec![User {
+                    name: String::from("Pepa"),
+                    emails: vec![],
+                    phones: vec![String::from("923149288")]
+                }]
+                .filter(&vec![])
+            ),
+            "Inclusive"
+        );
+        assert_eq!(
+            format!(
+                "{:?}",
+                vec![User {
+                    name: String::from("Pepa"),
+                    emails: vec![],
+                    phones: vec![String::from("923149288")]
+                }]
+                .filter(&vec![User {
+                    name: String::from("Pepa"),
+                    emails: vec![],
+                    phones: vec![String::from("923149288")]
+                }])
+            ),
+            "Inclusive"
         );
     }
 }
