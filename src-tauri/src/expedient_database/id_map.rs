@@ -1,7 +1,6 @@
 use std::slice::IterMut;
 
-
-type Id = usize;
+pub type Id = usize;
 
 pub struct IdMap<T> {
 	data: Vec<Option<T>>,

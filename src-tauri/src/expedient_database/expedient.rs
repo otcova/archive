@@ -1,14 +1,28 @@
+// #![allow(unused_imports)]
 use chrono::prelude::*;
 
 #[derive(Debug, PartialEq, Eq)]
-enum OrderState {
+pub enum OrderState {
     Done,
     Todo,
     Urgent,
 }
 
-#[derive(Debug)]
-struct Date(chrono::Date<Utc>);
+/// Stores year, month, day and hour in utc
+#[derive(Debug, PartialEq, Eq)]
+pub struct UtcDate {
+    pub year: i16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+}
+/// Stores year, month, day and hour in local time
+pub struct LocalDate {
+    pub year: i16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+}
 
 #[derive(Debug)]
 pub struct User {
@@ -19,7 +33,7 @@ pub struct User {
 
 #[derive(Debug)]
 pub struct Order {
-    dates: Vec<Date>,
+    dates: Vec<UtcDate>,
     description: String,
     state: OrderState,
 }
@@ -40,6 +54,46 @@ impl Expedient {
     }
     fn license_is_complete(&self) -> bool {
         self.license_plate.len() >= 7
+    }
+}
+
+impl UtcDate {
+    fn utc_ymdh(year: i16, month: u8, day: u8, hour: u8) -> Self {
+        Self {
+            year,
+            month,
+            day,
+            hour,
+        }
+    }
+    fn from_local_time(year: i16, month: u8, day: u8, hour: u8) -> Self {
+        let date = NaiveDate::from_ymd(year as i32, month as u32, day as u32);
+        let time = NaiveTime::from_hms(hour as u32, 0, 0);
+        let datetime = NaiveDateTime::new(date, time);
+
+        let dt_with_tz = Local.from_local_datetime(&datetime).unwrap();
+        let utc = dt_with_tz.naive_utc();
+
+        Self {
+            year: utc.year() as i16,
+            month: utc.month() as u8,
+            day: utc.day() as u8,
+            hour: utc.hour() as u8,
+        }
+    }
+    fn to_local_time(&self, year: i16, month: u8, day: u8, hour: u8) -> LocalDate {
+        let date = NaiveDate::from_ymd(year as i32, month as u32, day as u32);
+        let time = NaiveTime::from_hms(hour as u32, 0, 0);
+        let datetime = NaiveDateTime::new(date, time);
+
+        let local = Local.from_utc_datetime(&datetime);
+
+        LocalDate {
+            year: local.year() as i16,
+            month: local.month() as u8,
+            day: local.day() as u8,
+            hour: local.hour() as u8,
+        }
     }
 }
 
@@ -119,18 +173,16 @@ impl Filter for Expedient {
             "{:?}; {:?}; {:?}; {:?}",
             self, filter, vin_match, license_match
         );
-        
+
         if (filter.vin_is_complete() && vin_match.is_inclusive())
             || (filter.license_is_complete() && license_match.is_inclusive())
         {
             return MatchType::Inclusive;
         }
-        
+
         if !vin_match.is_inclusive() || !license_match.is_inclusive() {
             return MatchType::Similar(0.0);
         }
-
-        
 
         // Filter by user, model, description, orders
         MatchType::Similar(
@@ -254,22 +306,22 @@ mod test {
     fn filter_order() {
         let orders = [
             Order {
-                dates: vec![Date(chrono::Utc.ymd(2022, 10, 2))],
+                dates: vec![UtcDate::utc_ymdh(2022, 10, 2, 0)],
                 description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
                 state: OrderState::Done,
             },
             Order {
                 dates: vec![
-                    Date(chrono::Utc.ymd(2020, 2, 12)),
-                    Date(chrono::Utc.ymd(2020, 1, 11)),
+                    UtcDate::utc_ymdh(2020, 2, 1, 0),
+                    UtcDate::utc_ymdh(2020, 1, 1, 0),
                 ],
                 description: String::from("frena JA!!!!"),
                 state: OrderState::Done,
             },
             Order {
                 dates: vec![
-                    Date(chrono::Utc.ymd(2020, 2, 12)),
-                    Date(chrono::Utc.ymd(2020, 1, 11)),
+                    UtcDate::utc_ymdh(2020, 2, 1, 0),
+                    UtcDate::utc_ymdh(2020, 1, 1, 0),
                 ],
                 description: String::from("Me aburro!!!\nEn Sasr"),
                 state: OrderState::Todo,
