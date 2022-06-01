@@ -5,36 +5,44 @@ pub struct DateMap<T> {
     days: Vec<Vec<(u8, T)>>,
 }
 
-pub struct DateMapIter<'a, T> {
-    datemap: &'a DateMap<T>,
-    index: (usize, usize),
-}
-
 impl<T> DateMap<T> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             first_day_hash: 0,
             days: vec![],
         }
     }
-    fn iter(&self) -> DateMapIter<'_, T> {
+    pub fn iter(&self) -> DateMapIter<'_, T> {
         DateMapIter {
             datemap: self,
             index: (0, 0),
         }
     }
+    pub fn push(&mut self, date: UtcDate, data: T) {
+        self.first_day_hash = date.day_hash();
+        self.days.push(vec![(date.hour, data)]);
+    }
+}
+
+pub struct DateMapIter<'a, T> {
+    datemap: &'a DateMap<T>,
+    index: (usize, usize),
+}
+
+pub struct DateMapItem<'a, T> {
+    pub date: UtcDate,
+    pub data: &'a T,
 }
 
 impl<'a, T> Iterator for DateMapIter<'a, T> {
-    type Item = &'a T;
+    type Item = DateMapItem<'a, T>;
     fn next(&mut self) -> Option<Self::Item> {
         None
     }
 }
 
-
 /// Stores year, month, day and hour in utc
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct UtcDate {
     pub year: i16,
     pub month: u8,
@@ -42,6 +50,7 @@ pub struct UtcDate {
     pub hour: u8,
 }
 /// Stores year, month, day and hour in local time
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct LocalDate {
     pub year: i16,
     pub month: u8,
@@ -184,8 +193,48 @@ mod test {
     #[test]
     fn iter_empty_datemap() {
         let datemap = DateMap::<f32>::new();
+        assert!(datemap.iter().next().is_none());
+    }
+
+    #[test]
+    fn single_push_and_iter_datemap() {
+        let v = 3.1415;
+        let date = UtcDate::utc_ymdh(2021, 12, 2, 6);
+
+        let mut datemap = DateMap::new();
+        datemap.push(date, v);
+
         let mut datemap_iter = datemap.iter();
-        let item = datemap_iter.next();
-        assert!(item.is_none());
+
+        let item = datemap_iter.next().unwrap();
+        assert_eq!(date, item.date);
+        assert_eq!(v, *item.data);
+
+        assert!(datemap_iter.next().is_none());
+    }
+
+    #[test]
+    fn multiple_push_and_iter_datemap() {
+        let items = [
+            (UtcDate::utc_ymdh(2021, 12, 2, 6), 3.1415927),
+            (UtcDate::utc_ymdh(2021, 12, 2, 9), 1.231),
+            (UtcDate::utc_ymdh(2021, 12, 3, 22), 100231.2),
+            (UtcDate::utc_ymdh(2022, 2, 1, 0), 31.2),
+            (UtcDate::utc_ymdh(2022, 12, 3, 22), 0.000122),
+        ];
+
+        let mut datemap = DateMap::new();
+        for item in items {
+            datemap.push(item.0, item.1);
+        }
+        
+        let mut datemap_iter = datemap.iter();
+        
+        for real_item in items {
+            let map_item = datemap_iter.next().unwrap();
+            assert_eq!(real_item.0, map_item.date);
+            assert_eq!(real_item.1, *map_item.data);
+        }
+        assert!(datemap_iter.next().is_none());
     }
 }
