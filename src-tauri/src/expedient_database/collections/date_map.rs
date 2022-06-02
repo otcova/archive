@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use serde::{Serialize, Deserialize};
 
 pub struct DateMap<T> {
     first_day_hash: DayHash,
@@ -19,8 +20,23 @@ impl<T> DateMap<T> {
         }
     }
     pub fn push(&mut self, date: UtcDate, data: T) {
-        self.first_day_hash = date.day_hash();
-        self.days.push(vec![(date.hour, data)]);
+        let day_index = self.expand_to_day(date.day_hash());
+        self.days[day_index].push((date.hour, data));
+    }
+    fn expand_to_day(&mut self, date_hash: DayHash) -> usize {
+        if self.first_day_hash == 0 {
+            self.first_day_hash = date_hash;
+        }
+        let day_index = (date_hash - self.first_day_hash) as usize;
+        // create days if they don't exist
+        if self.days.len() < day_index + 1 {
+            let new_days_count = day_index - self.days.len() + 1;
+            self.days.reserve(new_days_count);
+            for _ in 0..new_days_count {
+                self.days.push(vec![])
+            }
+        }
+        day_index
     }
 }
 
@@ -37,12 +53,26 @@ pub struct DateMapItem<'a, T> {
 impl<'a, T> Iterator for DateMapIter<'a, T> {
     type Item = DateMapItem<'a, T>;
     fn next(&mut self) -> Option<Self::Item> {
+        while self.index.0 < self.datemap.days.len() {
+            while self.index.1 < self.datemap.days[self.index.0].len() {
+                self.index.1 += 1;
+                return Some(DateMapItem {
+                    date: UtcDate::from_day_hash(
+                        self.index.0 as DayHash + self.datemap.first_day_hash,
+                        self.datemap.days[self.index.0][self.index.1 - 1].0,
+                    ),
+                    data: &self.datemap.days[self.index.0][self.index.1 - 1].1,
+                });
+            }
+            self.index.1 = 0;
+            self.index.0 += 1;
+        }
         None
     }
 }
 
 /// Stores year, month, day and hour in utc
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub struct UtcDate {
     pub year: i16,
     pub month: u8,
@@ -227,9 +257,9 @@ mod test {
         for item in items {
             datemap.push(item.0, item.1);
         }
-        
+
         let mut datemap_iter = datemap.iter();
-        
+
         for real_item in items {
             let map_item = datemap_iter.next().unwrap();
             assert_eq!(real_item.0, map_item.date);
