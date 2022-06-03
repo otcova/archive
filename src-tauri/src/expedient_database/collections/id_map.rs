@@ -1,13 +1,21 @@
 use std::slice::IterMut;
+use serde::{Deserialize, Serialize};
 
 pub type Id = usize;
 
-pub struct IdMap<T> {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IdMap<T: Serialize> {
 	data: Vec<Option<T>>,
 	empty_ids: Vec<Id>,
 }
 
-impl<T> IdMap<T> {
+impl<T: Serialize> Default for IdMap<T> {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
+impl<T: Serialize> IdMap<T> {
     fn new() -> Self {
         Self { data: vec![], empty_ids: vec![] }
     }
@@ -56,7 +64,13 @@ impl<'a, T> Iterator for IdMapIterMut<'a, T> {
 #[cfg(test)]
 mod test {
     use super::IdMap;
-
+	
+	#[test]
+	fn default_idmap_is_empty() {
+		let map: IdMap::<i32> = Default::default();
+		assert_eq!(map.len(), 0);
+	}
+	
     #[test]
     fn initial_length_is_zero() {
         let map = IdMap::<i32>::new();
