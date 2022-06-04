@@ -2,20 +2,20 @@ use super::time::Instant;
 use crate::database::error::Result;
 use std::path::{Path, PathBuf};
 
-pub fn file_path_of(dir: &PathBuf, instant: &Instant) -> PathBuf {
-    dir.join(instant.year().to_string())
+pub fn file_path_of(database_dir: &PathBuf, instant: &Instant) -> PathBuf {
+    database_dir.join(instant.year().to_string())
         .join(instant.str() + ".bin")
 }
 
 /// Concats all files and folders of a directory
 /// filter_map all the folder names and file stem
-/// and sorts the content (greater to smaller)
-fn scan_folder<T, F>(dir: &PathBuf, mut filter_map: F) -> Result<Vec<(PathBuf, T)>>
+/// and sorts the content (newest to oldest)
+fn scan_folder<T, F>(database_dir: &PathBuf, mut filter_map: F) -> Result<Vec<(PathBuf, T)>>
 where
     T: PartialOrd,
     F: FnMut(&str) -> Option<T>,
 {
-    let mut content: Vec<(PathBuf, T)> = dir
+    let mut content: Vec<(PathBuf, T)> = database_dir
         .read_dir()?
         .flatten()
         .filter_map(|dir| {
@@ -29,13 +29,16 @@ where
     Ok(content)
 }
 
-/// Reads database tree and returns the path of the selected file
-pub fn select_database_backup<T, F>(dir: &PathBuf, select: F) -> Result<Option<T>>
+/// Reads database tree and loops (from newest to oldest) over every file using the 'select' callback.
+/// 
+/// To select the file, you have to return Some<Data> from the 'selected' callback,
+/// then the function will end and return the Some<Data>.
+pub fn select_database_backup<T, F>(database_dir: &PathBuf, select: F) -> Result<Option<T>>
 where
     F: FnMut((PathBuf, Instant)) -> Option<T>,
 {
     Ok(
-        scan_folder::<i32, _>(dir, |folder_year| folder_year.parse().ok())?
+        scan_folder::<i32, _>(database_dir, |folder_year| folder_year.parse().ok())?
             .iter()
             .flat_map(|(path, _)| scan_folder(&path, |file_time| Instant::from_utc(file_time).ok()))
             .flatten()

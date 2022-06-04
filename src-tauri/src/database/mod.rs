@@ -3,7 +3,7 @@
 mod backup;
 mod error;
 mod lock;
-mod serializer;
+mod file_serializer;
 
 use self::{
     error::{ErrorKind, Result},

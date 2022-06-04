@@ -4,7 +4,7 @@ mod time;
 use self::time::Instant;
 use super::{
     error::{ErrorKind, Result},
-    serializer,
+    file_serializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fs::create_dir_all, path::PathBuf};
@@ -12,7 +12,7 @@ use std::{fs::create_dir_all, path::PathBuf};
 pub fn load_newest<T: DeserializeOwned>(dir: &PathBuf) -> Result<T> {
     let newest = datamodel::select_database_backup(dir, |(path, _)| Some(path))?;
     if let Some(path) = newest {
-        let data: T = serializer::load_data(&path)?;
+        let data: T = file_serializer::load_data(&path)?;
         return Ok(data);
     }
     ErrorKind::NotFound.into()
@@ -26,20 +26,20 @@ pub fn save_data<T: Serialize>(database_path: &PathBuf, data: &T) -> Result<Path
 
     let path = datamodel::file_path_of(&database_path, &Instant::now());
     create_dir_all(&path.parent().unwrap())?;
-    serializer::save_data(&path, &data)?;
+    file_serializer::save_data(&path, &data)?;
     Ok(path)
 }
 
 /// Loops over all database backups until it finds a non corrupted sample.
 pub fn load_newest_noncurrupted<T: DeserializeOwned>(dir: &PathBuf) -> Result<T> {
-    datamodel::select_database_backup(dir, |(path, _)| serializer::load_data(&path).ok())?
+    datamodel::select_database_backup(dir, |(path, _)| file_serializer::load_data(&path).ok())?
         .map_or_else(|| ErrorKind::NotFound.into(), |d| Ok(d))
 }
 
 #[cfg(test)]
 mod tests {
     use super::time::Instant;
-    use crate::database::{backup::*, serializer};
+    use crate::database::{backup::*, file_serializer};
     use crate::test_utils::*;
     use std::{fs::File, io::Write, path::Path};
 
@@ -91,7 +91,7 @@ mod tests {
 
         let saved_data = gen_data3();
         let path = save_data(&tempdir.path, &saved_data).unwrap();
-        let loaded_data = serializer::load_data::<DataType3>(&path).unwrap();
+        let loaded_data = file_serializer::load_data::<DataType3>(&path).unwrap();
 
         assert_eq!(saved_data, loaded_data);
     }
@@ -124,10 +124,10 @@ mod tests {
 
         // Check that overrided content is correct
         if path_2 == path_3 {
-            let loaded_data_3 = serializer::load_data::<DataType3>(&path_3).unwrap();
+            let loaded_data_3 = file_serializer::load_data::<DataType3>(&path_3).unwrap();
             assert_eq!(saved_data_3, loaded_data_3);
         } else if path_1 == path_2 {
-            let loaded_data_2 = serializer::load_data::<DataType2>(&path_2).unwrap();
+            let loaded_data_2 = file_serializer::load_data::<DataType2>(&path_2).unwrap();
             assert_eq!(saved_data_2, loaded_data_2);
         }
     }
