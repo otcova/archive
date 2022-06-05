@@ -1,6 +1,6 @@
 use fs2::FileExt;
 use std::{fs::File, path::PathBuf};
-use super::error::Result;
+use crate::database::error::Result;
 
 #[derive(Debug)]
 pub struct Lock {

@@ -1,28 +1,29 @@
 use super::collections::UtcDate;
+use serde::{Deserialize, Serialize};
 
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OrderState {
     Done,
     Todo,
     Urgent,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     name: String,
     emails: Vec<String>,
     phones: Vec<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Order {
     dates: Vec<UtcDate>,
     description: String,
     state: OrderState,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Expedient {
     users: Vec<User>,
     model: String,

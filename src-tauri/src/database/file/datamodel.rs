@@ -1,8 +1,7 @@
-use super::time::Instant;
-use crate::database::error::Result;
+use super::*;
 use std::path::{Path, PathBuf};
 
-pub fn file_path_of(database_dir: &PathBuf, instant: &Instant) -> PathBuf {
+pub fn path_from_instant(database_dir: &PathBuf, instant: &Instant) -> PathBuf {
     database_dir.join(instant.year().to_string())
         .join(instant.str() + ".bin")
 }
@@ -33,7 +32,7 @@ where
 /// 
 /// To select the file, you have to return Some<Data> from the 'selected' callback,
 /// then the function will end and return the Some<Data>.
-pub fn select_database_backup<T, F>(database_dir: &PathBuf, select: F) -> Result<Option<T>>
+pub fn select_backup<T, F>(database_dir: &PathBuf, select: F) -> Result<Option<T>>
 where
     F: FnMut((PathBuf, Instant)) -> Option<T>,
 {
@@ -49,7 +48,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::database::backup::time::Instant;
     use crate::test_utils::*;
 
     #[test]
@@ -59,15 +57,15 @@ mod tests {
         let instant_2 = Instant::from_utc("2021_05_06 13_51_05").unwrap();
         let instant_3 = Instant::from_utc("2020_05_06 13_51_05").unwrap();
         assert_eq!(
-            file_path_of(&tempdir.path, &instant_1),
+            path_from_instant(&tempdir.path, &instant_1),
             tempdir.path.join("2021").join(instant_1.str() + ".bin")
         );
         assert_eq!(
-            file_path_of(&tempdir.path, &instant_2),
+            path_from_instant(&tempdir.path, &instant_2),
             tempdir.path.join("2021").join(instant_2.str() + ".bin")
         );
         assert_eq!(
-            file_path_of(&tempdir.path, &instant_3),
+            path_from_instant(&tempdir.path, &instant_3),
             tempdir.path.join("2020").join(instant_3.str() + ".bin")
         );
     }
@@ -103,7 +101,7 @@ mod tests {
 
         // Select first
         assert_eq!(
-            select_database_backup(&tempdir.path, |(_, instant)| {
+            select_backup(&tempdir.path, |(_, instant)| {
                 assert!(instant == instant_1, "Newest backup is not first");
                 Some(123)
             })
@@ -115,7 +113,7 @@ mod tests {
         // Select second
         let mut index = 0;
         assert_eq!(
-            select_database_backup(&tempdir.path, |(_, instant)| {
+            select_backup(&tempdir.path, |(_, instant)| {
                 if instant == instant_2 {
                     assert!(index == 1, "Backups are not in order");
                     return Some("abAca");
@@ -132,7 +130,7 @@ mod tests {
         // Select
         let mut index = 0;
         assert_eq!(
-            select_database_backup(&tempdir.path, |(_, instant)| {
+            select_backup(&tempdir.path, |(_, instant)| {
                 if instant == instant_3 {
                     assert!(index == 2, "Backups are not in order");
                     return Some(instant);

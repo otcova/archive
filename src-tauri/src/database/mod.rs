@@ -1,20 +1,18 @@
 #![allow(dead_code)]
 
-mod backup;
+mod file;
 mod error;
-mod lock;
-mod file_serializer;
+mod time;
 
 use self::{
     error::{ErrorKind, Result},
-    lock::Lock,
 };
 use serde::{de::DeserializeOwned, Serialize};
 use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Database<T: Default + DeserializeOwned + Serialize> {
-    lock: Lock,
+    lock: file::Lock,
     pub data: T,
     path: PathBuf,
 }
@@ -24,8 +22,8 @@ where
     T: Default + DeserializeOwned + Serialize,
 {
     pub fn open(path: &PathBuf) -> Result<Self> {
-        let lock = Lock::directory(&path)?;
-        let data: T = backup::load_newest(&path)?;
+        let lock = file::Lock::directory(&path)?;
+        let data: T = file::load_newest(&path)?;
         Ok(Self {
             lock,
             data,
@@ -38,7 +36,7 @@ where
             return ErrorKind::AlreadyExist.into();
         }
 
-        let lock = Lock::directory(&path)?;
+        let lock = file::Lock::directory(&path)?;
 
         let data: T = Default::default();
         Ok(Self {
@@ -49,7 +47,7 @@ where
     }
 
     pub fn store(&self) -> Result<PathBuf> {
-        backup::save_data(&self.path, &self.data)
+        file::save_data(&self.path, &self.data)
     }
 }
 
