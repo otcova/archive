@@ -9,6 +9,7 @@
 mod test_utils;
 
 mod database;
+mod chunked_database;
 mod expedient_database;
 
 fn main() {
