@@ -88,7 +88,7 @@ pub struct LocalDate {
     pub hour: u8,
 }
 
-type DayHash = i32;
+pub type DayHash = i32;
 
 impl UtcDate {
     pub fn utc_ymdh(year: i16, month: u8, day: u8, hour: u8) -> Self {
@@ -112,6 +112,10 @@ impl UtcDate {
             day: local.day() as u8,
             hour: local.hour() as u8,
         }
+    }
+    
+    pub fn date_hash(&self) -> i32 {
+        self.day_hash() * 24 + self.hour as i32
     }
 
     /// (JDN Formula)[http://www.cs.utsa.edu/~cs1063/projects/Spring2011/Project1/jdn-explanation.html]
@@ -219,7 +223,22 @@ mod test {
         assert_eq!(16762 + date_b, date_d);
         assert_eq!(16142 + date_c, date_d);
     }
+    
+    #[test]
+    fn ymd_hash_date_difference() {
+        let date_a = UtcDate::utc_ymdh(2010, 3, 4, 0).date_hash();
+        let date_b = UtcDate::utc_ymdh(2010, 3, 14, 20).date_hash();
+        let date_c = UtcDate::utc_ymdh(2011, 11, 24, 3).date_hash();
+        let date_d = UtcDate::utc_ymdh(2056, 2, 3, 23).date_hash();
 
+        assert_eq!(260 + date_a, date_b);
+        assert_eq!(15123 + date_a, date_c);
+        assert_eq!(402551 + date_a, date_d);
+        assert_eq!(14863 + date_b, date_c);
+        assert_eq!(402291 + date_b, date_d);
+        assert_eq!(387428 + date_c, date_d);
+    }
+    
     #[test]
     fn iter_empty_datemap() {
         let datemap = DateMap::<f32>::new();

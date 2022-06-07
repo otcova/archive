@@ -2,7 +2,7 @@ mod datamodel;
 mod lock;
 mod serializer;
 
-pub use super::{error::*, time::*};
+pub use super::{*, time::*};
 pub use lock::*;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fs::create_dir_all, path::PathBuf};

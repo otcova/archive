@@ -1,4 +1,4 @@
-use std::slice::IterMut;
+use std::slice::{IterMut, Iter};
 use serde::{Deserialize, Serialize};
 
 pub type Id = usize;
@@ -16,15 +16,15 @@ impl<T: Serialize> Default for IdMap<T> {
 }
 
 impl<T: Serialize> IdMap<T> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { data: vec![], empty_ids: vec![] }
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.data.len()
     }
 	
-	fn push(&mut self, item: T) -> Id {
+	pub fn push(&mut self, item: T) -> Id {
 		if let Some(reused_id) = self.empty_ids.pop() {
 			self.data[reused_id] = Some(item);
 			return reused_id;
@@ -33,28 +33,62 @@ impl<T: Serialize> IdMap<T> {
 		self.data.len() - 1
 	}
 	
-	fn delete(&mut self, id: Id) {
+	pub fn delete(&mut self, id: Id) {
 		self.data[id] = None;
 		self.empty_ids.push(id);
 	}
 	
-	fn iter_mut(&mut self) -> IdMapIterMut<T> {
-		IdMapIterMut { data_iter: self.data.iter_mut() }
+	pub fn iter(&self) -> IdMapIter<T> {
+		IdMapIter { data_iter: self.data.iter(), id: 0 }
+	}
+	
+	pub fn iter_mut(&mut self) -> IdMapIterMut<T> {
+		IdMapIterMut { data_iter: self.data.iter_mut(), id: 0 }
+	}
+	
+	pub fn update(&mut self, id: Id, item: T) {
+		self.data[id] = Some(item)
+	}
+	
+	pub fn read(&self, id: Id) -> &Option<T> {
+		&self.data[id]
 	}
 }
 
-struct IdMapIterMut<'a, T> {
-	data_iter: IterMut<'a, Option<T>>
+pub struct IdMapIter<'a, T> {
+	data_iter: Iter<'a, Option<T>>,
+	id: Id,
 }
 
-impl<'a, T> Iterator for IdMapIterMut<'a, T> {
-	type Item = &'a mut T;
+impl<'a, T> Iterator for IdMapIter<'a, T> {
+	type Item = (Id, &'a T);
 	
 	fn next(&mut self) -> Option<Self::Item> {
 		while let Some(next) = self.data_iter.next() {
 			if let Some(item) = next {
-				return Some(item);
+				return Some((self.id, item));
 			}
+			self.id += 1;
+		}
+		None
+	}
+}
+
+
+pub struct IdMapIterMut<'a, T> {
+	data_iter: IterMut<'a, Option<T>>,
+	id: Id,
+}
+
+impl<'a, T> Iterator for IdMapIterMut<'a, T> {
+	type Item = (Id, &'a mut T);
+	
+	fn next(&mut self) -> Option<Self::Item> {
+		while let Some(next) = self.data_iter.next() {
+			if let Some(item) = next {
+				return Some((self.id, item));
+			}
+			self.id += 1;
 		}
 		None
 	}
@@ -90,7 +124,7 @@ mod test {
     }
 	
 	#[test]
-    fn push_returens_an_id_that_increments() {
+    fn push_returns_an_id_that_increments() {
         let mut map = IdMap::<i32>::new();
         assert_eq!(map.push(123), 0);
         assert_eq!(map.push(0), 1);
@@ -105,10 +139,10 @@ mod test {
 		map.push(5325);
 		map.push(0);
 				
-		let mut iter = map.iter_mut();
-		assert_eq!(*iter.next().unwrap(), 0);
-		assert_eq!(*iter.next().unwrap(), 5325);
-		assert_eq!(*iter.next().unwrap(), 0);
+		let mut iter = map.iter();
+		assert_eq!(*iter.next().unwrap().1, 0);
+		assert_eq!(*iter.next().unwrap().1, 5325);
+		assert_eq!(*iter.next().unwrap().1, 0);
 	}
 	
 	
@@ -123,10 +157,43 @@ mod test {
 		
 		map.delete(id);
 		
+		let mut iter = map.iter();
+		assert_eq!(*iter.next().unwrap().1, 123);
+		assert_eq!(*iter.next().unwrap().1, 5325);
+		assert_eq!(*iter.next().unwrap().1, 123);
+		assert_eq!(iter.next(), None);
+	}
+	
+	#[test]
+	fn iter_mut_pushed_elements() {
+		let mut map = IdMap::<i32>::new();
+		
+		map.push(0);
+		map.push(5325);
+		map.push(0);
+				
 		let mut iter = map.iter_mut();
-		assert_eq!(*iter.next().unwrap(), 123);
-		assert_eq!(*iter.next().unwrap(), 5325);
-		assert_eq!(*iter.next().unwrap(), 123);
+		assert_eq!(*iter.next().unwrap().1, 0);
+		assert_eq!(*iter.next().unwrap().1, 5325);
+		assert_eq!(*iter.next().unwrap().1, 0);
+	}
+	
+	
+	#[test]
+	fn iter_mut_after_delete() {
+		let mut map = IdMap::<i32>::new();
+		
+		map.push(123);
+		map.push(5325);
+		let id = map.push(1234);
+		map.push(123);
+		
+		map.delete(id);
+		
+		let mut iter = map.iter_mut();
+		assert_eq!(*iter.next().unwrap().1, 123);
+		assert_eq!(*iter.next().unwrap().1, 5325);
+		assert_eq!(*iter.next().unwrap().1, 123);
 		assert_eq!(iter.next(), None);
 	}
 	
@@ -139,5 +206,22 @@ mod test {
 		
 		map.delete(id);
 		assert_eq!(map.push(3213), id);
+	}
+	
+	#[test]
+	fn read_updated_pushed_items() {
+		let mut map = IdMap::<i32>::new();
+		
+		let id_a = map.push(2);
+		let id_b = map.push(5325);
+		let id_c = map.push(14);
+		
+		map.update(id_b, 2314);
+		
+		assert_eq!(map.read(id_a).unwrap(), 2);
+		assert_eq!(map.read(id_b).unwrap(), 2314);
+		assert_eq!(map.read(id_c).unwrap(), 14);
+		
+		assert_eq!(map.len(), 3);
 	}
 }

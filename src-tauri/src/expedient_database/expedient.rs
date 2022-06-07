@@ -1,7 +1,6 @@
 use crate::chunked_database::UtcDate;
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OrderState {
     Done,
@@ -34,10 +33,10 @@ pub struct Expedient {
 }
 
 impl Expedient {
-    fn vin_is_complete(&self) -> bool {
+    pub fn vin_is_complete(&self) -> bool {
         self.vin.len() >= 17
     }
-    fn license_is_complete(&self) -> bool {
+    pub fn license_is_complete(&self) -> bool {
         self.license_plate.len() >= 7
     }
 }

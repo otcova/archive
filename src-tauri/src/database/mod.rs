@@ -1,12 +1,9 @@
 #![allow(dead_code)]
 
 mod file;
-mod error;
 mod time;
 
-use self::{
-    error::{ErrorKind, Result},
-};
+pub use crate::error::{ErrorKind, Result};
 use serde::{de::DeserializeOwned, Serialize};
 use std::path::PathBuf;
 
@@ -62,9 +59,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::test_utils::*;
     use super::Database;
-    
+    use crate::test_utils::*;
+
     #[test]
     fn open_database_on_empty_dir() {
         let tempdir = TempDir::new();
