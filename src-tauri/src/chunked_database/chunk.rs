@@ -59,9 +59,22 @@ mod test {
     }
 
     #[test]
-    fn open_database_chunk_on_empty_dir() {
+    fn create_database_chunk_on_empty_dir() {
         let tempdir = TempDir::new();
         let chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
         assert_eq!(chunk.database.data.items.len(), 0);
+    }
+    
+    #[test]
+    fn create_and_open_database_chunk() {
+        let tempdir = TempDir::new();
+        {
+            let chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
+            assert_eq!(chunk.database.data.items.len(), 0);
+        }
+        {
+            let chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
+            assert_eq!(chunk.database.data.items.len(), 0);
+        }
     }
 }
