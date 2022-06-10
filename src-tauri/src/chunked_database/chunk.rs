@@ -77,4 +77,18 @@ mod test {
             assert_eq!(chunk.database.data.items.len(), 0);
         }
     }
+    
+    #[test]
+    fn create_store_and_open_database_chunk() {
+        let tempdir = TempDir::new();
+        {
+            let mut chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
+            chunk.database.data.items.push(Data(123));
+            assert_eq!(chunk.database.data.items.len(), 1);
+        }
+        {
+            let chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
+            assert_eq!(chunk.database.data.items.len(), 1);
+        }
+    }
 }
