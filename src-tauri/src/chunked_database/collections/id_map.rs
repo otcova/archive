@@ -33,6 +33,13 @@ impl<T: Serialize> IdMap<T> {
 		self.data.len() - 1
 	}
 	
+	pub fn pop(&mut self, id: Id) -> Option<T> {
+		if self.data.len() < id {
+			return None
+		}
+		self.data[id].take()
+	}
+	
 	pub fn delete(&mut self, id: Id) {
 		self.data[id] = None;
 		self.empty_ids.push(id);
@@ -223,5 +230,18 @@ mod test {
 		assert_eq!(map.read(id_c).unwrap(), 14);
 		
 		assert_eq!(map.len(), 3);
+	}
+	
+	#[test]
+	fn pop_items() {
+		let mut map = IdMap::<i32>::new();
+		let id_a = map.push(12);
+		let id_b = map.push(543);
+		let id_c = map.push(21);
+		
+		assert_eq!(map.pop(100), None);
+		assert_eq!(map.pop(id_b), Some(543));
+		assert_eq!(map.pop(id_a), Some(12));
+		assert_eq!(map.pop(id_c), Some(21));
 	}
 }
