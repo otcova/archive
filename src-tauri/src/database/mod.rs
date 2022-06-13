@@ -5,7 +5,7 @@ mod time;
 
 pub use crate::error::{ErrorKind, Result};
 use serde::{de::DeserializeOwned, Serialize};
-use std::path::PathBuf;
+use std::{path::PathBuf, fs::create_dir_all};
 
 #[derive(Debug)]
 pub struct Database<T: Default + DeserializeOwned + Serialize> {
@@ -29,8 +29,13 @@ where
     }
 
     pub fn create(path: &PathBuf) -> Result<Self> {
-        if !path.read_dir().unwrap().next().is_none() {
-            return ErrorKind::AlreadyExist.into();
+        if path.exists() {
+            println!("Exists: {:?}", path);
+            if !path.read_dir().unwrap().next().is_none() {
+                return ErrorKind::AlreadyExist.into();
+            }
+        } else {
+            create_dir_all(&path)?;
         }
 
         let lock = file::Lock::directory(&path)?;
@@ -74,6 +79,12 @@ mod tests {
         let tempdir = TempDir::new();
         let database = Database::<i32>::create(&tempdir.path);
         assert!(database.is_ok());
+    }
+
+    #[test]
+    fn create_database_on_non_existing_dir() {
+        let tempdir = TempDir::new();
+        Database::<i32>::create(&tempdir.path.join("nested_folder")).unwrap();
     }
 
     #[test]
