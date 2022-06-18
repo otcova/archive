@@ -38,6 +38,10 @@ impl<T: Item> ChunkedDatabase<T> {
         self.dynamic.database.data.items.iter()
     }
 
+    pub fn iter_ancient(&self) -> IdMapIter<T> {
+        self.ancient.database.data.items.iter()
+    }
+
     pub fn delete(&mut self, id: Uid) {
         match id {
             Uid::DYNAMIC(id) => self.dynamic.database.data.items.delete(id),
@@ -64,7 +68,12 @@ impl<T: Item> ChunkedDatabase<T> {
     }
 
     /// Moves items from the dynamic chunk to the ancient chunk to satisfy 'max_dynamic_len'
-    fn move_old_items(&mut self) {}
+    fn move_old_items(&mut self) {
+        while self.dynamic.database.data.items.len() > self.max_dynamic_len {
+            println!("{} > {}", self.dynamic.database.data.items.len(), self.max_dynamic_len);
+            self.ancient.database.data.items.push(self.dynamic.pop_oldest().unwrap());
+        }
+    }
 }
 
 impl<T: Item> Drop for ChunkedDatabase<T> {
@@ -90,16 +99,50 @@ mod test {
     #[test]
     fn push_len_and_read() {
         let tempdir = TempDir::new();
-        
+
         let mut db = ChunkedDatabase::<Data>::open(&tempdir.path, 100).unwrap();
         let id_54 = db.push(Data(54));
         let id_13 = db.push(Data(13));
         let id_223 = db.push(Data(223));
-        
+
         assert_eq!(3, db.len());
-        
+
         assert_eq!(Some(Data(13)), *db.read(id_13));
         assert_eq!(Some(Data(223)), *db.read(id_223));
         assert_eq!(Some(Data(54)), *db.read(id_54));
+    }
+
+    #[test]
+    fn move_old_items() {
+        let tempdir = TempDir::new();
+
+        let mut db = ChunkedDatabase::<Data>::open(&tempdir.path, 2).unwrap();
+        db.push(Data(54));
+        db.push(Data(74));
+        db.push(Data(13));
+        db.push(Data(223));
+        db.move_old_items();
+
+        assert_eq!(4, db.len());
+        assert_eq!(2, db.iter().count());
+        assert_eq!(2, db.iter_ancient().count());
+    }
+
+    #[test]
+    fn move_old_items_on_drop() {
+        let tempdir = TempDir::new();
+        {
+            let mut db = ChunkedDatabase::<Data>::open(&tempdir.path, 2).unwrap();
+            db.push(Data(54));
+            db.push(Data(74));
+            db.push(Data(13));
+            db.push(Data(223));
+        }
+
+        let db = ChunkedDatabase::<Data>::open(&tempdir.path, 2).unwrap();
+
+        assert_eq!(4, db.len());
+        assert_eq!(2, db.iter().count());
+        assert_eq!(2, db.iter_ancient().count());
     }
 }
