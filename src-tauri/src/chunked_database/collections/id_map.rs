@@ -40,7 +40,7 @@ impl<T: Serialize> IdMap<T> {
         if self.data.len() < id {
             return None;
         }
-		self.empty_ids.push(id);
+        self.empty_ids.push(id);
         self.data[id].take()
     }
 
@@ -82,10 +82,10 @@ impl<'a, T> Iterator for IdMapIter<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(next) = self.data_iter.next() {
-            if let Some(item) = next {
-                return Some((self.id, item));
-            }
             self.id += 1;
+            if let Some(item) = next {
+                return Some((self.id - 1, item));
+            }
         }
         None
     }
@@ -150,14 +150,14 @@ mod test {
     fn iter_pushed_elements() {
         let mut map = IdMap::<i32>::new();
 
-        map.push(0);
-        map.push(5325);
-        map.push(0);
+        let id_a = map.push(0);
+        let id_b = map.push(5325);
+        let id_c = map.push(0);
 
         let mut iter = map.iter();
-        assert_eq!(*iter.next().unwrap().1, 0);
-        assert_eq!(*iter.next().unwrap().1, 5325);
-        assert_eq!(*iter.next().unwrap().1, 0);
+        assert_eq!(iter.next().unwrap(), (id_a, &0));
+        assert_eq!(iter.next().unwrap(), (id_b, &5325));
+        assert_eq!(iter.next().unwrap(), (id_c, &0));
     }
 
     #[test]
@@ -247,14 +247,14 @@ mod test {
 
         assert_eq!(map.pop(100), None);
         assert_eq!(3, map.len());
-		
+
         assert_eq!(map.pop(id_b), Some(543));
         assert_eq!(2, map.len());
-        
-		assert_eq!(map.pop(id_a), Some(12));
+
+        assert_eq!(map.pop(id_a), Some(12));
         assert_eq!(1, map.len());
-        
-		assert_eq!(map.pop(id_c), Some(21));
+
+        assert_eq!(map.pop(id_c), Some(21));
         assert_eq!(0, map.len());
     }
 }
