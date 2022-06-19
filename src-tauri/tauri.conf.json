@@ -54,9 +54,11 @@
     "windows": [
       {
         "title": "Archive",
+        "minWidth": 800,
+        "minHeight": 500,
         "width": 1000,
         "height": 700,
-        "resizable": false,
+        "resizable": true,
         "fullscreen": false,
         "decorations": false
       }
