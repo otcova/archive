@@ -5,7 +5,7 @@ import { useEvent } from "../utils/useEvent"
 type Props = {
 	txt: string,
 	shortCut?: string, // ctrl a, alt r, ctrl alt n
-	important?: boolean,
+	style?: number,
 	action: () => any,
 }
 
@@ -21,7 +21,7 @@ export function Button(props: Props) {
 	})
 	
 	return <div
-		className={props.important ? style.important : style.normal}
+		className={[style.normal, style.important, style.repetitive][props.style || 0]}
 		onClick={props.action}>
 		{props.txt}
 	</div>

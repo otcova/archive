@@ -1,5 +1,6 @@
 .normal,
-.important {
+.important,
+.repetitive {
 	cursor: pointer;
 	user-select: none;
 	border-radius: 5px;
@@ -7,12 +8,36 @@
 	border: 1px solid hsl(0, 0%, 75%);
 	background-color: #fff;
 	color: #000;
+	transition: all 50ms;
+	display: flex;
+	align-items: center;
+}
+
+
+.normal:hover {
+	background-color: #f3f3f3;
+}
+
+.repetitive:hover {
+	color: #fff;
+	background-color: #0078d4;
+}
+
+.important:hover {
+	background-color: #1783d6;
 }
 
 .important {
 	color: #fff;
 	border: none;
+	/* border-width: 1px; */
 	background-color: #0078d4;
+	/* border-color: #0078d4; */
+}
+
+.repetitive {
+	border-color: #0078d4;
+	padding: 3px 16px 3px 16px;
 }
 
 

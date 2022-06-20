@@ -47,7 +47,7 @@ export function TabContainer({ defaultTabTemplate }: Props) {
 	return <TabContext.Provider value={{ tabs, deleteTab, createTab, selected, select, renameSelected }}>
 		<div className={"column exp"}>
 			<TabBar />
-			<div className="column exp" style={{ padding: "20px" }}>
+			<div className="column exp">
 				<selected.ContentClass {...(selected.props ?? {})} />
 			</div>
 		</div>

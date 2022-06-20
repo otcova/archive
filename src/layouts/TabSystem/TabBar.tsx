@@ -8,9 +8,8 @@ import { TabContext } from "./tabContext";
 export function TabBar() {
 	const tabCtx = useContext(TabContext);
 
-	console.log("R", tabCtx.selected)
 	return <div className={style.container}>
-		<div className="exp rowLeft" data-tauri-drag-region>
+		<div className={style.rowLeft} data-tauri-drag-region>
 			{
 				tabCtx.tabs.map(tab => <TabElement key={tab.id} tab={tab} />)
 			}
