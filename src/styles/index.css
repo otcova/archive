@@ -5,10 +5,10 @@ body,
     width: 100%;
     padding: 0;
     margin: 0;
-    font-size: 14px;
+    font-size: 15px;
     background: #f5f5f5;
     font-family: Segoe UI, monospace;
-    font-weight: 400;
+    font-weight: lighter;
     color: #444;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

@@ -10,11 +10,11 @@
     "test": "cd src-tauri && cargo test"
   },
   "dependencies": {
-    "preact": "^10.5.15"
+    "preact": "^10.5.15",
+    "@tauri-apps/api": "^1.0.0-rc.3"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.1.5",
-    "@tauri-apps/api": "^1.0.0-rc.3",
     "@tauri-apps/cli": "^1.0.0-rc.8",
     "typescript": "^4.5.4",
     "vite": "^2.9.5"

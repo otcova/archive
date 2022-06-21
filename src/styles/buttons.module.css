@@ -13,6 +13,11 @@
 	align-items: center;
 }
 
+.normal,
+.important {
+	font-size: 14px;
+	font-weight: normal;
+}
 
 .normal:hover {
 	background-color: #f3f3f3;

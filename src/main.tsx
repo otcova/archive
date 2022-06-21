@@ -2,6 +2,8 @@ import "preact/debug";
 import { render } from 'preact/compat'
 import { App } from './app'
 import './styles/index.css'
+import { storeDatabase } from "./database";
+import { appWindow } from "@tauri-apps/api/window"
 
 render(<App />, document.getElementById('app')!)
 
@@ -25,3 +27,8 @@ addEventListener("keydown", event => {
     if (event.ctrlKey && event.key.toUpperCase() == "R")
         location.reload()
 })
+
+export async function closeApp() {
+    await storeDatabase();
+    appWindow.close();
+}
