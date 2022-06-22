@@ -1,21 +1,24 @@
 use std::io;
+use serde::Serialize;
 
 pub type Result<T> = std::result::Result<T, Error>;
 pub type Error = Box<ErrorKind>;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum ErrorKind {
+    AlreadyOpen,
     AlreadyExist,
     NotFound,
     DataIsCorrupted,
-    UnexpectedIoError(io::Error),
+    Collision,
+    UnexpectedIoError(String),
 }
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
         match err.kind() {
             io::ErrorKind::NotFound => ErrorKind::NotFound.into(),
-            _ => ErrorKind::UnexpectedIoError(err).into(),
+            _ => ErrorKind::UnexpectedIoError(format!("{:?}", err)).into(),
         }
     }
 }
@@ -34,6 +37,6 @@ mod tests {
     fn error_from_io() {
         let io_error: std::io::Error = std::io::ErrorKind::TimedOut.into();
         let error: Error = io_error.into();
-        assert_eq!(format!("{:?}", error), "UnexpectedIoError(Kind(TimedOut))");
+        assert_eq!("UnexpectedIoError(\"Kind(TimedOut)\")", format!("{:?}", error));
     }
 }
