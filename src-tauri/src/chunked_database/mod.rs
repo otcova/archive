@@ -1,10 +1,12 @@
 mod chunk;
-mod collections;
 
 use crate::error::*;
+pub use chunk::Item;
 use chunk::*;
-pub use collections::*;
+pub use crate::collections::*;
 use std::path::PathBuf;
+pub use crate::database::RollbackDateInfo;
+use serde::{Serialize, Deserialize};
 
 /// Data is composed of items, each item have a 'date' associated
 /// and is stored in on of the two interal databases in relation of that date
@@ -14,18 +16,20 @@ use std::path::PathBuf;
 ///
 /// In the ancient database are stored all the data considered old.
 
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Uid {
     DYNAMIC(chunk::Id),
     ANCIENT(chunk::Id),
 }
 
-pub struct ChunkedDatabase<T: Item> {
+#[derive(Debug)]
+pub struct ChunkedDatabase<T: Item + Send + Sync> {
     dynamic: Chunk<T>,
     ancient: Chunk<T>,
     max_dynamic_len: usize,
 }
 
-impl<T: Item> ChunkedDatabase<T> {
+impl<T: Item + Send + Sync> ChunkedDatabase<T> {
     pub fn open(path: &PathBuf, max_dynamic_len: usize) -> Result<Self> {
         Ok(Self {
             dynamic: Chunk::open(&path.join("dynamic"))?,
@@ -33,9 +37,35 @@ impl<T: Item> ChunkedDatabase<T> {
             max_dynamic_len,
         })
     }
+    
+    pub fn create(path: &PathBuf, max_dynamic_len: usize) -> Result<Self> {
+        Ok(Self {
+            dynamic: Chunk::create(&path.join("dynamic"))?,
+            ancient: Chunk::create(&path.join("ancient"))?,
+            max_dynamic_len,
+        })
+    }
+    
+    pub fn rollback(path: &PathBuf, max_dynamic_len: usize) -> Result<Self> {
+        Ok(Self {
+            dynamic: Chunk::rollback(&path.join("dynamic"))?,
+            ancient: Chunk::rollback(&path.join("ancient"))?,
+            max_dynamic_len,
+        })
+    }
+    
+    pub fn rollback_info(path: &PathBuf) -> Result<RollbackDateInfo> {
+        let dynamic_info = Chunk::<T>::rollback_info(&path.join("dynamic"))?;
+        let ancient_info = Chunk::<T>::rollback_info(&path.join("ancient"))?;
+        Ok(RollbackDateInfo {
+            newest_instant: dynamic_info.newest_instant.max(&ancient_info.newest_instant),
+            rollback_instant: dynamic_info.rollback_instant.min(&ancient_info.rollback_instant),
+        })
+    }
 
-    pub fn iter(&self) -> IdMapIter<T> {
-        self.dynamic.database.data.items.iter()
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (Uid, &'a T)> + 'a {
+        let iter = self.dynamic.database.data.items.iter();
+        iter.map(|(id, expedient)| (Uid::DYNAMIC(id), expedient))
     }
 
     pub fn iter_ancient(&self) -> IdMapIter<T> {
@@ -70,13 +100,28 @@ impl<T: Item> ChunkedDatabase<T> {
     /// Moves items from the dynamic chunk to the ancient chunk to satisfy 'max_dynamic_len'
     fn move_old_items(&mut self) {
         while self.dynamic.database.data.items.len() > self.max_dynamic_len {
-            println!("{} > {}", self.dynamic.database.data.items.len(), self.max_dynamic_len);
-            self.ancient.database.data.items.push(self.dynamic.pop_oldest().unwrap());
+            println!(
+                "{} > {}",
+                self.dynamic.database.data.items.len(),
+                self.max_dynamic_len
+            );
+            self.ancient
+                .database
+                .data
+                .items
+                .push(self.dynamic.pop_oldest().unwrap());
         }
+    }
+    
+    pub fn store(&mut self) -> Result<()> {
+        self.move_old_items();
+        self.dynamic.database.store()?;
+        self.ancient.database.store()?;
+        Ok(())
     }
 }
 
-impl<T: Item> Drop for ChunkedDatabase<T> {
+impl<T: Item + Send + Sync> Drop for ChunkedDatabase<T> {
     fn drop(&mut self) {
         self.move_old_items();
     }
@@ -86,7 +131,6 @@ impl<T: Item> Drop for ChunkedDatabase<T> {
 mod test {
     use super::*;
     use crate::test_utils::*;
-    use serde::*;
 
     #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq)]
     struct Data(i32);
@@ -100,7 +144,7 @@ mod test {
     fn push_len_and_read() {
         let tempdir = TempDir::new();
 
-        let mut db = ChunkedDatabase::<Data>::open(&tempdir.path, 100).unwrap();
+        let mut db = ChunkedDatabase::<Data>::create(&tempdir.path, 100).unwrap();
         let id_54 = db.push(Data(54));
         let id_13 = db.push(Data(13));
         let id_223 = db.push(Data(223));
@@ -116,7 +160,7 @@ mod test {
     fn move_old_items() {
         let tempdir = TempDir::new();
 
-        let mut db = ChunkedDatabase::<Data>::open(&tempdir.path, 2).unwrap();
+        let mut db = ChunkedDatabase::<Data>::create(&tempdir.path, 2).unwrap();
         db.push(Data(54));
         db.push(Data(74));
         db.push(Data(13));
@@ -132,7 +176,7 @@ mod test {
     fn move_old_items_on_drop() {
         let tempdir = TempDir::new();
         {
-            let mut db = ChunkedDatabase::<Data>::open(&tempdir.path, 2).unwrap();
+            let mut db = ChunkedDatabase::<Data>::create(&tempdir.path, 2).unwrap();
             db.push(Data(54));
             db.push(Data(74));
             db.push(Data(13));

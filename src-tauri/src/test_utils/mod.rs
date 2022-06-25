@@ -97,6 +97,6 @@ pub fn gen_data3() -> DataType3 {
 }
 
 
-pub fn pause_for(millis: u64) {
+pub fn sleep_for(millis: u64) {
     sleep(Duration::from_millis(millis));
 }

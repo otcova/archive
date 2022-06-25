@@ -2,7 +2,8 @@ use super::*;
 use std::path::{Path, PathBuf};
 
 pub fn path_from_instant(database_dir: &PathBuf, instant: &Instant) -> PathBuf {
-    database_dir.join(instant.year().to_string())
+    database_dir
+        .join(instant.year().to_string())
         .join(instant.str() + ".bin")
 }
 
@@ -29,7 +30,7 @@ where
 }
 
 /// Reads database tree and loops (from newest to oldest) over every file using the 'select' callback.
-/// 
+///
 /// To select the file, you have to return Some<Data> from the 'selected' callback,
 /// then the function will end and return the Some<Data>.
 pub fn select_backup<T, F>(database_dir: &PathBuf, select: F) -> Result<Option<T>>

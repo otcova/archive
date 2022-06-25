@@ -4,18 +4,18 @@ use std::slice::{Iter, IterMut};
 pub type Id = usize;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct IdMap<T: Serialize> {
+pub struct IdMap<T: Serialize + Send + Sync> {
     data: Vec<Option<T>>,
     empty_ids: Vec<Id>,
 }
 
-impl<T: Serialize> Default for IdMap<T> {
+impl<T: Serialize + Send + Sync> Default for IdMap<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Serialize> IdMap<T> {
+impl<T: Serialize + Send + Sync> IdMap<T> {
     pub fn new() -> Self {
         Self {
             data: vec![],
@@ -101,10 +101,10 @@ impl<'a, T> Iterator for IdMapIterMut<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(next) = self.data_iter.next() {
-            if let Some(item) = next {
-                return Some((self.id, item));
-            }
             self.id += 1;
+            if let Some(item) = next {
+                return Some((self.id - 1, item));
+            }
         }
         None
     }
@@ -182,14 +182,14 @@ mod test {
     fn iter_mut_pushed_elements() {
         let mut map = IdMap::<i32>::new();
 
-        map.push(0);
-        map.push(5325);
-        map.push(0);
+        let id_a = map.push(0);
+        let id_b = map.push(5325);
+        let id_c = map.push(0);
 
         let mut iter = map.iter_mut();
-        assert_eq!(*iter.next().unwrap().1, 0);
-        assert_eq!(*iter.next().unwrap().1, 5325);
-        assert_eq!(*iter.next().unwrap().1, 0);
+        assert_eq!(iter.next().unwrap(), (id_a, &mut 0));
+        assert_eq!(iter.next().unwrap(), (id_b, &mut 5325));
+        assert_eq!(iter.next().unwrap(), (id_c, &mut 0));
     }
 
     #[test]
@@ -256,5 +256,40 @@ mod test {
 
         assert_eq!(map.pop(id_c), Some(21));
         assert_eq!(0, map.len());
+    }
+
+    #[test]
+    fn complete_operation() {
+        let mut map = IdMap::<i32>::new();
+
+        let id_0 = map.push(12);
+        let id_1 = map.push(543);
+        let id_2 = map.push(21);
+
+        assert_eq!(
+            vec![(id_0, &12), (id_1, &543), (id_2, &21)],
+            map.iter().collect::<Vec<_>>()
+        );
+        
+        map.update(id_1, 132);
+        
+        assert_eq!(
+            vec![(id_0, &12), (id_1, &132), (id_2, &21)],
+            map.iter().collect::<Vec<_>>()
+        );
+        
+        let id_3 = map.push(41);
+        
+        assert_eq!(
+            vec![(id_0, &12), (id_1, &132), (id_2, &21), (id_3, &41)],
+            map.iter().collect::<Vec<_>>()
+        );
+        
+        map.delete(id_2);
+        
+        assert_eq!(
+            vec![(id_0, &12), (id_1, &132), (id_3, &41)],
+            map.iter().collect::<Vec<_>>()
+        );
     }
 }

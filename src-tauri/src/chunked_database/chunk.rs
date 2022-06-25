@@ -1,16 +1,25 @@
-pub use super::Id;
+pub use crate::collections::Id;
+use crate::collections::*;
 use super::*;
-use crate::database::Database;
+use crate::database::{Database, RollbackDateInfo};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::path::PathBuf;
 
-pub trait Item: Serialize + DeserializeOwned + Default + Clone {
+pub trait Item: Serialize + DeserializeOwned + Clone + Sync + Send {
     fn date(&self) -> i32;
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
-pub struct DataType<T: Serialize> {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DataType<T: Serialize + Send + Sync> {
     pub items: IdMap<T>,
+}
+
+impl<T: Serialize + Send + Sync> Default for DataType<T> {
+    fn default() -> DataType<T> {
+        DataType {
+            items: IdMap::default(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -19,25 +28,23 @@ pub struct Chunk<T: Item> {
 }
 
 impl<T: Item> Chunk<T> {
-    /// Open on a empty direcory will create a blanck database
     pub fn open(path: &PathBuf) -> Result<Self> {
-        match Self::create_database(path) {
-            Err(err) => match *err {
-                ErrorKind::AlreadyExist => Self::open_database(path),
-                err => err.into(),
-            },
-            database_chunk => database_chunk,
-        }
-    }
-    fn open_database(path: &PathBuf) -> Result<Self> {
         Ok(Self {
             database: Database::open(path)?,
         })
     }
-    fn create_database(path: &PathBuf) -> Result<Self> {
+    pub fn create(path: &PathBuf) -> Result<Self> {
         Ok(Self {
             database: Database::create(path)?,
         })
+    }
+    pub fn rollback(path: &PathBuf) -> Result<Self> {
+        Ok(Self {
+            database: Database::rollback(path)?,
+        })
+    }
+    pub fn rollback_info(path: &PathBuf) -> Result<RollbackDateInfo> {
+        Database::<DataType<T>>::rollback_info(path)
     }
 
     pub fn pop_oldest(&mut self) -> Option<T> {
@@ -74,7 +81,7 @@ mod test {
     #[test]
     fn create_database_chunk_on_empty_dir() {
         let tempdir = TempDir::new();
-        let chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
+        let chunk = Chunk::<Data>::create(&tempdir.path).unwrap();
         assert_eq!(chunk.database.data.items.len(), 0);
     }
 
@@ -82,7 +89,7 @@ mod test {
     fn create_and_open_database_chunk() {
         let tempdir = TempDir::new();
         {
-            let chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
+            let chunk = Chunk::<Data>::create(&tempdir.path).unwrap();
             assert_eq!(chunk.database.data.items.len(), 0);
         }
         {
@@ -95,7 +102,7 @@ mod test {
     fn create_store_and_open_database_chunk() {
         let tempdir = TempDir::new();
         {
-            let mut chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
+            let mut chunk = Chunk::<Data>::create(&tempdir.path).unwrap();
             chunk.database.data.items.push(Data(123));
             assert_eq!(chunk.database.data.items.len(), 1);
         }
@@ -108,14 +115,14 @@ mod test {
     #[test]
     fn pop_oldest_from_empty() {
         let tempdir = TempDir::new();
-        let mut chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
+        let mut chunk = Chunk::<Data>::create(&tempdir.path).unwrap();
         assert_eq!(chunk.pop_oldest(), None);
     }
 
     #[test]
     fn pop_oldest() {
         let tempdir = TempDir::new();
-        let mut chunk = Chunk::<Data>::open(&tempdir.path).unwrap();
+        let mut chunk = Chunk::<Data>::create(&tempdir.path).unwrap();
         chunk.database.data.items.push(Data(123));
         assert_eq!(chunk.pop_oldest(), Some(Data(123)));
         assert_eq!(chunk.pop_oldest(), None);

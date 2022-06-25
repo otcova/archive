@@ -1,17 +1,35 @@
 use super::{ErrorKind, Result};
 use chrono::prelude::*;
-use std::cmp::Ordering;
+use serde::Serialize;
 
 const UTC_INSTANT_FORMAT: &str = "%Y_%m_%d %H_%M_%S";
-const LOCAL_INSTANT_FORMAT: &str = "%Y_%m_%d %H_%M_%S";
+const LOCAL_INSTANT_FORMAT: &str = "%H:%M:%S %d/%m/%Y";
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct Instant(DateTime<Utc>);
+
+impl Serialize for Instant {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.to_local_time().serialize(serializer)
+    }
+}
 
 impl Instant {
     pub fn now() -> Self {
         Self(Utc::now().round_subsecs(0))
     }
+
+    pub fn ymd(year: i32, month: u32, day: u32) -> Self {
+        Self(Utc.ymd(year, month, day).and_hms(0, 0, 0))
+    }
+
+    pub fn ymd_hms(year: i32, month: u32, day: u32, hour: u32, min: u32, sec: u32) -> Self {
+        Self(Utc.ymd(year, month, day).and_hms(hour, min, sec))
+    }
+
     pub fn from_utc(utc: &str) -> Result<Self> {
         if let Ok(time) = NaiveDateTime::parse_from_str(utc, UTC_INSTANT_FORMAT) {
             return Ok(Self(DateTime::<Utc>::from_utc(time, Utc)));
@@ -31,11 +49,31 @@ impl Instant {
     pub fn year(&self) -> i32 {
         self.0.year()
     }
-}
+    pub fn month(&self) -> u32 {
+        self.0.month()
+    }
+    pub fn day(&self) -> u32 {
+        self.0.day()
+    }
+    pub fn hour(&self) -> u32 {
+        self.0.hour()
+    }
+    pub fn minute(&self) -> u32 {
+        self.0.minute()
+    }
+    pub fn second(&self) -> u32 {
+        self.0.second()
+    }
 
-impl PartialOrd for Instant {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
+    pub fn min(&self, other: &Instant) -> Instant {
+        Instant(self.0.min(other.0))
+    }
+    pub fn max(&self, other: &Instant) -> Instant {
+        Instant(self.0.max(other.0))
+    }
+
+    pub fn truncate_time(&self) -> Instant {
+        Instant::ymd(self.year(), self.month(), self.day())
     }
 }
 
@@ -72,15 +110,13 @@ mod tests {
     #[test]
     fn instant_from_converts_to_local_time() {
         let instant = Instant::from_utc("2022_05_01 15_02_29").unwrap();
-        assert_eq!(instant.to_local_time(), "2022_05_01 17_02_29");
+        assert_eq!(instant.to_local_time(), "17:02:29 01/05/2022");
     }
 
     #[test]
     fn instant_now_and_from_dont_mutate() {
         let initial_time = Instant::now();
         let final_time = Instant::from_utc(initial_time.str().as_str()).unwrap();
-        println!("{:?}", initial_time);
-        println!("{:?}", final_time);
         assert_eq!(initial_time.str(), final_time.str());
     }
 
@@ -108,5 +144,40 @@ mod tests {
 
         let instant3 = Instant::from_utc("4021_01_01 00_00_00").unwrap();
         assert_eq!(instant3.year(), 4021);
+    }
+
+    #[test]
+    fn truncate_time() {
+        let instant = Instant::from_utc("2022_05_01 15_02_29").unwrap();
+        let date = instant.truncate_time();
+        assert_eq!("2022_05_01 00_00_00", date.str());
+        assert_eq!(2022, date.year());
+        assert_eq!(5, date.month());
+        assert_eq!(1, date.day());
+        assert_eq!(0, date.hour());
+        assert_eq!(0, date.minute());
+        assert_eq!(0, date.second());
+    }
+
+    #[test]
+    fn ymd_hms() {
+        let instant = Instant::ymd_hms(2123, 12, 3, 1, 53, 32);
+        assert_eq!(2123, instant.year());
+        assert_eq!(12, instant.month());
+        assert_eq!(3, instant.day());
+        assert_eq!(1, instant.hour());
+        assert_eq!(53, instant.minute());
+        assert_eq!(32, instant.second());
+    }
+
+    #[test]
+    fn ymd() {
+        let instant = Instant::ymd(2123, 12, 3);
+        assert_eq!(2123, instant.year());
+        assert_eq!(12, instant.month());
+        assert_eq!(3, instant.day());
+        assert_eq!(0, instant.hour());
+        assert_eq!(0, instant.minute());
+        assert_eq!(0, instant.second());
     }
 }

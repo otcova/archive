@@ -1,14 +1,15 @@
-mod datamodel;
+pub mod datamodel;
 mod lock;
-mod serializer;
+pub mod serializer;
 
-pub use super::{*, time::*};
+pub use super::{time::*, *};
+pub use datamodel::*;
 pub use lock::*;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fs::create_dir_all, path::PathBuf};
 
 pub fn load_newest<T: DeserializeOwned>(dir: &PathBuf) -> Result<T> {
-    let newest = datamodel::select_backup(dir, |(path, _)| Some(path))?;
+    let newest = select_backup(dir, |(path, _)| Some(path))?;
     if let Some(path) = newest {
         let data: T = serializer::load_data(&path)?;
         return Ok(data);
@@ -22,16 +23,26 @@ pub fn save_data<T: Serialize>(database_path: &PathBuf, data: &T) -> Result<Path
         return ErrorKind::NotFound.into();
     }
 
-    let path = datamodel::path_from_instant(&database_path, &Instant::now());
-    create_dir_all(&path.parent().unwrap())?;
+    let path = path_from_instant(&database_path, &Instant::now());
+    create_dir_all(path.parent().unwrap())?;
     serializer::save_data(&path, &data)?;
     Ok(path)
 }
 
 /// Loops over all database backups until it finds a non corrupted sample.
+/// Then it returns the data parsed.
 pub fn load_newest_noncurrupted<T: DeserializeOwned>(dir: &PathBuf) -> Result<T> {
-    datamodel::select_backup(dir, |(path, _)| serializer::load_data(&path).ok())?
+    select_backup(dir, |(path, _)| serializer::load_data(&path).ok())?
         .map_or_else(|| ErrorKind::NotFound.into(), |d| Ok(d))
+}
+
+/// Loops over all database backups until it finds a non corrupted sample.
+/// Then it returns the instant of that backup.
+pub fn instant_of_newest_noncurrupted<T: DeserializeOwned>(dir: &PathBuf) -> Result<Instant> {
+    select_backup(dir, |(path, instant)| {
+        serializer::load_data(&path).ok().map(|_: T| instant)
+    })?
+    .map_or_else(|| ErrorKind::NotFound.into(), |d| Ok(d))
 }
 
 #[cfg(test)]
@@ -65,6 +76,20 @@ mod tests {
         assert_eq!(format!("{:?}", result), "Err(NotFound)");
 
         let result = load_newest_noncurrupted::<DataType3>(&tempdir.path);
+        assert_eq!(format!("{:?}", result), "Err(NotFound)");
+    }
+    
+    #[test]
+        fn instant_of_newest_noncorrupted_from_empty_dir() {
+        let tempdir = TempDir::new();
+
+        let result = instant_of_newest_noncurrupted::<DataType1>(&tempdir.path);
+        assert_eq!(format!("{:?}", result), "Err(NotFound)");
+
+        let result = instant_of_newest_noncurrupted::<DataType2>(&tempdir.path);
+        assert_eq!(format!("{:?}", result), "Err(NotFound)");
+
+        let result = instant_of_newest_noncurrupted::<DataType3>(&tempdir.path);
         assert_eq!(format!("{:?}", result), "Err(NotFound)");
     }
 
@@ -162,7 +187,7 @@ mod tests {
 
         // Create Data
         save_data(&tempdir.path, &gen_data2()).unwrap();
-        std::thread::sleep(std::time::Duration::from_millis(1100));
+        sleep_for(1100);
         let path = save_data(&tempdir.path, &gen_data2()).unwrap();
 
         // Corrupt data
@@ -184,7 +209,7 @@ mod tests {
 
         // Create Data
         save_data(&tempdir.path, &saved_data).unwrap();
-        std::thread::sleep(std::time::Duration::from_millis(1100));
+        sleep_for(1100);
         let path = save_data(&tempdir.path, &saved_data).unwrap();
 
         // Corrupt data
@@ -196,5 +221,30 @@ mod tests {
         // Read data
         let data = load_newest_noncurrupted::<DataType3>(&tempdir.path).unwrap();
         assert_eq!(data, saved_data);
+    }
+    
+    #[test]
+    fn instant_of_newest_noncorrupted_data_use_case() {
+        let tempdir = TempDir::new();
+
+        let saved_data = gen_data3();
+
+        // Create Data
+        let before = Instant::now();
+        save_data(&tempdir.path, &saved_data).unwrap();
+        let after = Instant::now();
+        
+        sleep_for(1100);
+        let path = save_data(&tempdir.path, &saved_data).unwrap();
+
+        // Corrupt data
+        File::create(path)
+            .unwrap()
+            .write_all(&[2, 1, 5, 0])
+            .unwrap();
+
+        // Read data
+        let instant = instant_of_newest_noncurrupted::<DataType3>(&tempdir.path).unwrap();
+        assert!(before <= instant && instant <= after);
     }
 }
