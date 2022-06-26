@@ -31,6 +31,7 @@ fn main() {
             api::hook_all_open_expedients,
             api::hook_expedient_filter,
             api::release_hook,
+            api::release_all_hooks,
             // expedients
             api::create_expedient,
             api::update_expedient,

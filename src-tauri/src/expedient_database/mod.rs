@@ -24,7 +24,6 @@ const CHUNKED_DATABASE_DYNAMIC_SIZE: usize = 4000;
 
 impl<'a> ExpedientDatabase<'a> {
     pub fn open(path: &PathBuf) -> Result<Self> {
-        println!("Expedient Database Open");
         Ok(Self {
             database: Arc::new(Mutex::new(ChunkedDatabase::open(
                 path,
@@ -164,6 +163,9 @@ impl<'a> ExpedientDatabase<'a> {
     pub fn release_hook(&mut self, hook: hook::Id) {
         self.hook_pool.release(hook);
     }
+    pub fn release_all_hooks(&mut self) {
+        self.hook_pool = HookPool::new();
+    }
 
     pub fn update_expedient(&mut self, id: Uid, expedient: Expedient) {
         self.database.lock().unwrap().update(id, expedient);
@@ -296,7 +298,69 @@ mod test {
         }
         assert_eq!(3, call_count, "Expected only 3 calls");
     }
+    
+    #[test]
+    fn release_all_hooks() {
+        let tempdir = TempDir::new();
 
+        let expedient_a = Expedient {
+            description: String::from("Eduardo Dato"),
+            license_plate: String::from(""),
+            model: String::from(""),
+            orders: vec![],
+            users: vec![],
+            vin: String::from(""),
+            date: UtcDate {
+                year: 1921,
+                month: 3,
+                day: 8,
+                hour: 21,
+            },
+        };
+
+        let expedient_b = Expedient {
+            description: String::from("Eduardo Pedro"),
+            license_plate: String::from(""),
+            model: String::from(""),
+            orders: vec![],
+            users: vec![],
+            vin: String::from(""),
+            date: UtcDate {
+                year: 1921,
+                month: 3,
+                day: 8,
+                hour: 21,
+            },
+        };
+
+        let mut call_count_a = 0;
+        let mut call_count_b = 0;
+
+        {
+            let mut db = ExpedientDatabase::create(&tempdir.path).unwrap();
+            let id = db.create_expedient(expedient_a.clone());
+            db.hook_expedient(id, |exp| {
+                call_count_a += 1;
+                match call_count_a {
+                    1 => assert_eq!(&Some(expedient_a.clone()), exp),
+                    _ => panic!("To many calls"),
+                }
+            });
+            db.hook_expedient(id, |exp| {
+                call_count_b += 1;
+                match call_count_b {
+                    1 => assert_eq!(&Some(expedient_a.clone()), exp),
+                    _ => panic!("To many calls"),
+                }
+            });
+            db.release_all_hooks();
+            db.update_expedient(id, expedient_b.clone());
+            db.delete_expedient(id);
+        }
+        assert_eq!(1, call_count_a, "Expected only one call per hook");
+        assert_eq!(1, call_count_b, "Expected only one call per hook");
+    }
+    
     #[test]
     fn release_hook() {
         let tempdir = TempDir::new();

@@ -52,9 +52,6 @@ mod tests {
             save_data(&path, &data).unwrap();
             let loaded: Data = load_data(&path).unwrap();
 
-            println!("stored: {:?}", &data);
-            println!("loaded: {:?}", &loaded);
-
             assert_eq!(data.len(), loaded.len());
             assert!(data.iter().zip(loaded.iter()).all(|(a, b)| a == b));
         }
@@ -64,9 +61,6 @@ mod tests {
 
             save_data(&path, &data).unwrap();
             let loaded: Data = load_data(&path).unwrap();
-
-            println!("stored: {:?}", &data);
-            println!("loaded: {:?}", &loaded);
 
             assert_eq!(data.len(), loaded.len());
             assert!(data.iter().zip(loaded.iter()).all(|(a, b)| a == b));

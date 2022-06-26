@@ -51,7 +51,6 @@ where
     /// - `AlreadyExist`: When already exists a database.
     pub fn create(path: &PathBuf) -> Result<Self> {
         if path.exists() {
-            println!("Exists: {:?}", path);
             if !path.read_dir().unwrap().next().is_none() {
                 return ErrorKind::AlreadyExist.into();
             }

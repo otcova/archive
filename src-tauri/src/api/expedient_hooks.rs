@@ -89,3 +89,11 @@ pub fn release_hook(state: tauri::State<ApiState>, hook_id: Id) {
         database.release_hook(hook_id);
     }
 }
+
+
+#[tauri::command]
+pub fn release_all_hooks(state: tauri::State<ApiState>) {
+    if let Some(database) = state.database_mutex.lock().unwrap().as_mut() {
+        database.release_all_hooks();
+    }
+}
