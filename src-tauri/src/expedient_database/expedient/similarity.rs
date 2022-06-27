@@ -43,11 +43,13 @@ impl Similarity for String {
 
 impl Similarity for Order {
     fn similarity(&self, other: &Self) -> f32 {
-        let description_match = self.description.similarity(&other.description);
-        if description_match < 1. && self.state != other.state {
-            return description_match / 2.;
-        }
-        description_match
+        [
+            match_if_exist(&self.title, &other.title, 1.),
+            match_if_exist(&self.description, &other.description, 1.),
+        ]
+        .into_iter()
+        .flatten()
+        .weighted_mean()
     }
 }
 
@@ -141,16 +143,19 @@ mod test {
         let orders = [
             Order {
                 date: UtcDate::utc_ymdh(2022, 10, 2, 0),
+                title: String::from("Pastilles Fre"),
                 description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
                 state: OrderState::Done,
             },
             Order {
                 date: UtcDate::utc_ymdh(2020, 2, 1, 0),
+                title: String::from("Frena Ara"),
                 description: String::from("frena JA!!!!"),
                 state: OrderState::Done,
             },
             Order {
                 date: UtcDate::utc_ymdh(2020, 2, 1, 0),
+                title: String::from("Fre"),
                 description: String::from("Me aburro!!!\nEn Sasr"),
                 state: OrderState::Todo,
             },
@@ -158,9 +163,9 @@ mod test {
 
         assert_eq!(1., orders[0].similarity(&orders[0]));
         assert_eq!(1., orders[1].similarity(&orders[1]));
-        assert_eq!(11. / 56., orders[0].similarity(&orders[2]));
-        assert_eq!(2. / 14., orders[1].similarity(&orders[0]));
-        assert_eq!(2. / 14., orders[0].similarity(&orders[1]));
+        assert_eq!(1., orders[2].similarity(&orders[2]));
+        assert!(orders[0].similarity(&orders[2]) > orders[0].similarity(&orders[1]));
+        assert_eq!(orders[0].similarity(&orders[1]), orders[1].similarity(&orders[0]));
     }
 
     #[test]

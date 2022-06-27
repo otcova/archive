@@ -1,7 +1,7 @@
 mod similarity;
-pub use similarity::*;
 use crate::{chunked_database, collections::UtcDate};
 use serde::{Deserialize, Serialize};
+pub use similarity::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Expedient {
@@ -17,6 +17,7 @@ pub struct Expedient {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Order {
     pub date: UtcDate,
+    pub title: String,
     pub description: String,
     pub state: OrderState,
 }
@@ -43,9 +44,12 @@ impl Expedient {
         self.license_plate.len() >= 7
     }
     pub fn global_order_state(&self) -> OrderState {
-        self.orders.iter().map(|order| order.state).max().unwrap_or(OrderState::Done)
+        self.orders
+            .iter()
+            .map(|order| order.state)
+            .max()
+            .unwrap_or(OrderState::Done)
     }
-    
 }
 
 impl chunked_database::Item for Expedient {
@@ -62,7 +66,7 @@ impl chunked_database::Item for Expedient {
 mod test {
     use super::*;
     use crate::chunked_database::Item;
-    
+
     #[test]
     fn date_hash() {
         let date_a = UtcDate {
@@ -86,11 +90,13 @@ mod test {
             orders: vec![
                 Order {
                     date: date_a,
+                    title: String::from(":)"),
                     description: String::from(""),
                     state: OrderState::Urgent,
                 },
                 Order {
                     date: date_b,
+                    title: String::from(""),
                     description: String::from("few ew fgwegfwe"),
                     state: OrderState::Done,
                 },
@@ -118,11 +124,13 @@ mod test {
                 orders: vec![
                     Order {
                         date: UtcDate::utc_ymdh(2022, 10, 2, 0),
+                        title: String::from("Placa"),
                         description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
                         state: OrderState::Done,
                     },
                     Order {
                         date: UtcDate::utc_ymdh(2022, 10, 2, 10),
+                        title: String::from("Coses Rares"),
                         description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
                         state: OrderState::Done,
                     },
@@ -142,6 +150,7 @@ mod test {
                 model: String::from("any stuff"),
                 orders: vec![Order {
                     date: UtcDate::utc_ymdh(2022, 10, 2, 0),
+                    title: String::from("Ell"),
                     description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
                     state: OrderState::Done,
                 }],
@@ -174,15 +183,12 @@ mod test {
             sorted_expedients[2].clone(),
             sorted_expedients[0].clone(),
         ];
-        
+
         unsorted_expedients.sort_unstable_by_key(|e| -e.date());
-        
-        assert_eq!(
-            sorted_expedients,
-            unsorted_expedients,
-        );
+
+        assert_eq!(sorted_expedients, unsorted_expedients,);
     }
-    
+
     #[test]
     fn global_order_state() {
         let expedient = Expedient {
@@ -192,11 +198,13 @@ mod test {
             orders: vec![
                 Order {
                     date: UtcDate::utc_ymdh(2022, 10, 2, 0),
+                    title: String::from("Pastilles de fre"),
                     description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
                     state: OrderState::Done,
                 },
                 Order {
                     date: UtcDate::utc_ymdh(2022, 10, 2, 10),
+                    title: String::from(":O"),
                     description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
                     state: OrderState::Todo,
                 },
@@ -212,5 +220,4 @@ mod test {
         };
         assert_eq!(OrderState::Todo, expedient.global_order_state());
     }
-
 }
