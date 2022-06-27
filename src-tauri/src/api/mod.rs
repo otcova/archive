@@ -1,19 +1,19 @@
 mod expedient_hooks;
 mod expedient_modifyer;
 
-pub use expedient_modifyer::*;
 pub use expedient_hooks::*;
+pub use expedient_modifyer::*;
 
 use crate::{
     database::RollbackDateInfo,
     error::{ErrorKind, Result},
     expedient_database::ExpedientDatabase,
 };
-use std::{path::PathBuf, sync::Mutex};
+use std::{path::PathBuf, sync::{Mutex, Arc}};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct ApiState<'a> {
-    pub database_mutex: Mutex<Option<ExpedientDatabase<'a>>>,
+    pub database_mutex: Arc<Mutex<Option<ExpedientDatabase<'a>>>>,
 }
 
 #[tauri::command]

@@ -15,9 +15,13 @@ mod error;
 mod expedient_database;
 mod mean;
 
+use tauri::RunEvent;
+
 fn main() {
+    let database_state = api::ApiState::default();
+    
     tauri::Builder::default()
-        .manage(api::ApiState::default())
+        .manage(database_state.clone())
         .invoke_handler(tauri::generate_handler![
             // database state
             api::open_database,
@@ -37,6 +41,13 @@ fn main() {
             api::update_expedient,
             api::delete_expedient,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(move |_, e| {
+            if let RunEvent::ExitRequested { .. } = e {
+                if let Some(database) = database_state.database_mutex.lock().unwrap().as_mut() {
+                    database.store().expect("error saving database");
+                }
+            }
+        });
 }
