@@ -1,0 +1,12 @@
+@use '../../layout'
+@use '../../theme'
+
+.container, .star
+	@include layout.row
+	width: 20px
+	height: 20px
+	cursor: pointer
+
+.container
+	border: 1px solid theme.$active-color
+	border-radius: 100%

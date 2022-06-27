@@ -1,0 +1,33 @@
+@use '../../layout'
+@use '../../theme'
+
+$height: 40px
+
+.tab_bar
+	@include layout.row-left-top
+	width: 100%
+	background-color: adjust-color(theme.$background, $lightness: -10%)
+	border-bottom: theme.$stroke
+	overflow: visible
+	height: $height
+	flex-shrink: 0
+	
+.tab
+	@include layout.row
+	transition: all 100ms
+	border: theme.$stroke
+	border-color: #fff0
+	height: $height
+	padding-left: 20px
+	padding-right: 20px
+
+.tab_active
+	@extend .tab
+	border: theme.$stroke
+	border-bottom-color: theme.$background
+	background: theme.$background
+
+.tab_content
+	@include layout.column-top
+	@include layout.grow
+	width: 100%

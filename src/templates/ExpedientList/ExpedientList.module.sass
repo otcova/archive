@@ -1,0 +1,45 @@
+@use '../../layout'
+@use '../../theme'
+
+.container
+	@include layout.grow
+	@include layout.column-top
+	padding: 40px
+	width: 100%
+	
+.expedient_box, .expedient_box_animated
+	@include layout.column-top
+	width: 100%
+	background: #fff
+	box-sizing: content-box
+	border: theme.$stroke
+	margin-bottom: -1px
+	padding: 14px 15px 14px 15px
+	overflow-y: hidden
+	transition: all 100ms
+	
+.expedient_content
+	@include layout.column
+	width: 100%
+	gap: 20px
+	
+.title_row, .order_row
+	@include layout.row
+	gap: 20px
+	width: 100%
+	
+.order_row
+	padding-left: 40px
+	
+.orders_count
+	@include layout.row-right
+	width: 15px
+	overflow-x: hidden
+
+.grow
+	@include layout.grow
+	
+.order_date
+	@include layout.column-right
+	width: 80px
+	padding-right: 5px
