@@ -151,7 +151,13 @@ impl<'a> ExpedientDatabase<'a> {
                         && expedient.date() <= max_date
                 })
                 .collect();
-            sorted_expedients.sort_unstable_by_key(|(_, expedient)| -expedient.date());
+            sorted_expedients.sort_unstable_by_key(|(_, expedient)| {
+                if expedient.global_order_state() == OrderState::Todo {
+                    i32::MAX / 2 - expedient.date()
+                } else {
+                    -expedient.date()
+                }
+            });
             sorted_expedients.truncate(limit);
 
             callback(sorted_expedients);
@@ -298,7 +304,7 @@ mod test {
         }
         assert_eq!(3, call_count, "Expected only 3 calls");
     }
-    
+
     #[test]
     fn release_all_hooks() {
         let tempdir = TempDir::new();
@@ -360,7 +366,7 @@ mod test {
         assert_eq!(1, call_count_a, "Expected only one call per hook");
         assert_eq!(1, call_count_b, "Expected only one call per hook");
     }
-    
+
     #[test]
     fn release_hook() {
         let tempdir = TempDir::new();
@@ -492,6 +498,31 @@ mod test {
                 hour: 21,
             },
         };
+        
+        let expedient_urgent = Expedient {
+            description: String::from("Eduardo Pedro"),
+            license_plate: String::from(""),
+            model: String::from(""),
+            orders: vec![Order {
+                date: UtcDate {
+                    year: 1721,
+                    month: 3,
+                    day: 8,
+                    hour: 22,
+                },
+                title: String::from(""),
+                description: String::from(""),
+                state: OrderState::Urgent,
+            }],
+            users: vec![],
+            vin: String::from(""),
+            date: UtcDate {
+                year: 1421,
+                month: 3,
+                day: 8,
+                hour: 21,
+            },
+        };
 
         let future_expedient = Expedient {
             description: String::from("Eduardo Pedro"),
@@ -525,7 +556,7 @@ mod test {
         let id_3 = db.create_expedient(expedient_done.clone());
         let id_4 = db.create_expedient(expedient_todo.clone());
         let id_5 = Uid::DYNAMIC(5);
-        
+
         let mut hook_all_open_has_been_triggered = 0;
         let mut hook_all_has_been_triggered = 0;
 
@@ -544,8 +575,8 @@ mod test {
                 match hook_all_open_has_been_triggered {
                     1 => assert_eq!(vec![id_1, id_4, id_2], expedients_ids),
                     2 => assert_eq!(vec![id_4, id_2], expedients_ids),
-                    3 => assert_eq!(vec![id_4, id_5, id_2], expedients_ids),
-                    4 => assert_eq!(vec![id_4, id_5, id_2], expedients_ids),
+                    3 => assert_eq!(vec![id_5, id_4, id_2], expedients_ids),
+                    4 => assert_eq!(vec![id_5, id_4, id_2], expedients_ids),
                     5 => assert_eq!(vec![id_5, id_2], expedients_ids),
                     _ => panic!(),
                 }
@@ -568,16 +599,16 @@ mod test {
                 match hook_all_has_been_triggered {
                     1 => assert_eq!(vec![id_0, id_3, id_1, id_4, id_2], expedients_ids),
                     2 => assert_eq!(vec![id_0, id_1, id_3, id_4, id_2], expedients_ids),
-                    3 => assert_eq!(vec![id_0, id_1, id_3, id_4, id_5, id_2], expedients_ids),
-                    4 => assert_eq!(vec![id_0, id_1, id_3, id_4, id_5, id_2], expedients_ids),
-                    5 => assert_eq!(vec![id_0, id_1, id_3, id_5, id_2], expedients_ids),
+                    3 => assert_eq!(vec![id_0, id_1, id_3, id_4, id_2, id_5], expedients_ids),
+                    4 => assert_eq!(vec![id_0, id_1, id_3, id_4, id_2, id_5], expedients_ids),
+                    5 => assert_eq!(vec![id_0, id_1, id_3, id_2, id_5], expedients_ids),
                     _ => panic!(),
                 }
             },
         );
 
         db.update_expedient(id_1, expedient_done);
-        db.create_expedient(expedient_todo.clone());
+        db.create_expedient(expedient_urgent.clone());
         db.create_expedient(future_expedient.clone());
         db.delete_expedient(id_4);
 
