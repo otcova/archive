@@ -4,12 +4,15 @@
 .container
 	@include layout.grow
 	@include layout.column-top
-	padding: 40px
-	width: 100%
-	
+	margin: 40px
+	padding: 0px 4px 0px 4px
+	width: calc(100% - 40px)
+	flex-shrink: 1
+	overflow-y: auto
+
 .expedient_box, .expedient_box_animated
 	@include layout.column-top
-	width: 100%
+	width: calc(100% - 32px)
 	background: #fff
 	box-sizing: content-box
 	border: theme.$stroke
@@ -17,29 +20,29 @@
 	padding: 14px 15px 14px 15px
 	overflow-y: hidden
 	transition: all 100ms
-	
+
 .expedient_content
 	@include layout.column
 	width: 100%
 	gap: 20px
-	
+
 .title_row, .order_row
 	@include layout.row
 	gap: 20px
 	width: 100%
-	
+
 .order_row
 	padding-left: 40px
-	
+
 .orders_count
 	@include layout.row-right
 	width: 15px
 	overflow-x: hidden
 
 .grow
-	@include layout.grow
+	width: 100%
+	flex-shrink: 1
 	
 .order_date
-	@include layout.column-right
-	width: 80px
-	padding-right: 5px
+	@include layout.column-left
+	width: 85px

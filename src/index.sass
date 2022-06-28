@@ -1,4 +1,5 @@
 @use './layout'
+@use './theme'
 
 html, body, #root
 	margin: 0
@@ -21,15 +22,14 @@ html, body, #root
 	flex-shrink: 0
 
 ::-webkit-scrollbar
-	width: 20px
+	width: 10px
 
 ::-webkit-scrollbar-track
 	background: none
 
 ::-webkit-scrollbar-thumb
-	background: none
-	border: 9px solid #0000
-	box-shadow: inset 0 0 10px #888
-
+	border: 4px solid theme.$background
+	background: #aaa
+	
 ::-webkit-scrollbar-thumb:hover
-	box-shadow: inset 0 0 10px #555
+	background: #777
