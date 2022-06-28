@@ -26,24 +26,28 @@ export function createHook(hook_name: HookType, parameters?: InvokeArgs) {
 	const [hookData, setHookData] = createSignal(null)
 	const [hookParameters, setHookParamenters] = createSignal(parameters)
 	const [hookId, setHookId] = createSignal(null)
-	const [needsCleanup, setNeedsCleanup] = createSignal(false)
 
 	const jsCallback = createCallback(setHookData)
-
+	
+	let needsCleanup = false
+	const tryCleanup = (hookId) => {
+		if (needsCleanup && Number.isInteger(hookId)) releaseHook({ jsCallback, hookId })
+	}
+	
 	createEffect(async () => {
 		const hookId = await invoke("hook_" + hook_name, { jsCallback, ...hookParameters() })
 		setHookId(pastHookId => {
 			if (pastHookId) invoke("release_hook", { hookId: pastHookId })
 			return hookId
 		})
+		tryCleanup(hookId)
 	})
-	
-	createEffect(() => {
-		if (needsCleanup() && hookId()) releaseHook({ jsCallback, hookId: hookId() })
+
+	onCleanup(() => {
+		needsCleanup = true
+		tryCleanup(hookId())
 	})
-	
-	onCleanup(() => setNeedsCleanup(true))
-	
+
 	return [hookData, setHookParamenters]
 }
 
