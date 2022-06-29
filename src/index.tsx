@@ -14,12 +14,16 @@ render(App, document.getElementById('root') as HTMLElement)
 
 oncontextmenu = e => e.preventDefault()
 
-// Update every frames to prevent bug
+// Update every frame to prevent input delay bug
 if (!document.getElementById("dummy")) {
     let dummy = document.createElement("div")
     dummy.id = "dummy"
     dummy.style.position = "absolute"
     document.body.appendChild(dummy)
-    let draw = (t: number) => { dummy.style.top = t % 10 + "px"; requestAnimationFrame(draw) }
-    draw(0)
+    let pos = 0
+    let draw = () => {
+        dummy.style.top = (pos = 1 - pos) + "px"
+        requestAnimationFrame(draw)
+    }
+    draw()
 }
