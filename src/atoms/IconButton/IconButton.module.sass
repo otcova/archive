@@ -1,0 +1,17 @@
+@use '../../layout'
+@use '../../theme'
+	
+.button
+	@include layout.row
+	cursor: pointer
+	transition: all 100ms
+	height: 40px
+	padding: 10px 20px 10px 20px
+	border: 1px solid theme.$active-color
+	background: #fff
+	border-radius: 2px
+	color: #000
+
+.button:hover
+	color: #fff
+	background: theme.$active-color
