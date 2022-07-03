@@ -1,6 +1,6 @@
+use super::*;
 pub use crate::collections::Id;
 use crate::collections::*;
-use super::*;
 use crate::database::{Database, RollbackDateInfo};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::path::PathBuf;
@@ -10,11 +10,11 @@ pub trait Item: Serialize + DeserializeOwned + Clone + Sync + Send {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct DataType<T: Serialize + Send + Sync> {
+pub struct DataType<T: Serialize + Clone + Send + Sync> {
     pub items: IdMap<T>,
 }
 
-impl<T: Serialize + Send + Sync> Default for DataType<T> {
+impl<T: Serialize + Clone + Send + Sync> Default for DataType<T> {
     fn default() -> DataType<T> {
         DataType {
             items: IdMap::default(),
@@ -48,20 +48,18 @@ impl<T: Item> Chunk<T> {
     }
 
     pub fn pop_oldest(&mut self) -> Option<T> {
-        let mut oldest_id = 0;
+        let mut oldest_id = None;
         let mut oldest_date = i32::MAX;
 
         for (id, item) in self.database.data.items.iter() {
             let item_date = item.date();
             if item_date < oldest_date {
                 oldest_date = item_date;
-                oldest_id = id;
+                oldest_id = Some(id);
             }
         }
-        if oldest_date == i32::MAX {
-            return None;
-        }
-        self.database.data.items.pop(oldest_id)
+
+        self.database.data.items.pop(oldest_id?)
     }
 }
 

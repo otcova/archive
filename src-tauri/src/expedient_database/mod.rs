@@ -1,57 +1,92 @@
 mod expedient;
-mod hook;
-use self::hook::*;
+mod observable;
 use crate::chunked_database::*;
 pub use crate::collections::UtcDate;
 use crate::error::*;
 pub use expedient::*;
+use observable::*;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 pub struct ExpedientDatabase<'a> {
-    database: Arc<Mutex<ChunkedDatabase<Expedient>>>,
-    hook_pool: HookPool<'a, Event>,
+    database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
+    expedients_observable: Observable<ExpedientHookContext<'a>>,
+    expedients_list_observable: Observable<ExpedientListHookContext<'a>>,
+    expedients_filter_list_observable: Observable<ExpedientFilterListHookContext<'a>>,
     data_has_changed: bool,
 }
 
-#[derive(Debug)]
-struct Event {
-    pub database: Arc<Mutex<ChunkedDatabase<Expedient>>>,
-    pub modifyed_expedient: Uid,
+#[derive(Clone)]
+struct ExpedientHookContext<'a> {
+    pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
+    pub expedient_id: Uid,
+    pub callback: Arc<Mutex<Box<dyn for<'r> FnMut(Option<&'r Expedient>) + Send + Sync + 'a>>>,
 }
 
-const CHUNKED_DATABASE_DYNAMIC_SIZE: usize = 4000;
+#[derive(Clone)]
+struct ExpedientListHookContext<'a> {
+    pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
+    pub max_date: i32,
+    pub limit_len: usize,
+    pub callback: Arc<Mutex<Box<dyn for<'r> FnMut(Vec<(Uid, &'r Expedient)>) + Send + Sync + 'a>>>,
+}
+
+#[derive(Clone)]
+struct ExpedientFilterListHookContext<'a> {
+    pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
+    pub max_date: i32,
+    pub limit_len: usize,
+    pub filter: Expedient,
+    pub callback:
+        Arc<Mutex<Box<dyn for<'r> FnMut(Vec<(Uid, &'r Expedient, f32)>) + Send + Sync + 'a>>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum HookId {
+    Expedient(Id),
+    ExpedientList(Id),
+    ExpedientFilterList(Id),
+}
+
+const CHUNKED_DATABASE_DYNAMIC_SIZE: usize = 6000;
 
 impl<'a> ExpedientDatabase<'a> {
     pub fn open(path: &PathBuf) -> Result<Self> {
         Ok(Self {
-            database: Arc::new(Mutex::new(ChunkedDatabase::open(
+            database: Arc::new(RwLock::new(ChunkedDatabase::open(
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
-            hook_pool: HookPool::new(),
+            expedients_observable: Observable::new(),
+            expedients_list_observable: Observable::new(),
+            expedients_filter_list_observable: Observable::new(),
             data_has_changed: false,
         })
     }
 
     pub fn create(path: &PathBuf) -> Result<Self> {
         Ok(Self {
-            database: Arc::new(Mutex::new(ChunkedDatabase::create(
+            database: Arc::new(RwLock::new(ChunkedDatabase::create(
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
-            hook_pool: HookPool::new(),
+            expedients_observable: Observable::new(),
+            expedients_list_observable: Observable::new(),
+            expedients_filter_list_observable: Observable::new(),
             data_has_changed: true,
         })
     }
 
     pub fn rollback(path: &PathBuf) -> Result<Self> {
         Ok(Self {
-            database: Arc::new(Mutex::new(ChunkedDatabase::rollback(
+            database: Arc::new(RwLock::new(ChunkedDatabase::rollback(
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
-            hook_pool: HookPool::new(),
+            expedients_observable: Observable::new(),
+            expedients_list_observable: Observable::new(),
+            expedients_filter_list_observable: Observable::new(),
             data_has_changed: false,
         })
     }
@@ -60,149 +95,195 @@ impl<'a> ExpedientDatabase<'a> {
         ChunkedDatabase::<Expedient>::rollback_info(path)
     }
 
-    pub fn read_expedient(&mut self, id: Uid) -> Option<Expedient> {
-        self.database.lock().unwrap().read(id).clone()
+    pub fn read_expedient(&self, id: Uid) -> Option<Expedient> {
+        self.database
+            .read()
+            .unwrap()
+            .read(id)
+            .map(|exp| exp.clone())
     }
 
     pub fn hook_expedient(
         &mut self,
         id: Uid,
-        mut callback: impl FnMut(&Option<Expedient>) -> () + Send + Sync + 'a,
-    ) -> Option<hook::Id> {
-        let db = self.database.lock().unwrap();
-        let expedient = db.read(id);
-        callback(expedient);
-        if expedient.is_some() {
-            return Some(self.hook_pool.hook(move |event, release| {
-                if event.modifyed_expedient == id {
-                    let db = event.database.lock().unwrap();
-                    let expedient = db.read(id);
-                    callback(expedient);
-                    if expedient.is_none() {
-                        release();
-                    }
-                }
-            }));
-        }
-        None
+        callback: impl for<'r> FnMut(Option<&'r Expedient>) -> () + Send + Sync + 'a,
+    ) -> HookId {
+        HookId::Expedient(self.expedients_observable.subscrive(
+            Callback {
+                callback: |context| {
+                    let database = context.database.read().unwrap();
+                    let expedient = database.read(context.expedient_id);
+                    (context.callback.lock().unwrap())(expedient)
+                },
+                context: ExpedientHookContext {
+                    database: self.database.clone(),
+                    expedient_id: id,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+            },
+            true,
+        ))
     }
 
-    pub fn hook_expedient_filter(
-        &mut self,
-        filter: Expedient,
-        from: UtcDate,
-        limit: usize,
-        mut callback: impl FnMut(Vec<(Uid, &Expedient, f32)>) -> () + Send + Sync + 'a,
-    ) -> hook::Id {
-        let mut dispatch_hook = move |database: &Arc<Mutex<ChunkedDatabase<Expedient>>>| {
-            let database = database.lock().unwrap();
-            let max_date = from.date_hash();
-            let mut expedients: Vec<_> = database
-                .iter()
-                .filter(|(_, expedient)| expedient.date() <= max_date)
-                .map(|(id, expedient)| (id, expedient, expedient.similarity(&filter)))
-                .filter(|(_, _, similarity)| *similarity > 0.)
-                .collect();
-            expedients.sort_unstable_by(|(_, _, a), (_, _, b)| a.partial_cmp(b).unwrap().reverse());
-            expedients.truncate(limit);
-
-            callback(expedients);
-        };
-        dispatch_hook(&self.database.clone());
-        self.hook_pool
-            .hook(move |event, _| dispatch_hook(&event.database))
-    }
     pub fn hook_all_expedients(
         &mut self,
-        from: UtcDate,
-        limit: usize,
-        mut callback: impl FnMut(Vec<(Uid, &Expedient)>) -> () + Send + Sync + 'a,
-    ) -> hook::Id {
-        let max_date = from.date_hash();
+        from_date: UtcDate,
+        limit_len: usize,
+        callback: impl for<'r> FnMut(Vec<(Uid, &'r Expedient)>) -> () + Send + Sync + 'a,
+    ) -> HookId {
+        HookId::ExpedientList(self.expedients_list_observable.subscrive(
+            Callback {
+                callback: |context| {
+                    let database = context.database.read().unwrap();
 
-        let mut dispatch_hook = move |database: &Arc<Mutex<ChunkedDatabase<Expedient>>>| {
-            let database = database.lock().unwrap();
-            let mut sorted_expedients: Vec<_> = database
-                .iter()
-                .filter(|(_, expedient)| expedient.date() <= max_date)
-                .collect();
-            sorted_expedients.sort_unstable_by_key(|(_, expedient)| -expedient.date());
-            sorted_expedients.truncate(limit);
-            callback(sorted_expedients);
-        };
-        dispatch_hook(&self.database.clone());
-        self.hook_pool
-            .hook(move |event, _| dispatch_hook(&event.database))
+                    let mut expedient_list: Vec<_> = database
+                        .iter()
+                        .filter(|(_, expedient)| expedient.date() <= context.max_date)
+                        .collect();
+
+                    expedient_list.sort_unstable_by_key(|(_, expedient)| -expedient.date());
+                    expedient_list.truncate(context.limit_len);
+                    (context.callback.lock().unwrap())(expedient_list)
+
+                    // TODO: check on ancient database
+                },
+                context: ExpedientListHookContext {
+                    database: self.database.clone(),
+                    max_date: from_date.date_hash(),
+                    limit_len,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+            },
+            true,
+        ))
     }
     pub fn hook_all_open_expedients(
         &mut self,
-        from: UtcDate,
-        limit: usize,
-        mut callback: impl FnMut(Vec<(Uid, &Expedient)>) -> () + Send + Sync + 'a,
-    ) -> hook::Id {
-        let mut dispatch_hook = move |database: &Arc<Mutex<ChunkedDatabase<Expedient>>>| {
-            let database = database.lock().unwrap();
-            let max_date = from.date_hash();
+        from_date: UtcDate,
+        limit_len: usize,
+        callback: impl for<'r> FnMut(Vec<(Uid, &'r Expedient)>) -> () + Send + Sync + 'a,
+    ) -> HookId {
+        HookId::ExpedientList(self.expedients_list_observable.subscrive(
+            Callback {
+                callback: |context| {
+                    let database = context.database.read().unwrap();
 
-            let mut sorted_expedients: Vec<_> = database
-                .iter()
-                .filter(|(_, expedient)| {
-                    expedient.global_order_state() != OrderState::Done
-                        && expedient.date() <= max_date
-                })
-                .collect();
-            sorted_expedients.sort_unstable_by_key(|(_, expedient)| {
-                if expedient.global_order_state() == OrderState::Todo {
-                    i32::MAX / 2 - expedient.date()
-                } else {
-                    -expedient.date()
-                }
-            });
-            sorted_expedients.truncate(limit);
+                    let mut expedient_list: Vec<_> = database
+                        .iter()
+                        .filter(|(_, expedient)| {
+                            expedient.date() <= context.max_date
+                                && expedient.global_order_state() != OrderState::Done
+                        })
+                        .collect();
 
-            callback(sorted_expedients);
-        };
-        dispatch_hook(&self.database.clone());
-        self.hook_pool
-            .hook(move |event, _| dispatch_hook(&event.database))
+                    expedient_list.sort_unstable_by_key(|(_, expedient)| {
+                        if expedient.global_order_state() == OrderState::Todo {
+                            i32::MAX / 2 - expedient.date()
+                        } else {
+                            -expedient.date()
+                        }
+                    });
+                    expedient_list.truncate(context.limit_len);
+                    (context.callback.lock().unwrap())(expedient_list)
+
+                    // TODO: check on ancient database
+                },
+                context: ExpedientListHookContext {
+                    database: self.database.clone(),
+                    max_date: from_date.date_hash(),
+                    limit_len,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+            },
+            true,
+        ))
     }
-    pub fn release_hook(&mut self, hook: hook::Id) {
-        self.hook_pool.release(hook);
+    pub fn hook_expedient_filter(
+        &mut self,
+        filter: Expedient,
+        from_date: UtcDate,
+        limit_len: usize,
+        callback: impl for<'r> FnMut(Vec<(Uid, &'r Expedient, f32)>) -> () + Send + Sync + 'a,
+    ) -> HookId {
+        HookId::ExpedientFilterList(self.expedients_filter_list_observable.subscrive(
+            Callback {
+                callback: |context| {
+                    let database = context.database.read().unwrap();
+
+                    let mut expedient_list: Vec<_> = database
+                        .iter()
+                        .map(|(id, expedient)| {
+                            (id, expedient, expedient.similarity(&context.filter))
+                        })
+                        .filter(|(_, expedient, similarity)| {
+                            expedient.date() <= context.max_date && *similarity > 0.
+                        })
+                        .collect();
+                    expedient_list.sort_unstable_by_key(|(_, expedient, similarity)| {
+                        (-(1 << 24) as f32 * similarity) as i32 - expedient.date()
+                    });
+                    expedient_list.truncate(context.limit_len);
+                    (context.callback.lock().unwrap())(expedient_list)
+
+                    // TODO: check on ancient database
+                },
+                context: ExpedientFilterListHookContext {
+                    database: self.database.clone(),
+                    max_date: from_date.date_hash(),
+                    limit_len,
+                    filter,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+            },
+            true,
+        ))
+    }
+
+    pub fn release_hook(&mut self, hook_id: HookId) {
+        match hook_id {
+            HookId::Expedient(id) => self.expedients_observable.unsubscrive(id),
+            HookId::ExpedientList(id) => self.expedients_list_observable.unsubscrive(id),
+            HookId::ExpedientFilterList(id) => {
+                self.expedients_filter_list_observable.unsubscrive(id)
+            }
+        }
     }
     pub fn release_all_hooks(&mut self) {
-        self.hook_pool = HookPool::new();
+        self.expedients_observable = Observable::new();
+        self.expedients_list_observable = Observable::new();
     }
 
     pub fn update_expedient(&mut self, id: Uid, expedient: Expedient) {
-        self.database.lock().unwrap().update(id, expedient);
-        self.dispath_change(id);
+        self.database.write().unwrap().update(id, expedient);
+        self.dispath_change();
     }
     pub fn create_expedient(&mut self, expedient: Expedient) -> Uid {
-        let id = self.database.lock().unwrap().push(expedient);
-        self.dispath_change(id);
+        let id = self.database.write().unwrap().push(expedient);
+        self.dispath_change();
         id
     }
     pub fn delete_expedient(&mut self, id: Uid) {
-        self.database.lock().unwrap().delete(id);
-        self.dispath_change(id);
+        self.database.write().unwrap().delete(id);
+        self.dispath_change();
     }
     pub fn merge_expedient(&self, _id_a: Uid, _id_b: Uid) {
         todo!()
     }
 
-    fn dispath_change(&mut self, modifyed_expedient: Uid) {
+    fn dispath_change(&mut self) {
         self.data_has_changed = true;
-        self.hook_pool.dispatch(&Event {
-            database: self.database.clone(),
-            modifyed_expedient,
-        });
+        self.expedients_observable.trigger();
+        // block_on(join!(
+        self.expedients_filter_list_observable.trigger();
+        self.expedients_list_observable.trigger();
+        // ));
     }
 
     /// If data has changes, creates a backup.
     pub fn store(&mut self) -> Result<()> {
         if self.data_has_changed {
             self.data_has_changed = false;
-            self.database.lock().unwrap().store()?;
+            self.database.write().unwrap().store()?;
         }
         Ok(())
     }
@@ -245,7 +326,7 @@ mod test {
         {
             let mut db = ExpedientDatabase::create(&tempdir.path).unwrap();
             let id = db.create_expedient(expedient.clone());
-            db.hook_expedient(id, |exp| db_expedient = exp.clone());
+            db.hook_expedient(id, |exp| db_expedient = exp.map(|d| d.clone()));
         }
 
         assert_eq!(expedient, db_expedient.unwrap());
@@ -293,9 +374,9 @@ mod test {
             db.hook_expedient(id, |exp| {
                 call_count += 1;
                 match call_count {
-                    1 => assert_eq!(&Some(expedient_a.clone()), exp),
-                    2 => assert_eq!(&Some(expedient_b.clone()), exp),
-                    3 => assert_eq!(&None, exp),
+                    1 => assert_eq!(Some(&expedient_a.clone()), exp),
+                    2 => assert_eq!(Some(&expedient_b.clone()), exp),
+                    3 => assert_eq!(None, exp),
                     _ => panic!("To many calls"),
                 }
             });
@@ -348,20 +429,20 @@ mod test {
             db.hook_expedient(id, |exp| {
                 call_count_a += 1;
                 match call_count_a {
-                    1 => assert_eq!(&Some(expedient_a.clone()), exp),
+                    1 => assert_eq!(Some(&expedient_a.clone()), exp),
                     _ => panic!("To many calls"),
                 }
             });
             db.hook_expedient(id, |exp| {
                 call_count_b += 1;
                 match call_count_b {
-                    1 => assert_eq!(&Some(expedient_a.clone()), exp),
+                    1 => assert_eq!(Some(&expedient_a.clone()), exp),
                     _ => panic!("To many calls"),
                 }
             });
             db.release_all_hooks();
-            db.update_expedient(id, expedient_b.clone());
-            db.delete_expedient(id);
+            (db.update_expedient(id, expedient_b.clone()));
+            (db.delete_expedient(id));
         }
         assert_eq!(1, call_count_a, "Expected only one call per hook");
         assert_eq!(1, call_count_b, "Expected only one call per hook");
@@ -409,11 +490,11 @@ mod test {
             let hook_id = db.hook_expedient(id, |exp| {
                 call_count += 1;
                 match call_count {
-                    1 => assert_eq!(&Some(expedient_a.clone()), exp),
+                    1 => assert_eq!(Some(&expedient_a.clone()), exp),
                     _ => panic!("To many calls"),
                 }
             });
-            db.release_hook(hook_id.unwrap());
+            db.release_hook(hook_id);
             db.update_expedient(id, expedient_b.clone());
             db.delete_expedient(id);
         }
@@ -498,7 +579,7 @@ mod test {
                 hour: 21,
             },
         };
-        
+
         let expedient_urgent = Expedient {
             description: String::from("Eduardo Pedro"),
             license_plate: String::from(""),
@@ -555,7 +636,10 @@ mod test {
         let id_2 = db.create_expedient(old_expedient_todo.clone());
         let id_3 = db.create_expedient(expedient_done.clone());
         let id_4 = db.create_expedient(expedient_todo.clone());
-        let id_5 = Uid::DYNAMIC(5);
+        let id_5 = Uid::DYNAMIC(Id {
+            index: 5,
+            identifier: 6,
+        });
 
         let mut hook_all_open_has_been_triggered = 0;
         let mut hook_all_has_been_triggered = 0;
@@ -700,9 +784,9 @@ mod test {
         let mut hook_has_triggered = false;
 
         let mut db = ExpedientDatabase::create(&tempdir.path).unwrap();
-        db.create_expedient(expedient_0);
+        (db.create_expedient(expedient_0));
         let id_1 = db.create_expedient(expedient_1.clone());
-        db.create_expedient(expedient_2);
+        (db.create_expedient(expedient_2));
         let id_3 = db.create_expedient(expedient_3.clone());
 
         db.hook_expedient_filter(
@@ -720,11 +804,9 @@ mod test {
 
                 assert_eq!(id_3, filter[0].0);
                 assert_eq!(expedient_3, *filter[0].1);
-                assert_eq!(0.5, filter[0].2);
 
                 assert_eq!(id_1, filter[1].0);
                 assert_eq!(expedient_1, *filter[1].1);
-                assert_eq!(0.375, filter[1].2);
             },
         );
         drop(db);
@@ -737,8 +819,6 @@ mod test {
         let tempdir = TempDir::new();
         {
             let mut database = ExpedientDatabase::create(&tempdir.path).unwrap();
-            database.store().unwrap();
-            database.store().unwrap();
             database.store().unwrap();
             database.create_expedient(Expedient {
                 description: String::from("Pedro"),

@@ -1,5 +1,5 @@
 use chrono::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub struct DateMap<T> {
     first_day_hash: DayHash,
@@ -79,8 +79,9 @@ pub struct UtcDate {
     pub day: u8,
     pub hour: u8,
 }
+
 /// Stores year, month, day and hour in local time
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub struct LocalDate {
     pub year: i16,
     pub month: u8,
@@ -113,7 +114,7 @@ impl UtcDate {
             hour: local.hour() as u8,
         }
     }
-    
+
     pub fn date_hash(&self) -> i32 {
         self.day_hash() * 24 + self.hour as i32
     }
@@ -223,7 +224,7 @@ mod test {
         assert_eq!(16762 + date_b, date_d);
         assert_eq!(16142 + date_c, date_d);
     }
-    
+
     #[test]
     fn ymd_hash_date_difference() {
         let date_a = UtcDate::utc_ymdh(2010, 3, 4, 0).date_hash();
@@ -238,7 +239,7 @@ mod test {
         assert_eq!(402291 + date_b, date_d);
         assert_eq!(387428 + date_c, date_d);
     }
-    
+
     #[test]
     fn iter_empty_datemap() {
         let datemap = DateMap::<f32>::new();

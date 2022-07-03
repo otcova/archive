@@ -52,14 +52,14 @@ mod test {
 
     #[test]
     fn use_case() {
-		let data = [(1., 1.), (2., 1.), (3., 1.)];
+        let data = [(1., 1.), (2., 1.), (3., 1.)];
         assert_eq!(2., data.iter().weighted_mean::<f32>());
-		
-		let data = [(25., 30.), (-12., 45.), (4., 25.)];
+
+        let data = [(25., 30.), (-12., 45.), (4., 25.)];
         assert_eq!(3.1, data.iter().weighted_mean::<f32>());
-		
-		let data = [Some((-1., 2.)), Some((2., 1.)), None, Some((1., 2.))];
-		let iter = data.into_iter().flatten();
+
+        let data = [Some((-1., 2.)), Some((2., 1.)), None, Some((1., 2.))];
+        let iter = data.into_iter().flatten();
         assert_eq!(0.4, iter.weighted_mean::<f32>());
     }
 }

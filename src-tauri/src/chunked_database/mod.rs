@@ -1,12 +1,12 @@
 mod chunk;
 
+pub use crate::collections::*;
+pub use crate::database::RollbackDateInfo;
 use crate::error::*;
 pub use chunk::Item;
 use chunk::*;
-pub use crate::collections::*;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-pub use crate::database::RollbackDateInfo;
-use serde::{Serialize, Deserialize};
 
 /// Data is composed of items, each item have a 'date' associated
 /// and is stored in on of the two interal databases in relation of that date
@@ -16,10 +16,19 @@ use serde::{Serialize, Deserialize};
 ///
 /// In the ancient database are stored all the data considered old.
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Uid {
     DYNAMIC(chunk::Id),
     ANCIENT(chunk::Id),
+}
+
+impl Uid {
+    pub fn is_ancient(&self) -> bool {
+        match self {
+            Self::DYNAMIC(_) => false,
+            Self::ANCIENT(_) => true,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -37,7 +46,7 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
             max_dynamic_len,
         })
     }
-    
+
     pub fn create(path: &PathBuf, max_dynamic_len: usize) -> Result<Self> {
         Ok(Self {
             dynamic: Chunk::create(&path.join("dynamic"))?,
@@ -45,7 +54,7 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
             max_dynamic_len,
         })
     }
-    
+
     pub fn rollback(path: &PathBuf, max_dynamic_len: usize) -> Result<Self> {
         Ok(Self {
             dynamic: Chunk::rollback(&path.join("dynamic"))?,
@@ -53,13 +62,17 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
             max_dynamic_len,
         })
     }
-    
+
     pub fn rollback_info(path: &PathBuf) -> Result<RollbackDateInfo> {
         let dynamic_info = Chunk::<T>::rollback_info(&path.join("dynamic"))?;
         let ancient_info = Chunk::<T>::rollback_info(&path.join("ancient"))?;
         Ok(RollbackDateInfo {
-            newest_instant: dynamic_info.newest_instant.max(&ancient_info.newest_instant),
-            rollback_instant: dynamic_info.rollback_instant.min(&ancient_info.rollback_instant),
+            newest_instant: dynamic_info
+                .newest_instant
+                .max(&ancient_info.newest_instant),
+            rollback_instant: dynamic_info
+                .rollback_instant
+                .min(&ancient_info.rollback_instant),
         })
     }
 
@@ -68,8 +81,9 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
         iter.map(|(id, expedient)| (Uid::DYNAMIC(id), expedient))
     }
 
-    pub fn iter_ancient(&self) -> IdMapIter<T> {
-        self.ancient.database.data.items.iter()
+    pub fn iter_ancient(&self) -> impl Iterator<Item = (Uid, &T)> {
+        let iter = self.ancient.database.data.items.iter();
+        iter.map(|(id, expedient)| (Uid::ANCIENT(id), expedient))
     }
 
     pub fn delete(&mut self, id: Uid) {
@@ -87,10 +101,10 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
             Uid::ANCIENT(id) => self.ancient.database.data.items.update(id, item),
         }
     }
-    pub fn read(&self, id: Uid) -> &Option<T> {
+    pub fn read(&self, id: Uid) -> Option<&T> {
         match id {
-            Uid::DYNAMIC(id) => self.dynamic.database.data.items.read(id),
-            Uid::ANCIENT(id) => self.ancient.database.data.items.read(id),
+            Uid::DYNAMIC(id) => self.dynamic.database.data.items.ref_data(id),
+            Uid::ANCIENT(id) => self.ancient.database.data.items.ref_data(id),
         }
     }
     pub fn len(&self) -> usize {
@@ -112,7 +126,7 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
                 .push(self.dynamic.pop_oldest().unwrap());
         }
     }
-    
+
     pub fn store(&mut self) -> Result<()> {
         self.move_old_items();
         self.dynamic.database.store()?;
@@ -151,9 +165,9 @@ mod test {
 
         assert_eq!(3, db.len());
 
-        assert_eq!(Some(Data(13)), *db.read(id_13));
-        assert_eq!(Some(Data(223)), *db.read(id_223));
-        assert_eq!(Some(Data(54)), *db.read(id_54));
+        assert_eq!(Some(&Data(13)), db.read(id_13));
+        assert_eq!(Some(&Data(223)), db.read(id_223));
+        assert_eq!(Some(&Data(54)), db.read(id_54));
     }
 
     #[test]
@@ -188,5 +202,19 @@ mod test {
         assert_eq!(4, db.len());
         assert_eq!(2, db.iter().count());
         assert_eq!(2, db.iter_ancient().count());
+    }
+
+    #[test]
+    fn uid_is_ancient() {
+        assert!(!Uid::DYNAMIC(Id {
+            index: 123,
+            identifier: 21
+        })
+        .is_ancient());
+        assert!(Uid::ANCIENT(Id {
+            index: 2,
+            identifier: 123
+        })
+        .is_ancient());
     }
 }

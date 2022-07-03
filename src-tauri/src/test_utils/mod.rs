@@ -1,11 +1,11 @@
+use serde::{Deserialize, Serialize};
 use std::io::prelude::*;
+use std::thread::sleep;
+use std::time::Duration;
 use std::{
     fs::{create_dir_all, File},
     path::PathBuf,
 };
-use serde::{Serialize, Deserialize};
-use std::thread::sleep;
-use std::time::Duration;
 
 fn gen_id() -> usize {
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -95,7 +95,6 @@ pub fn gen_data3() -> DataType3 {
         matrix: vec![vec![2., 0., 1.], vec![0., 1e10, -5.], vec![1.3, 0.3, -1.]],
     }
 }
-
 
 pub fn sleep_for(millis: u64) {
     sleep(Duration::from_millis(millis));

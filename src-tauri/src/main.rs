@@ -1,3 +1,4 @@
+#![feature(future_join, future_poll_fn)]
 #![allow(dead_code)]
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
@@ -19,7 +20,7 @@ use tauri::RunEvent;
 
 fn main() {
     let database_state = api::ApiState::default();
-    
+
     tauri::Builder::default()
         .manage(database_state.clone())
         .invoke_handler(tauri::generate_handler![

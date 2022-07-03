@@ -1,109 +1,198 @@
 use serde::{Deserialize, Serialize};
 use std::slice::{Iter, IterMut};
 
-pub type Id = usize;
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct IdMap<T: Serialize + Send + Sync> {
-    data: Vec<Option<T>>,
-    empty_ids: Vec<Id>,
+/// Id.0 is the index to the data and Id.1 is an identifier
+/// to check if the data has been replaced
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Id {
+    pub index: usize,
+    pub identifier: usize,
 }
 
-impl<T: Serialize + Send + Sync> Default for IdMap<T> {
+impl Id {
+    fn new(index: usize, identifier: usize) -> Self {
+        Self { index, identifier }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Item<T: Clone + Send + Sync> {
+    pub identifier: usize,
+    pub data: T,
+}
+
+impl<T: Clone + Send + Sync> Item<T> {
+    fn new(identifier: usize, data: T) -> Self {
+        Self { identifier, data }
+    }
+    fn is_some(&self) -> bool {
+        self.identifier != 0
+    }
+    fn clean(&mut self) {
+        self.identifier = 0;
+    }
+    fn take(&mut self) -> Option<T> {
+        let data = self.clone_data();
+        self.clean();
+        data
+    }
+    fn clone_data(&self) -> Option<T> {
+        if self.is_some() {
+            Some(self.data.clone())
+        } else {
+            None
+        }
+    }
+    fn ref_data(&self) -> Option<&T> {
+        if self.is_some() {
+            Some(&self.data)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IdMap<T: Serialize + Clone + Send + Sync> {
+    data: Vec<Item<T>>,
+    empty_indexes: Vec<usize>,
+    last_identifier: usize,
+}
+
+impl<T: Serialize + Clone + Send + Sync> Default for IdMap<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Serialize + Send + Sync> IdMap<T> {
+impl<T: Serialize + Clone + Send + Sync> IdMap<T> {
     pub fn new() -> Self {
         Self {
             data: vec![],
-            empty_ids: vec![],
+            empty_indexes: vec![],
+            last_identifier: 0,
         }
     }
 
     pub fn len(&self) -> usize {
-        self.data.len() - self.empty_ids.len()
+        self.data.len() - self.empty_indexes.len()
     }
 
     pub fn push(&mut self, item: T) -> Id {
-        if let Some(reused_id) = self.empty_ids.pop() {
-            self.data[reused_id] = Some(item);
-            return reused_id;
+        self.last_identifier += 1;
+        if let Some(reused_id) = self.empty_indexes.pop() {
+            self.data[reused_id] = Item::new(self.last_identifier, item);
+            return Id::new(reused_id, self.last_identifier);
         }
-        self.data.push(Some(item));
-        self.data.len() - 1
+        self.data.push(Item::new(self.last_identifier, item));
+        Id::new(self.data.len() - 1, self.last_identifier)
     }
 
     pub fn pop(&mut self, id: Id) -> Option<T> {
-        if self.data.len() < id {
-            return None;
+        if self.exists(id) {
+            self.empty_indexes.push(id.index);
+            self.data[id.index].take()
+        } else {
+            None
         }
-        self.empty_ids.push(id);
-        self.data[id].take()
     }
 
     pub fn delete(&mut self, id: Id) {
-        self.data[id] = None;
-        self.empty_ids.push(id);
+        if self.exists(id) {
+            self.data[id.index].clean();
+            self.empty_indexes.push(id.index);
+        }
+    }
+
+    pub fn exists(&self, id: Id) -> bool {
+        if id.index < self.data.len() {
+            self.data[id.index].identifier == id.identifier
+        } else {
+            false
+        }
     }
 
     pub fn iter(&self) -> IdMapIter<T> {
         IdMapIter {
             data_iter: self.data.iter(),
-            id: 0,
+            index: 0,
         }
     }
 
     pub fn iter_mut(&mut self) -> IdMapIterMut<T> {
         IdMapIterMut {
             data_iter: self.data.iter_mut(),
-            id: 0,
+            index: 0,
         }
     }
 
     pub fn update(&mut self, id: Id, item: T) {
-        self.data[id] = Some(item)
+        if id.index < self.data.len() {
+            self.data[id.index].data = item
+        }
     }
 
-    pub fn read(&self, id: Id) -> &Option<T> {
-        &self.data[id]
+    pub fn ref_data(&self, id: Id) -> Option<&T> {
+        if self.exists(id) {
+            self.data[id.index].ref_data()
+        } else {
+            None
+        }
+    }
+
+    pub fn clone_data(&self, id: Id) -> Option<T> {
+        if self.exists(id) {
+            self.data[id.index].clone_data()
+        } else {
+            None
+        }
     }
 }
 
-pub struct IdMapIter<'a, T> {
-    data_iter: Iter<'a, Option<T>>,
-    id: Id,
+pub struct IdMapIter<'a, T: Clone + Send + Sync> {
+    data_iter: Iter<'a, Item<T>>,
+    index: usize,
 }
 
-impl<'a, T> Iterator for IdMapIter<'a, T> {
+impl<'a, T: Clone + Send + Sync> Iterator for IdMapIter<'a, T> {
     type Item = (Id, &'a T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(next) = self.data_iter.next() {
-            self.id += 1;
-            if let Some(item) = next {
-                return Some((self.id - 1, item));
+        while let Some(item) = self.data_iter.next() {
+            self.index += 1;
+            if item.is_some() {
+                return Some((
+                    Id {
+                        index: self.index - 1,
+                        identifier: item.identifier,
+                    },
+                    &item.data,
+                ));
             }
         }
         None
     }
 }
 
-pub struct IdMapIterMut<'a, T> {
-    data_iter: IterMut<'a, Option<T>>,
-    id: Id,
+pub struct IdMapIterMut<'a, T: Clone + Send + Sync> {
+    data_iter: IterMut<'a, Item<T>>,
+    index: usize,
 }
 
-impl<'a, T> Iterator for IdMapIterMut<'a, T> {
+impl<'a, T: Clone + Send + Sync> Iterator for IdMapIterMut<'a, T> {
     type Item = (Id, &'a mut T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(next) = self.data_iter.next() {
-            self.id += 1;
-            if let Some(item) = next {
-                return Some((self.id - 1, item));
+        while let Some(item) = self.data_iter.next() {
+            self.index += 1;
+            if item.is_some() {
+                return Some((
+                    Id {
+                        index: self.index - 1,
+                        identifier: item.identifier,
+                    },
+                    &mut item.data,
+                ));
             }
         }
         None
@@ -112,7 +201,7 @@ impl<'a, T> Iterator for IdMapIterMut<'a, T> {
 
 #[cfg(test)]
 mod test {
-    use super::IdMap;
+    use super::*;
 
     #[test]
     fn default_idmap_is_empty() {
@@ -141,9 +230,9 @@ mod test {
     #[test]
     fn push_returns_an_id_that_increments() {
         let mut map = IdMap::<i32>::new();
-        assert_eq!(map.push(123), 0);
-        assert_eq!(map.push(0), 1);
-        assert_eq!(map.push(123), 2);
+        assert_eq!(map.push(123).index, 0);
+        assert_eq!(map.push(0).index, 1);
+        assert_eq!(map.push(123).index, 2);
     }
 
     #[test]
@@ -211,14 +300,19 @@ mod test {
     }
 
     #[test]
-    fn push_after_delete_reuses_id() {
+    fn push_after_delete_reuses_id_index() {
         let mut map = IdMap::<i32>::new();
         map.push(12);
         let id = map.push(543);
         map.push(21);
 
         map.delete(id);
-        assert_eq!(map.push(3213), id);
+        let new_id = map.push(3213);
+        assert_eq!(new_id.index, id.index);
+        assert_ne!(new_id.identifier, id.identifier);
+
+        assert!(map.exists(new_id));
+        assert!(!map.exists(id));
     }
 
     #[test]
@@ -231,9 +325,26 @@ mod test {
 
         map.update(id_b, 2314);
 
-        assert_eq!(map.read(id_a).unwrap(), 2);
-        assert_eq!(map.read(id_b).unwrap(), 2314);
-        assert_eq!(map.read(id_c).unwrap(), 14);
+        assert_eq!(*map.ref_data(id_a).unwrap(), 2);
+        assert_eq!(*map.ref_data(id_b).unwrap(), 2314);
+        assert_eq!(*map.ref_data(id_c).unwrap(), 14);
+
+        assert_eq!(map.len(), 3);
+    }
+
+    #[test]
+    fn clone_updated_pushed_items() {
+        let mut map = IdMap::<i32>::new();
+
+        let id_a = map.push(2);
+        let id_b = map.push(5325);
+        let id_c = map.push(14);
+
+        map.update(id_b, 2314);
+
+        assert_eq!(map.clone_data(id_a).unwrap(), 2);
+        assert_eq!(map.clone_data(id_b).unwrap(), 2314);
+        assert_eq!(map.clone_data(id_c).unwrap(), 14);
 
         assert_eq!(map.len(), 3);
     }
@@ -245,7 +356,13 @@ mod test {
         let id_b = map.push(543);
         let id_c = map.push(21);
 
-        assert_eq!(map.pop(100), None);
+        assert_eq!(
+            map.pop(Id {
+                index: id_a.index,
+                identifier: 1000,
+            }),
+            None
+        );
         assert_eq!(3, map.len());
 
         assert_eq!(map.pop(id_b), Some(543));
@@ -270,26 +387,42 @@ mod test {
             vec![(id_0, &12), (id_1, &543), (id_2, &21)],
             map.iter().collect::<Vec<_>>()
         );
-        
+
         map.update(id_1, 132);
-        
+
         assert_eq!(
             vec![(id_0, &12), (id_1, &132), (id_2, &21)],
             map.iter().collect::<Vec<_>>()
         );
-        
+
         let id_3 = map.push(41);
-        
+
         assert_eq!(
             vec![(id_0, &12), (id_1, &132), (id_2, &21), (id_3, &41)],
             map.iter().collect::<Vec<_>>()
         );
-        
+
         map.delete(id_2);
-        
+
         assert_eq!(
             vec![(id_0, &12), (id_1, &132), (id_3, &41)],
             map.iter().collect::<Vec<_>>()
         );
+    }
+
+    #[test]
+    fn exists() {
+        let mut map = IdMap::<i32>::new();
+
+        let id_0 = map.push(12);
+        let id_1 = map.push(543);
+        let id_2 = map.push(21);
+
+        assert!(map.exists(id_0));
+        assert!(map.exists(id_1));
+        assert!(map.exists(id_2));
+
+        map.delete(id_0);
+        assert!(!map.exists(id_0));
     }
 }

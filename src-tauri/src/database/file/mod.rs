@@ -78,9 +78,9 @@ mod tests {
         let result = load_newest_noncurrupted::<DataType3>(&tempdir.path);
         assert_eq!(format!("{:?}", result), "Err(NotFound)");
     }
-    
+
     #[test]
-        fn instant_of_newest_noncorrupted_from_empty_dir() {
+    fn instant_of_newest_noncorrupted_from_empty_dir() {
         let tempdir = TempDir::new();
 
         let result = instant_of_newest_noncurrupted::<DataType1>(&tempdir.path);
@@ -222,7 +222,7 @@ mod tests {
         let data = load_newest_noncurrupted::<DataType3>(&tempdir.path).unwrap();
         assert_eq!(data, saved_data);
     }
-    
+
     #[test]
     fn instant_of_newest_noncorrupted_data_use_case() {
         let tempdir = TempDir::new();
@@ -233,7 +233,7 @@ mod tests {
         let before = Instant::now();
         save_data(&tempdir.path, &saved_data).unwrap();
         let after = Instant::now();
-        
+
         sleep_for(1100);
         let path = save_data(&tempdir.path, &saved_data).unwrap();
 

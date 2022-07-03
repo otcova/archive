@@ -165,7 +165,10 @@ mod test {
         assert_eq!(1., orders[1].similarity(&orders[1]));
         assert_eq!(1., orders[2].similarity(&orders[2]));
         assert!(orders[0].similarity(&orders[2]) > orders[0].similarity(&orders[1]));
-        assert_eq!(orders[0].similarity(&orders[1]), orders[1].similarity(&orders[0]));
+        assert_eq!(
+            orders[0].similarity(&orders[1]),
+            orders[1].similarity(&orders[0])
+        );
     }
 
     #[test]

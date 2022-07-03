@@ -9,7 +9,10 @@ use crate::{
     error::{ErrorKind, Result},
     expedient_database::ExpedientDatabase,
 };
-use std::{path::PathBuf, sync::{Mutex, Arc}};
+use std::{
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 #[derive(Default, Clone)]
 pub struct ApiState<'a> {
