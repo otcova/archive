@@ -48,12 +48,6 @@ impl<Context: Clone + Send + Sync> Observable<Context> {
             callback.call()
         }
     }
-
-    pub async fn async_trigger(&mut self) {
-        for (_, callback) in self.hooks.iter_mut() {
-            callback.call()
-        }
-    }
 }
 
 #[cfg(test)]
