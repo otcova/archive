@@ -20,45 +20,54 @@ impl Id {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Item<T: Send + Sync> {
-    pub identifier: usize,
-    pub data: T,
+    identifier: usize,
+    data: Option<T>,
 }
 
 impl<T: Send + Sync> Item<T> {
     fn new(identifier: usize, data: T) -> Self {
-        Self { identifier, data }
+        Self {
+            identifier,
+            data: Some(data),
+        }
     }
     fn is_some(&self) -> bool {
-        self.identifier != 0
+        self.data.is_some()
     }
     fn clean(&mut self) {
         self.identifier = 0;
+        self.data = None;
     }
     fn take(&mut self) -> Option<T> {
         if self.is_some() {
-            unsafe {
-                let mut data = std::mem::MaybeUninit::uninit().assume_init();
-                std::ptr::copy(&self.data as *const _, &mut data as *mut _, size_of::<T>());
-                self.clean();
-                Some(data).take()
-            }
+            self.data.take()
         } else {
             None
         }
     }
     fn ref_data(&self) -> Option<&T> {
         if self.is_some() {
-            Some(&self.data)
+            self.data.as_ref()
         } else {
             None
         }
+    }
+    fn mut_data(&mut self) -> Option<&mut T> {
+        if self.is_some() {
+            self.data.as_mut()
+        } else {
+            None
+        }
+    }
+    fn update(&mut self, data: T) {
+        self.data = Some(data)
     }
 }
 
 impl<T: Clone + Send + Sync> Item<T> {
     fn clone_data(&self) -> Option<T> {
         if self.is_some() {
-            Some(self.data.clone())
+            self.data.clone()
         } else {
             None
         }
@@ -162,7 +171,7 @@ impl<T: Send + Sync> IdMap<T> {
 
     pub fn update(&mut self, id: Id, item: T) {
         if id.index < self.data.len() {
-            self.data[id.index].data = item
+            self.data[id.index].update(item)
         }
     }
 
@@ -202,7 +211,7 @@ impl<'a, T: Send + Sync> Iterator for IdMapIter<'a, T> {
                         index: self.index - 1,
                         identifier: item.identifier,
                     },
-                    &item.data,
+                    item.ref_data().unwrap(),
                 ));
             }
         }
@@ -227,7 +236,7 @@ impl<'a, T: Send + Sync> Iterator for IdMapIterMut<'a, T> {
                         index: self.index - 1,
                         identifier: item.identifier,
                     },
-                    &mut item.data,
+                    item.mut_data().unwrap(),
                 ));
             }
         }
