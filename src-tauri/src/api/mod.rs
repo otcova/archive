@@ -67,7 +67,7 @@ pub fn database_rollback_info(
 #[tauri::command]
 pub fn store_database(state: tauri::State<ApiState>) -> Result<()> {
     if let Some(database) = state.database_mutex.lock().unwrap().as_mut() {
-        database.store()
+        database.save()
     } else {
         ErrorKind::NotFound.into()
     }

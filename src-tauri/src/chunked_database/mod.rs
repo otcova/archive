@@ -77,60 +77,52 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
     }
 
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = (Uid, &'a T)> + 'a {
-        let iter = self.dynamic.database.data.items.iter();
+        let iter = self.dynamic.iter();
         iter.map(|(id, expedient)| (Uid::DYNAMIC(id), expedient))
     }
 
     pub fn iter_ancient(&self) -> impl Iterator<Item = (Uid, &T)> {
-        let iter = self.ancient.database.data.items.iter();
+        let iter = self.ancient.iter();
         iter.map(|(id, expedient)| (Uid::ANCIENT(id), expedient))
     }
 
     pub fn delete(&mut self, id: Uid) {
         match id {
-            Uid::DYNAMIC(id) => self.dynamic.database.data.items.delete(id),
-            Uid::ANCIENT(id) => self.ancient.database.data.items.delete(id),
+            Uid::DYNAMIC(id) => self.dynamic.delete(id),
+            Uid::ANCIENT(id) => self.ancient.delete(id),
         }
     }
     pub fn push(&mut self, item: T) -> Uid {
-        Uid::DYNAMIC(self.dynamic.database.data.items.push(item))
+        Uid::DYNAMIC(self.dynamic.push(item))
     }
     pub fn update(&mut self, id: Uid, item: T) {
         match id {
-            Uid::DYNAMIC(id) => self.dynamic.database.data.items.update(id, item),
-            Uid::ANCIENT(id) => self.ancient.database.data.items.update(id, item),
+            Uid::DYNAMIC(id) => self.dynamic.update(id, item),
+            Uid::ANCIENT(id) => self.ancient.update(id, item),
         }
     }
     pub fn read(&self, id: Uid) -> Option<&T> {
         match id {
-            Uid::DYNAMIC(id) => self.dynamic.database.data.items.ref_data(id),
-            Uid::ANCIENT(id) => self.ancient.database.data.items.ref_data(id),
+            Uid::DYNAMIC(id) => self.dynamic.ref_data(id),
+            Uid::ANCIENT(id) => self.ancient.ref_data(id),
         }
     }
     pub fn len(&self) -> usize {
-        self.dynamic.database.data.items.len() + self.ancient.database.data.items.len()
+        self.dynamic.len() + self.ancient.len()
     }
 
     /// Moves items from the dynamic chunk to the ancient chunk to satisfy 'max_dynamic_len'
     fn move_old_items(&mut self) {
-        while self.dynamic.database.data.items.len() > self.max_dynamic_len {
-            println!(
-                "{} > {}",
-                self.dynamic.database.data.items.len(),
-                self.max_dynamic_len
-            );
-            self.ancient
-                .database
-                .data
-                .items
-                .push(self.dynamic.pop_oldest().unwrap());
+        while self.dynamic.len() > self.max_dynamic_len {
+            println!("{} > {}", self.dynamic.len(), self.max_dynamic_len);
+            self.ancient.push(self.dynamic.pop_oldest().unwrap());
         }
     }
 
-    pub fn store(&mut self) -> Result<()> {
+    pub fn save(&mut self) -> Result<()> {
         self.move_old_items();
-        self.dynamic.database.store()?;
-        self.ancient.database.store()?;
+        self.dynamic.save()?;
+        self.ancient.save()?;
         Ok(())
     }
 }

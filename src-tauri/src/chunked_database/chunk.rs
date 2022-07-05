@@ -24,23 +24,27 @@ impl<T: Serialize + Clone + Send + Sync> Default for DataType<T> {
 
 #[derive(Debug)]
 pub struct Chunk<T: Item> {
-    pub database: Database<DataType<T>>,
+    database: Database<DataType<T>>,
+    modifyed: bool,
 }
 
 impl<T: Item> Chunk<T> {
     pub fn open(path: &PathBuf) -> Result<Self> {
         Ok(Self {
             database: Database::open(path)?,
+            modifyed: false,
         })
     }
     pub fn create(path: &PathBuf) -> Result<Self> {
         Ok(Self {
             database: Database::create(path)?,
+            modifyed: true,
         })
     }
     pub fn rollback(path: &PathBuf) -> Result<Self> {
         Ok(Self {
             database: Database::rollback(path)?,
+            modifyed: false,
         })
     }
     pub fn rollback_info(path: &PathBuf) -> Result<RollbackDateInfo> {
@@ -60,6 +64,39 @@ impl<T: Item> Chunk<T> {
         }
 
         self.database.data.items.pop(oldest_id?)
+    }
+    
+    pub fn save(&mut self) -> Result<()> {
+        if self.modifyed {
+            self.database.store()?;
+            self.modifyed = false;
+        }
+        Ok(())
+    }
+    
+    pub fn ref_data(&self, id: Id) -> Option<&T> {
+        self.database.data.items.ref_data(id)
+    }
+    pub fn len(&self) -> usize {
+        self.database.data.items.len()
+    }
+    
+    // Functions to modify data from database
+    pub fn iter(&self) -> IdMapIter<T> {
+        self.database.data.items.iter()
+    }
+    pub fn push(&mut self, data: T) -> Id {
+        self.modifyed = true;
+        self.database.data.items.push(data)
+    }
+    
+    pub fn update(&mut self, id: Id, data: T) {
+        self.modifyed = true;
+        self.database.data.items.update(id, data)
+    }
+    pub fn delete(&mut self, id: Id) {
+        self.modifyed = true;
+        self.database.data.items.delete(id)
     }
 }
 

@@ -14,7 +14,6 @@ pub struct ExpedientDatabase<'a> {
     expedients_observable: Observable<ExpedientHookContext<'a>>,
     expedients_list_observable: Observable<ExpedientListHookContext<'a>>,
     expedients_filter_list_observable: Observable<ExpedientFilterListHookContext<'a>>,
-    data_has_changed: bool,
 }
 
 #[derive(Clone)]
@@ -61,7 +60,6 @@ impl<'a> ExpedientDatabase<'a> {
             expedients_observable: Observable::new(),
             expedients_list_observable: Observable::new(),
             expedients_filter_list_observable: Observable::new(),
-            data_has_changed: false,
         })
     }
 
@@ -74,7 +72,6 @@ impl<'a> ExpedientDatabase<'a> {
             expedients_observable: Observable::new(),
             expedients_list_observable: Observable::new(),
             expedients_filter_list_observable: Observable::new(),
-            data_has_changed: true,
         })
     }
 
@@ -87,7 +84,6 @@ impl<'a> ExpedientDatabase<'a> {
             expedients_observable: Observable::new(),
             expedients_list_observable: Observable::new(),
             expedients_filter_list_observable: Observable::new(),
-            data_has_changed: false,
         })
     }
 
@@ -271,7 +267,6 @@ impl<'a> ExpedientDatabase<'a> {
     }
 
     fn dispath_change(&mut self) {
-        self.data_has_changed = true;
         self.expedients_observable.trigger();
         // block_on(join!(
         self.expedients_filter_list_observable.trigger();
@@ -280,11 +275,8 @@ impl<'a> ExpedientDatabase<'a> {
     }
 
     /// If data has changes, creates a backup.
-    pub fn store(&mut self) -> Result<()> {
-        if self.data_has_changed {
-            self.data_has_changed = false;
-            self.database.write().unwrap().store()?;
-        }
+    pub fn save(&mut self) -> Result<()> {
+        self.database.write().unwrap().save()?;
         Ok(())
     }
 }
@@ -815,11 +807,11 @@ mod test {
     }
 
     #[test]
-    fn store_do_not_create_files_when_data_is_not_changed() {
+    fn save_do_not_create_files_when_data_is_not_changed() {
         let tempdir = TempDir::new();
         {
             let mut database = ExpedientDatabase::create(&tempdir.path).unwrap();
-            database.store().unwrap();
+            database.save().unwrap();
             database.create_expedient(Expedient {
                 description: String::from("Pedro"),
                 license_plate: String::from(""),
@@ -834,10 +826,10 @@ mod test {
                     hour: 11,
                 },
             });
-            database.store().unwrap();
+            database.save().unwrap();
             sleep_for(1100);
-            database.store().unwrap();
-            database.store().unwrap();
+            database.save().unwrap();
+            database.save().unwrap();
         }
 
         let year = crate::database::Instant::now().year().to_string();

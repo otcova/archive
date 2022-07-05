@@ -47,7 +47,7 @@ fn main() {
         .run(move |_, e| {
             if let RunEvent::ExitRequested { .. } = e {
                 if let Some(database) = database_state.database_mutex.lock().unwrap().as_mut() {
-                    database.store().expect("error saving database");
+                    database.save().expect("error saving database");
                 }
             }
         });
