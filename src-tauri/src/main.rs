@@ -1,4 +1,4 @@
-#![feature(future_join, future_poll_fn)]
+#![feature(thread_is_running)]
 #![allow(dead_code)]
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),

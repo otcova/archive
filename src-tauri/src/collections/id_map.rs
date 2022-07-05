@@ -1,8 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{
-    mem::size_of,
-    slice::{Iter, IterMut},
-};
+use std::slice::{Iter, IterMut};
 
 /// Id.0 is the index to the data and Id.1 is an identifier
 /// to check if the data has been replaced

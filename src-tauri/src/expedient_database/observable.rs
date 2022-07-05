@@ -1,5 +1,6 @@
 use crate::collections::*;
 use serde::Serialize;
+use std::thread::{spawn, JoinHandle};
 
 #[derive(Clone)]
 pub struct Callback<Context: Clone + Send + Sync> {
@@ -16,6 +17,9 @@ impl<Context: Clone + Send + Sync> Serialize for Callback<Context> {
     }
 }
 impl<Context: Clone + Send + Sync> Callback<Context> {
+    pub fn new(context: Context, callback: fn(&Context)) -> Self {
+        Self { context, callback }
+    }
     pub fn call(&self) {
         (self.callback)(&self.context)
     }
@@ -23,12 +27,14 @@ impl<Context: Clone + Send + Sync> Callback<Context> {
 
 pub struct Observable<Context: Clone + Send + Sync> {
     hooks: IdMap<Callback<Context>>,
+    async_trigger_joins: IdMap<JoinHandle<()>>,
 }
 
 impl<Context: Clone + Send + Sync> Observable<Context> {
     pub fn new() -> Self {
         Self {
             hooks: IdMap::new(),
+            async_trigger_joins: IdMap::new(),
         }
     }
 
@@ -50,6 +56,41 @@ impl<Context: Clone + Send + Sync> Observable<Context> {
     }
 }
 
+impl<Context: Clone + Send + Sync + 'static> Observable<Context> {
+    pub fn async_trigger(&mut self) {
+        self.try_join_handles();
+
+        for (_, callback) in self.hooks.iter_mut() {
+            let cloned_callback = callback.clone();
+
+            let join_handle = spawn(move || cloned_callback.call());
+
+            self.async_trigger_joins.push(join_handle);
+        }
+    }
+
+    fn try_join_handles(&mut self) {
+        let ids_to_delete: Vec<_> = self
+            .async_trigger_joins
+            .iter()
+            .filter(|(_, handle)| handle.is_finished())
+            .map(|(id, _)| id)
+            .collect();
+
+        for id in ids_to_delete {
+            self.async_trigger_joins.pop(id).unwrap().join().unwrap();
+        }
+    }
+}
+
+impl<Context: Clone + Send + Sync> Drop for Observable<Context> {
+    fn drop(&mut self) {
+        for handle in self.async_trigger_joins.take_iter() {
+            handle.join().unwrap();
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -64,22 +105,16 @@ mod test {
         let mut observable = Observable::<Arc<AtomicI8>>::new();
 
         observable.subscrive(
-            Callback {
-                callback: |ctx| {
-                    ctx.fetch_add(2, Ordering::SeqCst);
-                },
-                context: has_been_triggered.clone(),
-            },
+            Callback::new(has_been_triggered.clone(), |ctx| {
+                ctx.fetch_add(2, Ordering::SeqCst);
+            }),
             false,
         );
 
         observable.subscrive(
-            Callback {
-                callback: |ctx| {
-                    ctx.fetch_add(3, Ordering::SeqCst);
-                },
-                context: has_been_triggered.clone(),
-            },
+            Callback::new(has_been_triggered.clone(), |ctx| {
+                ctx.fetch_add(3, Ordering::SeqCst);
+            }),
             true,
         );
 
@@ -94,17 +129,35 @@ mod test {
         let mut observable = Observable::<Arc<AtomicI8>>::new();
 
         let id = observable.subscrive(
-            Callback {
-                callback: |ctx| {
-                    ctx.fetch_add(3, Ordering::SeqCst);
-                },
-                context: has_been_triggered.clone(),
-            },
+            Callback::new(has_been_triggered.clone(), |ctx| {
+                ctx.fetch_add(3, Ordering::SeqCst);
+            }),
             true,
         );
         observable.unsubscrive(id);
         observable.trigger();
 
         assert_eq!(3, has_been_triggered.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn async_trigger() {
+        let has_been_triggered = Arc::new(AtomicI8::new(0));
+        {
+            let mut observable = Observable::<Arc<AtomicI8>>::new();
+
+            observable.subscrive(
+                Callback::new(has_been_triggered.clone(), |ctx| {
+                    // Delay to simulate computation
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                    ctx.fetch_add(3, Ordering::SeqCst);
+                }),
+                true,
+            );
+            observable.async_trigger();
+
+            assert_eq!(3, has_been_triggered.load(Ordering::SeqCst));
+        }
+        assert_eq!(6, has_been_triggered.load(Ordering::SeqCst));
     }
 }
