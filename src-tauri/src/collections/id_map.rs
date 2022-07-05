@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::slice::{Iter, IterMut};
+use std::{
+    mem::size_of,
+    slice::{Iter, IterMut},
+};
 
 /// Id.0 is the index to the data and Id.1 is an identifier
 /// to check if the data has been replaced
@@ -16,12 +19,12 @@ impl Id {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Item<T: Clone + Send + Sync> {
+struct Item<T: Send + Sync> {
     pub identifier: usize,
     pub data: T,
 }
 
-impl<T: Clone + Send + Sync> Item<T> {
+impl<T: Send + Sync> Item<T> {
     fn new(identifier: usize, data: T) -> Self {
         Self { identifier, data }
     }
@@ -32,13 +35,13 @@ impl<T: Clone + Send + Sync> Item<T> {
         self.identifier = 0;
     }
     fn take(&mut self) -> Option<T> {
-        let data = self.clone_data();
-        self.clean();
-        data
-    }
-    fn clone_data(&self) -> Option<T> {
         if self.is_some() {
-            Some(self.data.clone())
+            unsafe {
+                let mut data = std::mem::MaybeUninit::uninit().assume_init();
+                std::ptr::copy(&self.data as *const _, &mut data as *mut _, size_of::<T>());
+                self.clean();
+                Some(data).take()
+            }
         } else {
             None
         }
@@ -52,20 +55,47 @@ impl<T: Clone + Send + Sync> Item<T> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct IdMap<T: Serialize + Clone + Send + Sync> {
+impl<T: Clone + Send + Sync> Item<T> {
+    fn clone_data(&self) -> Option<T> {
+        if self.is_some() {
+            Some(self.data.clone())
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct IdMap<T: Send + Sync> {
     data: Vec<Item<T>>,
     empty_indexes: Vec<usize>,
     last_identifier: usize,
 }
 
-impl<T: Serialize + Clone + Send + Sync> Default for IdMap<T> {
+#[derive(Debug, Serialize)]
+pub struct IdMapSerialize<T: Serialize + Send + Sync> {
+    data: Vec<Item<T>>,
+    empty_indexes: Vec<usize>,
+    last_identifier: usize,
+}
+
+impl<T: Serialize + Send + Sync> Serialize for IdMap<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let data: &IdMapSerialize<T> = unsafe { std::mem::transmute(self) };
+        data.serialize(serializer)
+    }
+}
+
+impl<T: Send + Sync> Default for IdMap<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Serialize + Clone + Send + Sync> IdMap<T> {
+impl<T: Send + Sync> IdMap<T> {
     pub fn new() -> Self {
         Self {
             data: vec![],
@@ -126,6 +156,10 @@ impl<T: Serialize + Clone + Send + Sync> IdMap<T> {
         }
     }
 
+    pub fn take_iter<'a>(&'a mut self) -> impl Iterator<Item = T> + 'a {
+        self.data.iter_mut().map(|item| item.take()).flatten()
+    }
+
     pub fn update(&mut self, id: Id, item: T) {
         if id.index < self.data.len() {
             self.data[id.index].data = item
@@ -139,7 +173,9 @@ impl<T: Serialize + Clone + Send + Sync> IdMap<T> {
             None
         }
     }
+}
 
+impl<T: Clone + Send + Sync> IdMap<T> {
     pub fn clone_data(&self, id: Id) -> Option<T> {
         if self.exists(id) {
             self.data[id.index].clone_data()
@@ -149,12 +185,12 @@ impl<T: Serialize + Clone + Send + Sync> IdMap<T> {
     }
 }
 
-pub struct IdMapIter<'a, T: Clone + Send + Sync> {
+pub struct IdMapIter<'a, T: Send + Sync> {
     data_iter: Iter<'a, Item<T>>,
     index: usize,
 }
 
-impl<'a, T: Clone + Send + Sync> Iterator for IdMapIter<'a, T> {
+impl<'a, T: Send + Sync> Iterator for IdMapIter<'a, T> {
     type Item = (Id, &'a T);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -174,12 +210,12 @@ impl<'a, T: Clone + Send + Sync> Iterator for IdMapIter<'a, T> {
     }
 }
 
-pub struct IdMapIterMut<'a, T: Clone + Send + Sync> {
+pub struct IdMapIterMut<'a, T: Send + Sync> {
     data_iter: IterMut<'a, Item<T>>,
     index: usize,
 }
 
-impl<'a, T: Clone + Send + Sync> Iterator for IdMapIterMut<'a, T> {
+impl<'a, T: Send + Sync> Iterator for IdMapIterMut<'a, T> {
     type Item = (Id, &'a mut T);
 
     fn next(&mut self) -> Option<Self::Item> {
