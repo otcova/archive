@@ -57,9 +57,9 @@ impl<'a> ExpedientDatabase<'a> {
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
-            expedients_observable: Observable::new(),
-            expedients_list_observable: Observable::new(),
-            expedients_filter_list_observable: Observable::new(),
+            expedients_observable: Observable::default(),
+            expedients_list_observable: Observable::default(),
+            expedients_filter_list_observable: Observable::default(),
         })
     }
 
@@ -69,9 +69,9 @@ impl<'a> ExpedientDatabase<'a> {
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
-            expedients_observable: Observable::new(),
-            expedients_list_observable: Observable::new(),
-            expedients_filter_list_observable: Observable::new(),
+            expedients_observable: Observable::default(),
+            expedients_list_observable: Observable::default(),
+            expedients_filter_list_observable: Observable::default(),
         })
     }
 
@@ -81,9 +81,9 @@ impl<'a> ExpedientDatabase<'a> {
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
-            expedients_observable: Observable::new(),
-            expedients_list_observable: Observable::new(),
-            expedients_filter_list_observable: Observable::new(),
+            expedients_observable: Observable::default(),
+            expedients_list_observable: Observable::default(),
+            expedients_filter_list_observable: Observable::default(),
         })
     }
 
@@ -245,8 +245,8 @@ impl<'a> ExpedientDatabase<'a> {
         }
     }
     pub fn release_all_hooks(&mut self) {
-        self.expedients_observable = Observable::new();
-        self.expedients_list_observable = Observable::new();
+        self.expedients_observable = Observable::default();
+        self.expedients_list_observable = Observable::default();
     }
 
     pub fn update_expedient(&mut self, id: Uid, expedient: Expedient) {

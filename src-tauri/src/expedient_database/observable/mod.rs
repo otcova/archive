@@ -37,14 +37,15 @@ pub enum InstantTriggerType {
     None,
 }
 
-impl<'a, Context: Clone + Send + Sync + 'a> Observable<'a, Context> {
-    pub fn new() -> Self {
+impl<'a, Context: Clone + Send + Sync + 'a> Default for Observable<'a, Context> {
+    fn default() -> Self {
         Self {
-            hooks: IdMap::new(),
-            async_trigger_joins: IdMap::new(),
+            hooks: Default::default(),
+            async_trigger_joins: Default::default(),
         }
     }
-
+}
+impl<'a, Context: Clone + Send + Sync + 'a> Observable<'a, Context> {
     pub fn subscrive(
         &mut self,
         callback: Callback<Context>,
@@ -95,7 +96,7 @@ impl<'a, Context: Clone + Send + Sync + 'a> Observable<'a, Context> {
         // for id in ids_to_delete {
         //     self.async_trigger_joins.pop(id);
         // }
-        
+
         // for handle_item in self.async_trigger_joins.iter_mut() {
         //     handle_item.value.take().join();
         // }
@@ -113,7 +114,7 @@ mod test {
     fn subscrive_and_triger() {
         let has_been_triggered = Arc::new(AtomicI8::new(0));
 
-        let mut observable = Observable::<Arc<AtomicI8>>::new();
+        let mut observable = Observable::<Arc<AtomicI8>>::default();
 
         observable.subscrive(
             Callback::new(has_been_triggered.clone(), |ctx| {
@@ -137,7 +138,7 @@ mod test {
     fn subscrive_unsubscrive_and_triger() {
         let has_been_triggered = Arc::new(AtomicI8::new(0));
 
-        let mut observable = Observable::<Arc<AtomicI8>>::new();
+        let mut observable = Observable::<Arc<AtomicI8>>::default();
 
         let id = observable.subscrive(
             Callback::new(has_been_triggered.clone(), |ctx| {
@@ -155,7 +156,7 @@ mod test {
     fn async_trigger() {
         let has_been_triggered = Arc::new(AtomicI8::new(0));
         {
-            let mut observable = Observable::<Arc<AtomicI8>>::new();
+            let mut observable = Observable::<Arc<AtomicI8>>::default();
 
             observable.subscrive(
                 Callback::new(has_been_triggered.clone(), |ctx| {
@@ -176,7 +177,7 @@ mod test {
     fn async_instant_trigger() {
         let has_been_triggered = Arc::new(AtomicI8::new(0));
         {
-            let mut observable = Observable::<Arc<AtomicI8>>::new();
+            let mut observable = Observable::<Arc<AtomicI8>>::default();
 
             observable.subscrive(
                 Callback::new(has_been_triggered.clone(), |ctx| {

@@ -63,7 +63,7 @@ impl<T: Item> Chunk<T> {
             }
         }
 
-        self.database.data.items.pop(oldest_id?)
+        self.database.data.items.take(oldest_id?)
     }
     
     pub fn save(&mut self) -> Result<()> {
@@ -75,7 +75,7 @@ impl<T: Item> Chunk<T> {
     }
     
     pub fn ref_data(&self, id: Id) -> Option<&T> {
-        self.database.data.items.ref_data(id)
+        self.database.data.items.as_ref(id)
     }
     pub fn len(&self) -> usize {
         self.database.data.items.len()

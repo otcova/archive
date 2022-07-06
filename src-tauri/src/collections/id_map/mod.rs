@@ -1,75 +1,10 @@
-use serde::{Deserialize, Serialize};
+mod item;
+mod serializer;
+pub use item::Id;
+use item::*;
+use serde::Deserialize;
+pub use serializer::*;
 use std::slice::{Iter, IterMut};
-
-/// Id.0 is the index to the data and Id.1 is an identifier
-/// to check if the data has been replaced
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Id {
-    pub index: usize,
-    pub identifier: usize,
-}
-
-impl Id {
-    fn new(index: usize, identifier: usize) -> Self {
-        Self { index, identifier }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Item<T: Send + Sync> {
-    identifier: usize,
-    data: Option<T>,
-}
-
-impl<T: Send + Sync> Item<T> {
-    fn new(identifier: usize, data: T) -> Self {
-        Self {
-            identifier,
-            data: Some(data),
-        }
-    }
-    fn is_some(&self) -> bool {
-        self.data.is_some()
-    }
-    fn clean(&mut self) {
-        self.identifier = 0;
-        self.data = None;
-    }
-    fn take(&mut self) -> Option<T> {
-        if self.is_some() {
-            self.data.take()
-        } else {
-            None
-        }
-    }
-    fn ref_data(&self) -> Option<&T> {
-        if self.is_some() {
-            self.data.as_ref()
-        } else {
-            None
-        }
-    }
-    fn mut_data(&mut self) -> Option<&mut T> {
-        if self.is_some() {
-            self.data.as_mut()
-        } else {
-            None
-        }
-    }
-    fn update(&mut self, data: T) {
-        self.data = Some(data)
-    }
-}
-
-impl<T: Clone + Send + Sync> Item<T> {
-    fn clone_data(&self) -> Option<T> {
-        if self.is_some() {
-            self.data.clone()
-        } else {
-            None
-        }
-    }
-}
 
 #[derive(Debug, Deserialize)]
 pub struct IdMap<T: Send + Sync> {
@@ -78,38 +13,17 @@ pub struct IdMap<T: Send + Sync> {
     last_identifier: usize,
 }
 
-#[derive(Debug, Serialize)]
-pub struct IdMapSerialize<T: Serialize + Send + Sync> {
-    data: Vec<Item<T>>,
-    empty_indexes: Vec<usize>,
-    last_identifier: usize,
-}
-
-impl<T: Serialize + Send + Sync> Serialize for IdMap<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let data: &IdMapSerialize<T> = unsafe { std::mem::transmute(self) };
-        data.serialize(serializer)
-    }
-}
-
 impl<T: Send + Sync> Default for IdMap<T> {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T: Send + Sync> IdMap<T> {
-    pub fn new() -> Self {
         Self {
             data: vec![],
             empty_indexes: vec![],
             last_identifier: 0,
         }
     }
+}
 
+impl<T: Send + Sync> IdMap<T> {
     pub fn len(&self) -> usize {
         self.data.len() - self.empty_indexes.len()
     }
@@ -118,13 +32,20 @@ impl<T: Send + Sync> IdMap<T> {
         self.last_identifier += 1;
         if let Some(reused_id) = self.empty_indexes.pop() {
             self.data[reused_id] = Item::new(self.last_identifier, item);
-            return Id::new(reused_id, self.last_identifier);
+            Id {
+                index: reused_id,
+                identifier: self.last_identifier,
+            }
+        } else {
+            self.data.push(Item::new(self.last_identifier, item));
+            Id {
+                index: self.data.len() - 1,
+                identifier: self.last_identifier,
+            }
         }
-        self.data.push(Item::new(self.last_identifier, item));
-        Id::new(self.data.len() - 1, self.last_identifier)
     }
 
-    pub fn pop(&mut self, id: Id) -> Option<T> {
+    pub fn take(&mut self, id: Id) -> Option<T> {
         if self.exists(id) {
             self.empty_indexes.push(id.index);
             self.data[id.index].take()
@@ -135,7 +56,7 @@ impl<T: Send + Sync> IdMap<T> {
 
     pub fn delete(&mut self, id: Id) {
         if self.exists(id) {
-            self.data[id.index].clean();
+            self.data[id.index].delete();
             self.empty_indexes.push(id.index);
         }
     }
@@ -145,6 +66,28 @@ impl<T: Send + Sync> IdMap<T> {
             self.data[id.index].identifier == id.identifier
         } else {
             false
+        }
+    }
+
+    pub fn as_ref(&self, id: Id) -> Option<&T> {
+        if self.exists(id) {
+            self.data[id.index].as_ref()
+        } else {
+            None
+        }
+    }
+    
+    pub fn as_mut(&mut self, id: Id) -> Option<&mut T> {
+        if self.exists(id) {
+            self.data[id.index].as_mut()
+        } else {
+            None
+        }
+    }
+    
+    pub fn update(&mut self, id: Id, new_data: T) {
+        if let Some(data_mut) = self.as_mut(id) {
+            *data_mut = new_data
         }
     }
 
@@ -162,22 +105,8 @@ impl<T: Send + Sync> IdMap<T> {
         }
     }
 
-    pub fn take_iter<'a>(&'a mut self) -> impl Iterator<Item = T> + 'a {
+    pub fn take_into_iter<'a>(&'a mut self) -> impl Iterator<Item = T> + 'a {
         self.data.iter_mut().map(|item| item.take()).flatten()
-    }
-
-    pub fn update(&mut self, id: Id, item: T) {
-        if id.index < self.data.len() {
-            self.data[id.index].update(item)
-        }
-    }
-
-    pub fn ref_data(&self, id: Id) -> Option<&T> {
-        if self.exists(id) {
-            self.data[id.index].ref_data()
-        } else {
-            None
-        }
     }
 }
 
@@ -208,7 +137,7 @@ impl<'a, T: Send + Sync> Iterator for IdMapIter<'a, T> {
                         index: self.index - 1,
                         identifier: item.identifier,
                     },
-                    item.ref_data().unwrap(),
+                    item.as_ref().unwrap(),
                 ));
             }
         }
@@ -233,7 +162,7 @@ impl<'a, T: Send + Sync> Iterator for IdMapIterMut<'a, T> {
                         index: self.index - 1,
                         identifier: item.identifier,
                     },
-                    item.mut_data().unwrap(),
+                    item.as_mut().unwrap(),
                 ));
             }
         }
@@ -253,13 +182,13 @@ mod test {
 
     #[test]
     fn initial_length_is_zero() {
-        let map = IdMap::<i32>::new();
+        let map = IdMap::<i32>::default();
         assert_eq!(map.len(), 0);
     }
 
     #[test]
     fn length_increments_on_push() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
         assert_eq!(map.len(), 0);
         map.push(123);
         assert_eq!(map.len(), 1);
@@ -271,7 +200,7 @@ mod test {
 
     #[test]
     fn push_returns_an_id_that_increments() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
         assert_eq!(map.push(123).index, 0);
         assert_eq!(map.push(0).index, 1);
         assert_eq!(map.push(123).index, 2);
@@ -279,7 +208,7 @@ mod test {
 
     #[test]
     fn iter_pushed_elements() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
 
         let id_a = map.push(0);
         let id_b = map.push(5325);
@@ -293,7 +222,7 @@ mod test {
 
     #[test]
     fn iter_after_delete() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
 
         map.push(123);
         map.push(5325);
@@ -311,7 +240,7 @@ mod test {
 
     #[test]
     fn iter_mut_pushed_elements() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
 
         let id_a = map.push(0);
         let id_b = map.push(5325);
@@ -325,7 +254,7 @@ mod test {
 
     #[test]
     fn iter_mut_after_delete() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
 
         map.push(123);
         map.push(5325);
@@ -343,7 +272,7 @@ mod test {
 
     #[test]
     fn push_after_delete_reuses_id_index() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
         map.push(12);
         let id = map.push(543);
         map.push(21);
@@ -359,7 +288,7 @@ mod test {
 
     #[test]
     fn read_updated_pushed_items() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
 
         let id_a = map.push(2);
         let id_b = map.push(5325);
@@ -367,16 +296,16 @@ mod test {
 
         map.update(id_b, 2314);
 
-        assert_eq!(*map.ref_data(id_a).unwrap(), 2);
-        assert_eq!(*map.ref_data(id_b).unwrap(), 2314);
-        assert_eq!(*map.ref_data(id_c).unwrap(), 14);
+        assert_eq!(*map.as_ref(id_a).unwrap(), 2);
+        assert_eq!(*map.as_ref(id_b).unwrap(), 2314);
+        assert_eq!(*map.as_ref(id_c).unwrap(), 14);
 
         assert_eq!(map.len(), 3);
     }
 
     #[test]
     fn clone_updated_pushed_items() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
 
         let id_a = map.push(2);
         let id_b = map.push(5325);
@@ -393,13 +322,13 @@ mod test {
 
     #[test]
     fn pop_items() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
         let id_a = map.push(12);
         let id_b = map.push(543);
         let id_c = map.push(21);
 
         assert_eq!(
-            map.pop(Id {
+            map.take(Id {
                 index: id_a.index,
                 identifier: 1000,
             }),
@@ -407,19 +336,19 @@ mod test {
         );
         assert_eq!(3, map.len());
 
-        assert_eq!(map.pop(id_b), Some(543));
+        assert_eq!(map.take(id_b), Some(543));
         assert_eq!(2, map.len());
 
-        assert_eq!(map.pop(id_a), Some(12));
+        assert_eq!(map.take(id_a), Some(12));
         assert_eq!(1, map.len());
 
-        assert_eq!(map.pop(id_c), Some(21));
+        assert_eq!(map.take(id_c), Some(21));
         assert_eq!(0, map.len());
     }
 
     #[test]
     fn complete_operation() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
 
         let id_0 = map.push(12);
         let id_1 = map.push(543);
@@ -454,7 +383,7 @@ mod test {
 
     #[test]
     fn exists() {
-        let mut map = IdMap::<i32>::new();
+        let mut map = IdMap::<i32>::default();
 
         let id_0 = map.push(12);
         let id_1 = map.push(543);
