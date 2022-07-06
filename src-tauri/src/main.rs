@@ -1,4 +1,4 @@
-#![feature(thread_is_running)]
+#![feature(thread_spawn_unchecked, thread_is_running)]
 #![allow(dead_code)]
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),

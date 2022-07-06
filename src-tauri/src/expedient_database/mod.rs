@@ -11,9 +11,9 @@ use std::sync::{Arc, Mutex, RwLock};
 
 pub struct ExpedientDatabase<'a> {
     database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
-    expedients_observable: Observable<ExpedientHookContext<'a>>,
-    expedients_list_observable: Observable<ExpedientListHookContext<'a>>,
-    expedients_filter_list_observable: Observable<ExpedientFilterListHookContext<'a>>,
+    expedients_observable: Observable<'a, ExpedientHookContext<'a>>,
+    expedients_list_observable: Observable<'a, ExpedientListHookContext<'a>>,
+    expedients_filter_list_observable: Observable<'a, ExpedientFilterListHookContext<'a>>,
 }
 
 #[derive(Clone)]
@@ -117,7 +117,7 @@ impl<'a> ExpedientDatabase<'a> {
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
             },
-            true,
+            InstantTriggerType::Sync,
         ))
     }
 
@@ -150,7 +150,7 @@ impl<'a> ExpedientDatabase<'a> {
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
             },
-            true,
+            InstantTriggerType::Async,
         ))
     }
     pub fn hook_all_open_expedients(
@@ -191,7 +191,7 @@ impl<'a> ExpedientDatabase<'a> {
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
             },
-            true,
+            InstantTriggerType::Async,
         ))
     }
     pub fn hook_expedient_filter(
@@ -231,7 +231,7 @@ impl<'a> ExpedientDatabase<'a> {
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
             },
-            true,
+            InstantTriggerType::Async,
         ))
     }
 
@@ -268,10 +268,8 @@ impl<'a> ExpedientDatabase<'a> {
 
     fn dispath_change(&mut self) {
         self.expedients_observable.trigger();
-        // block_on(join!(
-        self.expedients_filter_list_observable.trigger();
-        self.expedients_list_observable.trigger();
-        // ));
+        self.expedients_filter_list_observable.async_trigger();
+        self.expedients_list_observable.async_trigger();
     }
 
     /// If data has changes, creates a backup.
@@ -285,7 +283,7 @@ impl<'a> ExpedientDatabase<'a> {
 mod test {
     use super::*;
     use crate::test_utils::*;
-
+    
     #[test]
     fn create_close_and_open_database() {
         let tempdir = TempDir::new();
@@ -370,7 +368,7 @@ mod test {
                     2 => assert_eq!(Some(&expedient_b.clone()), exp),
                     3 => assert_eq!(None, exp),
                     _ => panic!("To many calls"),
-                }
+                };
             });
             db.update_expedient(id, expedient_b.clone());
             db.delete_expedient(id);
@@ -682,10 +680,14 @@ mod test {
                 }
             },
         );
-
+        
+        sleep_for(20);
         db.update_expedient(id_1, expedient_done);
+        sleep_for(20);
         db.create_expedient(expedient_urgent.clone());
+        sleep_for(20);
         db.create_expedient(future_expedient.clone());
+        sleep_for(20);
         db.delete_expedient(id_4);
 
         drop(db);
