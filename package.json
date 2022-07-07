@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "description": "",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview",
+    "frontend-dev": "vite",
+    "frontend-build": "vite build",
     "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
     "test": "cd src-tauri && cargo test"
   },
   "license": "MIT",
