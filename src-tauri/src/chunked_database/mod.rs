@@ -78,12 +78,12 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
 
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = (Uid, &'a T)> + 'a {
         let iter = self.dynamic.iter();
-        iter.map(|(id, expedient)| (Uid::DYNAMIC(id), expedient))
+        iter.map(|item| (Uid::DYNAMIC(item.id), item.data))
     }
 
     pub fn iter_ancient(&self) -> impl Iterator<Item = (Uid, &T)> {
         let iter = self.ancient.iter();
-        iter.map(|(id, expedient)| (Uid::ANCIENT(id), expedient))
+        iter.map(|item| (Uid::ANCIENT(item.id), item.data))
     }
 
     pub fn delete(&mut self, id: Uid) {

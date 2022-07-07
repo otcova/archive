@@ -69,24 +69,24 @@ impl<T: Send + Sync> IdMap<T> {
         }
     }
 
-    pub fn as_ref(&self, id: Id) -> Option<&T> {
+    pub fn get_ref(&self, id: Id) -> Option<&T> {
         if self.exists(id) {
             self.data[id.index].as_ref()
         } else {
             None
         }
     }
-    
-    pub fn as_mut(&mut self, id: Id) -> Option<&mut T> {
+
+    pub fn get_mut(&mut self, id: Id) -> Option<&mut T> {
         if self.exists(id) {
             self.data[id.index].as_mut()
         } else {
             None
         }
     }
-    
+
     pub fn update(&mut self, id: Id, new_data: T) {
-        if let Some(data_mut) = self.as_mut(id) {
+        if let Some(data_mut) = self.get_mut(id) {
             *data_mut = new_data
         }
     }
@@ -105,8 +105,10 @@ impl<T: Send + Sync> IdMap<T> {
         }
     }
 
-    pub fn take_into_iter<'a>(&'a mut self) -> impl Iterator<Item = T> + 'a {
-        self.data.iter_mut().map(|item| item.take()).flatten()
+    pub fn take_into_iter<'a>(&mut self) -> impl Iterator<Item = T> {
+        self.empty_indexes = vec![];
+        let data = std::mem::replace(&mut self.data, vec![]);
+        data.into_iter().filter_map(|mut item| item.take())
     }
 }
 
@@ -126,19 +128,19 @@ pub struct IdMapIter<'a, T: Send + Sync> {
 }
 
 impl<'a, T: Send + Sync> Iterator for IdMapIter<'a, T> {
-    type Item = (Id, &'a T);
+    type Item = RefItem<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(item) = self.data_iter.next() {
             self.index += 1;
             if item.is_some() {
-                return Some((
-                    Id {
+                return Some(RefItem {
+                    id: Id {
                         index: self.index - 1,
                         identifier: item.identifier,
                     },
-                    item.as_ref().unwrap(),
-                ));
+                    data: item.as_ref().unwrap(),
+                });
             }
         }
         None
@@ -151,19 +153,19 @@ pub struct IdMapIterMut<'a, T: Send + Sync> {
 }
 
 impl<'a, T: Send + Sync> Iterator for IdMapIterMut<'a, T> {
-    type Item = (Id, &'a mut T);
+    type Item = MutItem<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(item) = self.data_iter.next() {
             self.index += 1;
             if item.is_some() {
-                return Some((
-                    Id {
+                return Some(MutItem {
+                    id: Id {
                         index: self.index - 1,
                         identifier: item.identifier,
                     },
-                    item.as_mut().unwrap(),
-                ));
+                    data: item.as_mut().unwrap(),
+                });
             }
         }
         None
@@ -212,12 +214,23 @@ mod test {
 
         let id_a = map.push(0);
         let id_b = map.push(5325);
-        let id_c = map.push(0);
+        let id_c = map.push(-1);
 
         let mut iter = map.iter();
-        assert_eq!(iter.next().unwrap(), (id_a, &0));
-        assert_eq!(iter.next().unwrap(), (id_b, &5325));
-        assert_eq!(iter.next().unwrap(), (id_c, &0));
+
+        let a = iter.next().unwrap();
+        assert_eq!(a.id, id_a);
+        assert_eq!(*a.data, 0);
+
+        let b = iter.next().unwrap();
+        assert_eq!(b.id, id_b);
+        assert_eq!(*b.data, 5325);
+
+        let c = iter.next().unwrap();
+        assert_eq!(c.id, id_c);
+        assert_eq!(*c.data, -1);
+
+        assert!(iter.next().is_none());
     }
 
     #[test]
@@ -232,24 +245,34 @@ mod test {
         map.delete(id);
 
         let mut iter = map.iter();
-        assert_eq!(*iter.next().unwrap().1, 123);
-        assert_eq!(*iter.next().unwrap().1, 5325);
-        assert_eq!(*iter.next().unwrap().1, 123);
-        assert_eq!(iter.next(), None);
+        assert_eq!(*iter.next().unwrap().data, 123);
+        assert_eq!(*iter.next().unwrap().data, 5325);
+        assert_eq!(*iter.next().unwrap().data, 123);
+        assert!(iter.next().is_none());
     }
 
     #[test]
     fn iter_mut_pushed_elements() {
         let mut map = IdMap::<i32>::default();
 
-        let id_a = map.push(0);
-        let id_b = map.push(5325);
+        let id_a = map.push(-194984);
+        let id_b = map.push(9491);
         let id_c = map.push(0);
 
         let mut iter = map.iter_mut();
-        assert_eq!(iter.next().unwrap(), (id_a, &mut 0));
-        assert_eq!(iter.next().unwrap(), (id_b, &mut 5325));
-        assert_eq!(iter.next().unwrap(), (id_c, &mut 0));
+        let a = iter.next().unwrap();
+        assert_eq!(a.id, id_a);
+        assert_eq!(*a.data, -194984);
+
+        let b = iter.next().unwrap();
+        assert_eq!(b.id, id_b);
+        assert_eq!(*b.data, 9491);
+
+        let c = iter.next().unwrap();
+        assert_eq!(c.id, id_c);
+        assert_eq!(*c.data, 0);
+
+        assert!(iter.next().is_none());
     }
 
     #[test]
@@ -264,10 +287,10 @@ mod test {
         map.delete(id);
 
         let mut iter = map.iter_mut();
-        assert_eq!(*iter.next().unwrap().1, 123);
-        assert_eq!(*iter.next().unwrap().1, 5325);
-        assert_eq!(*iter.next().unwrap().1, 123);
-        assert_eq!(iter.next(), None);
+        assert_eq!(*iter.next().unwrap().data, 123);
+        assert_eq!(*iter.next().unwrap().data, 5325);
+        assert_eq!(*iter.next().unwrap().data, 123);
+        assert!(iter.next().is_none());
     }
 
     #[test]
@@ -296,9 +319,9 @@ mod test {
 
         map.update(id_b, 2314);
 
-        assert_eq!(*map.as_ref(id_a).unwrap(), 2);
-        assert_eq!(*map.as_ref(id_b).unwrap(), 2314);
-        assert_eq!(*map.as_ref(id_c).unwrap(), 14);
+        assert_eq!(*map.get_ref(id_a).unwrap(), 2);
+        assert_eq!(*map.get_ref(id_b).unwrap(), 2314);
+        assert_eq!(*map.get_ref(id_c).unwrap(), 14);
 
         assert_eq!(map.len(), 3);
     }
@@ -355,29 +378,37 @@ mod test {
         let id_2 = map.push(21);
 
         assert_eq!(
-            vec![(id_0, &12), (id_1, &543), (id_2, &21)],
-            map.iter().collect::<Vec<_>>()
+            vec![(id_0, 12), (id_1, 543), (id_2, 21)],
+            map.iter()
+                .map(|item| (item.id, *item.data))
+                .collect::<Vec<_>>()
         );
 
         map.update(id_1, 132);
 
         assert_eq!(
-            vec![(id_0, &12), (id_1, &132), (id_2, &21)],
-            map.iter().collect::<Vec<_>>()
+            vec![(id_0, 12), (id_1, 132), (id_2, 21)],
+            map.iter()
+                .map(|item| (item.id, *item.data))
+                .collect::<Vec<_>>()
         );
 
         let id_3 = map.push(41);
 
         assert_eq!(
-            vec![(id_0, &12), (id_1, &132), (id_2, &21), (id_3, &41)],
-            map.iter().collect::<Vec<_>>()
+            vec![(id_0, 12), (id_1, 132), (id_2, 21), (id_3, 41)],
+            map.iter()
+                .map(|item| (item.id, *item.data))
+                .collect::<Vec<_>>()
         );
 
         map.delete(id_2);
 
         assert_eq!(
-            vec![(id_0, &12), (id_1, &132), (id_3, &41)],
-            map.iter().collect::<Vec<_>>()
+            vec![(id_0, 12), (id_1, 132), (id_3, 41)],
+            map.iter()
+                .map(|item| (item.id, *item.data))
+                .collect::<Vec<_>>()
         );
     }
 

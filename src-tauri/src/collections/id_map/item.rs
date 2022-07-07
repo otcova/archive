@@ -22,6 +22,9 @@ impl<T: Send + Sync> Item<T> {
     pub fn is_some(&self) -> bool {
         self.data.is_some()
     }
+    pub fn is_none(&self) -> bool {
+        self.data.is_none()
+    }
     pub fn delete(&mut self) {
         self.identifier = 0;
         self.data = None;
@@ -60,4 +63,16 @@ impl<T: Clone + Send + Sync> Item<T> {
             None
         }
     }
+}
+
+#[derive(Debug)]
+pub struct RefItem<'a, T: Send + Sync> {
+    pub id: Id,
+    pub data: &'a T,
+}
+
+#[derive(Debug)]
+pub struct MutItem<'a, T: Send + Sync> {
+    pub id: Id,
+    pub data: &'a mut T,
 }

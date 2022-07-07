@@ -55,11 +55,11 @@ impl<T: Item> Chunk<T> {
         let mut oldest_id = None;
         let mut oldest_date = i32::MAX;
 
-        for (id, item) in self.database.data.items.iter() {
-            let item_date = item.date();
+        for item in self.database.data.items.iter() {
+            let item_date = item.data.date();
             if item_date < oldest_date {
                 oldest_date = item_date;
-                oldest_id = Some(id);
+                oldest_id = Some(item.id);
             }
         }
 
@@ -75,7 +75,7 @@ impl<T: Item> Chunk<T> {
     }
     
     pub fn ref_data(&self, id: Id) -> Option<&T> {
-        self.database.data.items.as_ref(id)
+        self.database.data.items.get_ref(id)
     }
     pub fn len(&self) -> usize {
         self.database.data.items.len()

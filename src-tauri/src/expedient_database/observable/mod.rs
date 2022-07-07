@@ -66,16 +66,16 @@ impl<'a, Context: Clone + Send + Sync + 'a> Observable<'a, Context> {
     }
 
     pub fn trigger(&mut self) {
-        for (_, callback) in self.hooks.iter_mut() {
-            callback.call()
+        for callback_item in self.hooks.iter_mut() {
+            callback_item.data.call()
         }
     }
 
     pub fn async_trigger(&mut self) {
         self.try_join_handles();
 
-        for (_, callback) in self.hooks.iter_mut() {
-            Self::async_call(&mut self.async_trigger_joins, callback.clone());
+        for callback_item in self.hooks.iter_mut() {
+            Self::async_call(&mut self.async_trigger_joins, callback_item.data.clone());
         }
     }
 
@@ -85,21 +85,15 @@ impl<'a, Context: Clone + Send + Sync + 'a> Observable<'a, Context> {
     }
 
     fn try_join_handles(&mut self) {
-        // let ids_to_delete: Vec<_> = self
-        //     .async_trigger_joins
-        //     .iter_mut()
-        //     .filter_map(|(id, thread)| thread.try_join().map(|_| id))
-        //     // .filter(|(_, handle)| handle.is_finished())
-        //     // .map(|(id, _)| id)
-        //     .collect();
+        let ids_to_delete: Vec<_> = self
+            .async_trigger_joins
+            .iter_mut()
+            .filter_map(|thread_item| thread_item.data.try_join().map(|_| thread_item.id))
+            .collect();
 
-        // for id in ids_to_delete {
-        //     self.async_trigger_joins.pop(id);
-        // }
-
-        // for handle_item in self.async_trigger_joins.iter_mut() {
-        //     handle_item.value.take().join();
-        // }
+        for id in ids_to_delete {
+            self.async_trigger_joins.delete(id);
+        }
     }
 }
 
