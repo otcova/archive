@@ -17,7 +17,7 @@ const criticalError = (error, msg?) => setDatabaseError({
 	action: closeApp,
 })
 
-const unclassifiedError = (error) => criticalError("Error no classificat", error)
+const unclassifiedError = (error) => criticalError("Error", error)
 const lockError = () => criticalError("L'aplicació només pot estar oberta un cop")
 
 const requestCreateDatabase = () => setDatabaseError({
@@ -34,7 +34,7 @@ async function openDatabase() {
 		switch (error) {
 			case "NotFound": return requestCreateDatabase()
 			case "Collision": return lockError()
-			case "Corrupted": return loadRollbackInfo()
+			case "DataIsCorrupted": return loadRollbackInfo()
 			case "AlreadyOpen":
 				await invoke('release_all_hooks')
 				return setDatabaseError(null)
@@ -74,6 +74,12 @@ async function loadRollbackInfo() {
 			action: loadRollback,
 		})
 	} catch (error) {
+		if (error == "NotFound") {
+			return criticalError(
+				"S'ha trobat informació corrupte a la base de dates",
+				"No s'ha pogut recuperar cap copia de seguretat",
+			)
+		}
 		unclassifiedError(error)
 	}
 }
