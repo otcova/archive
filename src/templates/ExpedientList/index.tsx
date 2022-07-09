@@ -7,8 +7,8 @@ import style from './ExpedientList.module.sass'
 export default function ExpedientList(props: { hookType: "all_expedients" | "all_open_expedients" }) {
 
 	const [expedientList] = createHook(props.hookType,
-		{ from: expedientUtils.futureDate(), limit: 1000 })
-
+		{ from: expedientUtils.futureDate(), limit: 70 })
+	
 	return <div class={style.container}>
 		<For each={expedientList()?.map(([id]) => JSON.stringify(id)) ?? []}>{(_, index) =>
 			<Row expedient={expedientList()[index()][1]} expedientId={expedientList()[index()][0]} />
