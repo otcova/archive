@@ -1,8 +1,10 @@
-import { onCleanup, onMount } from "solid-js"
+import { JSXElement, onCleanup, onMount } from "solid-js"
 import style from "./IconButton.module.sass"
 
+type IconType = "folder" | "file"
+
 type Props = {
-	icon: "redirect"
+	icon: IconType,
 	shortCut?: string, // examples: ctrl a, alt r, ctrl alt n
 	style?: number,
 	action?: () => any,
@@ -27,5 +29,6 @@ export default function IconButton(props: Props) {
 	</div>
 }
 
-const icons = new Map()
-icons.set("redirect", <div>TODO</div>);
+const icons = new Map<IconType, JSXElement>()
+icons.set("folder", <div>Folder</div>);
+icons.set("file", <div>File</div>);

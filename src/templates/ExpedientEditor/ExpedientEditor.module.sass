@@ -1,0 +1,29 @@
+@use '../../layout'
+	
+.expedient_container
+	@include layout.row
+	@include layout.grow
+	overflow: hidden
+	width: 100%
+
+.expedient_column_left, .expedient_column_right
+	@include layout.column-top
+	flex-shrink: 1
+	height: 100%
+	width: 50%
+	overflow-y: auto
+
+	
+.bottom_bar
+	@include layout.row-left
+	gap: 30px
+	width: 100%
+	
+.bottom_bar_space
+	@include layout.grow
+
+.input_row
+	display: grid
+	grid-template-columns: auto auto
+	width: 100%
+	flex-shrink: 1

@@ -1,13 +1,20 @@
 import { batch, createContext, createSignal, For, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import Agenda from '../Agenda'
+import ExpedientEditor from '../ExpedientEditor'
 import style from './TabSystem.module.sass'
 
 const TabContext = createContext<{ focusTab, isActive, tab, createTab, closeTab, rename }>()
 export const useTab = () => useContext(TabContext)
 
+const initialTab = [
+	{ name: "Nou Expedient", componentClass: ExpedientEditor, props: {} },
+	{ name: " Oberts ", componentClass: Agenda, props: {} },
+	{ name: "Pendents", componentClass: Agenda, props: {} },
+	{ name: " Tancats ", componentClass: Agenda, props: {} },
+]
+
 export default function TabSystem() {
-	const initialTab = [{ name: "Agenda", componentClass: Agenda, props: {} }]
 	const [tabs, setTabs] = createStore<{ name, componentClass, props, component?}[]>(initialTab)
 	const [activeTab, setActiveTab] = createSignal(0)
 
