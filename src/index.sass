@@ -8,11 +8,11 @@ html, body, #root
 	height: 100%
 	font: lighter 14px Segoe UI
 	white-space: normal
-	
+
 #root
 	@include layout.column-top
 	background: #eee
-	
+
 *
 	box-sizing: border-box
 	width: fit-content
@@ -30,6 +30,11 @@ html, body, #root
 ::-webkit-scrollbar-thumb
 	border: 4px solid theme.$background
 	background: #aaa
-	
+
 ::-webkit-scrollbar-thumb:hover
 	background: #777
+
+@font-face
+	font-family: "codicon"
+	font-display: block
+	src: url("./codicon.ttf") format("truetype")

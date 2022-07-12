@@ -1,17 +1,26 @@
 @use '../../layout'
 @use '../../theme'
-	
-.button
-	@include layout.row
-	cursor: pointer
-	transition: all 100ms
-	height: 40px
-	padding: 10px 20px 10px 20px
-	border: 1px solid theme.$active-color
-	background: #fff
-	border-radius: 2px
-	color: #000
 
-.button:hover
+.container
+	cursor: pointer
+	
+.button, .close, .minimize
+	background-color: #fff0
+	transition: background-color 100ms
+	padding: 12px
+	
+.button:hover, .minimize:hover
+	background-color: #fff8
+	
+.close:hover
+	background-color: #f008
 	color: #fff
-	background: theme.$active-color
+		
+.close, .minimize
+	font: normal normal normal 16px/1 codicon
+
+.close::before
+	content: '\eab8'
+
+.minimize::before
+	content: '\eaba'

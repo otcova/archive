@@ -1,7 +1,7 @@
 import { JSXElement, onCleanup, onMount } from "solid-js"
 import style from "./IconButton.module.sass"
 
-type IconType = "folder" | "file"
+type IconType = "folder" | "file" | "close" | "minimize"
 
 type Props = {
 	icon: IconType,
@@ -24,11 +24,13 @@ export default function IconButton(props: Props) {
 	onMount(() => addEventListener("keydown", onKeydown))
 	onCleanup(() => removeEventListener("keydown", onKeydown))
 
-	return <div class={style.button} onClick={props.action}>
-		{icons.get(props.icon)}
+	return <div class={style.container} onClick={props.action}>
+		{icons.get(props.icon)()}
 	</div>
 }
 
-const icons = new Map<IconType, JSXElement>()
-icons.set("folder", <div>Folder</div>);
-icons.set("file", <div>File</div>);
+const icons = new Map<IconType, () => JSXElement>()
+icons.set("folder", () => <div class={style.button}>Folder</div>);
+icons.set("file", () => <div class={style.button}>File</div>);
+icons.set("close", () => <div class={style.close}></div>);
+icons.set("minimize", () => <div class={style.minimize}></div>);

@@ -3,11 +3,15 @@ import './index.sass'
 import ErrorPanel from './templates/ErrorPanel'
 import TabSystem from './templates/TabSystem'
 import { databaseError } from './database'
+import WindowButtons from './atoms/WindowButtons'
 
 function App() {
-	return <>{
-		databaseError() ? <ErrorPanel /> : <TabSystem />
-	}</>
+    return <>
+        <WindowButtons />
+        {
+            databaseError() ? <ErrorPanel /> : <TabSystem />
+        }
+    </>
 }
 
 render(App, document.getElementById('root') as HTMLElement)
