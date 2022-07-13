@@ -1,7 +1,5 @@
 # Frontend
 
-- Minimize and close window buttons
-
 ## Expedient List
 
 - Expedients and Orders mode

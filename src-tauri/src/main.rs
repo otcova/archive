@@ -12,6 +12,7 @@ mod api;
 mod chunked_database;
 mod collections;
 mod database;
+mod observable;
 mod error;
 mod expedient_database;
 mod mean;

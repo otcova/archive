@@ -1,51 +1,25 @@
 mod expedient;
-mod observable;
+mod hooks;
+use hooks::*;
 use crate::chunked_database::*;
 pub use crate::collections::UtcDate;
 use crate::error::*;
 pub use expedient::*;
-use observable::*;
+use crate::observable::*;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, RwLock};
 
 pub struct ExpedientDatabase<'a> {
     database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
-    expedients_observable: Observable<'a, ExpedientHookContext<'a>>,
-    expedients_list_observable: Observable<'a, ExpedientListHookContext<'a>>,
-    expedients_filter_list_observable: Observable<'a, ExpedientFilterListHookContext<'a>>,
+    hook_pool: HookPool<'a>,
 }
 
-#[derive(Clone)]
-struct ExpedientHookContext<'a> {
-    pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
-    pub expedient_id: Uid,
-    pub callback: Arc<Mutex<Box<dyn for<'r> FnMut(Option<&'r Expedient>) + Send + Sync + 'a>>>,
-}
-
-#[derive(Clone)]
-struct ExpedientListHookContext<'a> {
-    pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
-    pub max_date: i32,
-    pub limit_len: usize,
-    pub callback: Arc<Mutex<Box<dyn for<'r> FnMut(Vec<(Uid, &'r Expedient)>) + Send + Sync + 'a>>>,
-}
-
-#[derive(Clone)]
-struct ExpedientFilterListHookContext<'a> {
-    pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
-    pub max_date: i32,
-    pub limit_len: usize,
-    pub filter: Expedient,
-    pub callback:
-        Arc<Mutex<Box<dyn for<'r> FnMut(Vec<(Uid, &'r Expedient, f32)>) + Send + Sync + 'a>>>,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HookId {
     Expedient(Id),
     ExpedientList(Id),
-    ExpedientFilterList(Id),
 }
 
 const CHUNKED_DATABASE_DYNAMIC_SIZE: usize = 6000;
@@ -59,7 +33,6 @@ impl<'a> ExpedientDatabase<'a> {
             )?)),
             expedients_observable: Observable::default(),
             expedients_list_observable: Observable::default(),
-            expedients_filter_list_observable: Observable::default(),
         })
     }
 
@@ -71,7 +44,6 @@ impl<'a> ExpedientDatabase<'a> {
             )?)),
             expedients_observable: Observable::default(),
             expedients_list_observable: Observable::default(),
-            expedients_filter_list_observable: Observable::default(),
         })
     }
 
@@ -83,7 +55,6 @@ impl<'a> ExpedientDatabase<'a> {
             )?)),
             expedients_observable: Observable::default(),
             expedients_list_observable: Observable::default(),
-            expedients_filter_list_observable: Observable::default(),
         })
     }
 
@@ -120,120 +91,7 @@ impl<'a> ExpedientDatabase<'a> {
             InstantTriggerType::Sync,
         ))
     }
-
-    pub fn hook_all_expedients(
-        &mut self,
-        from_date: UtcDate,
-        limit_len: usize,
-        callback: impl for<'r> FnMut(Vec<(Uid, &'r Expedient)>) -> () + Send + Sync + 'a,
-    ) -> HookId {
-        HookId::ExpedientList(self.expedients_list_observable.subscrive(
-            Callback {
-                callback: |context| {
-                    let database = context.database.read().unwrap();
-
-                    let mut expedient_list: Vec<_> = database
-                        .iter()
-                        .filter(|(_, expedient)| expedient.date() <= context.max_date)
-                        .collect();
-
-                    expedient_list.sort_unstable_by_key(|(_, expedient)| -expedient.date());
-                    expedient_list.truncate(context.limit_len);
-                    (context.callback.lock().unwrap())(expedient_list)
-
-                    // TODO: check on ancient database
-                },
-                context: ExpedientListHookContext {
-                    database: self.database.clone(),
-                    max_date: from_date.date_hash(),
-                    limit_len,
-                    callback: Arc::new(Mutex::new(Box::new(callback))),
-                },
-            },
-            InstantTriggerType::Async,
-        ))
-    }
-    pub fn hook_all_open_expedients(
-        &mut self,
-        from_date: UtcDate,
-        limit_len: usize,
-        callback: impl for<'r> FnMut(Vec<(Uid, &'r Expedient)>) -> () + Send + Sync + 'a,
-    ) -> HookId {
-        HookId::ExpedientList(self.expedients_list_observable.subscrive(
-            Callback {
-                callback: |context| {
-                    let database = context.database.read().unwrap();
-
-                    let mut expedient_list: Vec<_> = database
-                        .iter()
-                        .filter(|(_, expedient)| {
-                            expedient.date() <= context.max_date
-                                && expedient.global_order_state() != OrderState::Done
-                        })
-                        .collect();
-
-                    expedient_list.sort_unstable_by_key(|(_, expedient)| {
-                        if expedient.global_order_state() == OrderState::Todo {
-                            i32::MAX / 2 - expedient.date()
-                        } else {
-                            -expedient.date()
-                        }
-                    });
-                    expedient_list.truncate(context.limit_len);
-                    (context.callback.lock().unwrap())(expedient_list)
-
-                    // TODO: check on ancient database
-                },
-                context: ExpedientListHookContext {
-                    database: self.database.clone(),
-                    max_date: from_date.date_hash(),
-                    limit_len,
-                    callback: Arc::new(Mutex::new(Box::new(callback))),
-                },
-            },
-            InstantTriggerType::Async,
-        ))
-    }
-    pub fn hook_expedient_filter(
-        &mut self,
-        filter: Expedient,
-        from_date: UtcDate,
-        limit_len: usize,
-        callback: impl for<'r> FnMut(Vec<(Uid, &'r Expedient, f32)>) -> () + Send + Sync + 'a,
-    ) -> HookId {
-        HookId::ExpedientFilterList(self.expedients_filter_list_observable.subscrive(
-            Callback {
-                callback: |context| {
-                    let database = context.database.read().unwrap();
-
-                    let mut expedient_list: Vec<_> = database
-                        .iter()
-                        .map(|(id, expedient)| {
-                            (id, expedient, expedient.similarity(&context.filter))
-                        })
-                        .filter(|(_, expedient, similarity)| {
-                            expedient.date() <= context.max_date && *similarity > 0.
-                        })
-                        .collect();
-                    expedient_list.sort_unstable_by_key(|(_, expedient, similarity)| {
-                        (-(1 << 24) as f32 * similarity) as i32 - expedient.date()
-                    });
-                    expedient_list.truncate(context.limit_len);
-                    (context.callback.lock().unwrap())(expedient_list)
-
-                    // TODO: check on ancient database
-                },
-                context: ExpedientFilterListHookContext {
-                    database: self.database.clone(),
-                    max_date: from_date.date_hash(),
-                    limit_len,
-                    filter,
-                    callback: Arc::new(Mutex::new(Box::new(callback))),
-                },
-            },
-            InstantTriggerType::Async,
-        ))
-    }
+    /*NOW*/
 
     pub fn release_hook(&mut self, hook_id: HookId) {
         match hook_id {
@@ -283,7 +141,7 @@ impl<'a> ExpedientDatabase<'a> {
 mod test {
     use super::*;
     use crate::test_utils::*;
-    
+
     #[test]
     fn create_close_and_open_database() {
         let tempdir = TempDir::new();
@@ -680,7 +538,7 @@ mod test {
                 }
             },
         );
-        
+
         sleep_for(20);
         db.update_expedient(id_1, expedient_done);
         sleep_for(20);
