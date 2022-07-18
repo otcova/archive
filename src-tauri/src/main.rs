@@ -33,9 +33,8 @@ fn main() {
             api::store_database,
             // hooks
             api::hook_expedient,
-            api::hook_all_expedients,
-            api::hook_all_open_expedients,
-            api::hook_expedient_filter,
+            api::hook_list_expedients,
+            api::hook_list_oreders,
             api::release_hook,
             api::release_all_hooks,
             // expedients

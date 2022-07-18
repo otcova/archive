@@ -4,11 +4,12 @@ mod expedient_modifyer;
 pub use expedient_hooks::*;
 pub use expedient_modifyer::*;
 
+pub use crate::expedient_database::*;
 use crate::{
     database::RollbackDateInfo,
     error::{ErrorKind, Result},
-    expedient_database::ExpedientDatabase,
 };
+
 use std::{
     path::PathBuf,
     sync::{Arc, Mutex},

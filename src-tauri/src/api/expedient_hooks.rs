@@ -1,4 +1,4 @@
-use super::ApiState;
+use super::*;
 use crate::{chunked_database::Uid, expedient_database::*};
 use serde::{Deserialize, Serialize};
 
@@ -28,55 +28,34 @@ pub fn hook_expedient(
 }
 
 #[tauri::command]
-pub fn hook_all_expedients(
+pub fn hook_list_expedients(
     state: tauri::State<ApiState>,
     window: tauri::Window,
-    from: UtcDate,
-    limit: usize,
+    options: ListExpedientsHookOptions,
     js_callback: JsCallback,
 ) -> Option<HookId> {
     let mut database = state.database_mutex.lock().unwrap();
     Some(
         database
             .as_mut()?
-            .hook_all_expedients(from, limit, move |expedients| {
+            .hook_list_expedients(options, move |expedients| {
                 js_callback.call(&window, &expedients)
             }),
     )
 }
 
 #[tauri::command]
-pub fn hook_all_open_expedients(
+pub fn hook_list_oreders(
     state: tauri::State<ApiState>,
     window: tauri::Window,
-    from: UtcDate,
-    limit: usize,
+    options: ListOrdersHookOptions,
     js_callback: JsCallback,
 ) -> Option<HookId> {
     let mut database = state.database_mutex.lock().unwrap();
     Some(
         database
             .as_mut()?
-            .hook_all_open_expedients(from, limit, move |expedients| {
-                js_callback.call(&window, &expedients)
-            }),
-    )
-}
-
-#[tauri::command]
-pub fn hook_expedient_filter(
-    state: tauri::State<ApiState>,
-    window: tauri::Window,
-    filter: Expedient,
-    from: UtcDate,
-    limit: usize,
-    js_callback: JsCallback,
-) -> Option<HookId> {
-    let mut database = state.database_mutex.lock().unwrap();
-    Some(
-        database
-            .as_mut()?
-            .hook_expedient_filter(filter, from, limit, move |expedients| {
+            .hook_list_oreders(options, move |expedients| {
                 js_callback.call(&window, &expedients)
             }),
     )

@@ -1,25 +1,17 @@
 mod expedient;
 mod hooks;
-use hooks::*;
 use crate::chunked_database::*;
 pub use crate::collections::UtcDate;
 use crate::error::*;
 pub use expedient::*;
-use crate::observable::*;
+pub use hooks::*;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 
 pub struct ExpedientDatabase<'a> {
     database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
     hook_pool: HookPool<'a>,
-}
-
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HookId {
-    Expedient(Id),
-    ExpedientList(Id),
 }
 
 const CHUNKED_DATABASE_DYNAMIC_SIZE: usize = 6000;
@@ -31,8 +23,7 @@ impl<'a> ExpedientDatabase<'a> {
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
-            expedients_observable: Observable::default(),
-            expedients_list_observable: Observable::default(),
+            hook_pool: Default::default(),
         })
     }
 
@@ -42,8 +33,7 @@ impl<'a> ExpedientDatabase<'a> {
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
-            expedients_observable: Observable::default(),
-            expedients_list_observable: Observable::default(),
+            hook_pool: Default::default(),
         })
     }
 
@@ -53,8 +43,7 @@ impl<'a> ExpedientDatabase<'a> {
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
-            expedients_observable: Observable::default(),
-            expedients_list_observable: Observable::default(),
+            hook_pool: Default::default(),
         })
     }
 
@@ -68,43 +57,6 @@ impl<'a> ExpedientDatabase<'a> {
             .unwrap()
             .read(id)
             .map(|exp| exp.clone())
-    }
-
-    pub fn hook_expedient(
-        &mut self,
-        id: Uid,
-        callback: impl for<'r> FnMut(Option<&'r Expedient>) -> () + Send + Sync + 'a,
-    ) -> HookId {
-        HookId::Expedient(self.expedients_observable.subscrive(
-            Callback {
-                callback: |context| {
-                    let database = context.database.read().unwrap();
-                    let expedient = database.read(context.expedient_id);
-                    (context.callback.lock().unwrap())(expedient)
-                },
-                context: ExpedientHookContext {
-                    database: self.database.clone(),
-                    expedient_id: id,
-                    callback: Arc::new(Mutex::new(Box::new(callback))),
-                },
-            },
-            InstantTriggerType::Sync,
-        ))
-    }
-    /*NOW*/
-
-    pub fn release_hook(&mut self, hook_id: HookId) {
-        match hook_id {
-            HookId::Expedient(id) => self.expedients_observable.unsubscrive(id),
-            HookId::ExpedientList(id) => self.expedients_list_observable.unsubscrive(id),
-            HookId::ExpedientFilterList(id) => {
-                self.expedients_filter_list_observable.unsubscrive(id)
-            }
-        }
-    }
-    pub fn release_all_hooks(&mut self) {
-        self.expedients_observable = Observable::default();
-        self.expedients_list_observable = Observable::default();
     }
 
     pub fn update_expedient(&mut self, id: Uid, expedient: Expedient) {
@@ -124,13 +76,6 @@ impl<'a> ExpedientDatabase<'a> {
         todo!()
     }
 
-    fn dispath_change(&mut self) {
-        self.expedients_observable.trigger();
-        self.expedients_filter_list_observable.async_trigger();
-        self.expedients_list_observable.async_trigger();
-    }
-
-    /// If data has changes, creates a backup.
     pub fn save(&mut self) -> Result<()> {
         self.database.write().unwrap().save()?;
         Ok(())
@@ -350,211 +295,6 @@ mod test {
     }
 
     #[test]
-    fn all_and_all_open_expedients_hook() {
-        let tempdir = TempDir::new();
-
-        let expedient_done = Expedient {
-            description: String::from("Eduardo Dato"),
-            license_plate: String::from(""),
-            model: String::from(""),
-            orders: vec![Order {
-                date: UtcDate {
-                    year: 2921,
-                    month: 3,
-                    day: 8,
-                    hour: 22,
-                },
-                title: String::from(""),
-                description: String::from(""),
-                state: OrderState::Done,
-            }],
-            users: vec![],
-            vin: String::from(""),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
-        };
-
-        let expedient_todo = Expedient {
-            description: String::from("Eduardo Pedro"),
-            license_plate: String::from(""),
-            model: String::from(""),
-            orders: vec![Order {
-                date: UtcDate {
-                    year: 1921,
-                    month: 3,
-                    day: 8,
-                    hour: 22,
-                },
-                title: String::from(""),
-                description: String::from(""),
-                state: OrderState::Todo,
-            }],
-            users: vec![],
-            vin: String::from(""),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
-        };
-
-        let old_expedient_todo = Expedient {
-            description: String::from("Eduardo Pedro"),
-            license_plate: String::from(""),
-            model: String::from(""),
-            orders: vec![Order {
-                date: UtcDate {
-                    year: 1821,
-                    month: 3,
-                    day: 8,
-                    hour: 22,
-                },
-                title: String::from(""),
-                description: String::from(""),
-                state: OrderState::Todo,
-            }],
-            users: vec![],
-            vin: String::from(""),
-            date: UtcDate {
-                year: 1721,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
-        };
-
-        let expedient_urgent = Expedient {
-            description: String::from("Eduardo Pedro"),
-            license_plate: String::from(""),
-            model: String::from(""),
-            orders: vec![Order {
-                date: UtcDate {
-                    year: 1721,
-                    month: 3,
-                    day: 8,
-                    hour: 22,
-                },
-                title: String::from(""),
-                description: String::from(""),
-                state: OrderState::Urgent,
-            }],
-            users: vec![],
-            vin: String::from(""),
-            date: UtcDate {
-                year: 1421,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
-        };
-
-        let future_expedient = Expedient {
-            description: String::from("Eduardo Pedro"),
-            license_plate: String::from(""),
-            model: String::from(""),
-            orders: vec![Order {
-                date: UtcDate {
-                    year: 7821,
-                    month: 3,
-                    day: 8,
-                    hour: 22,
-                },
-                title: String::from(""),
-                description: String::from(""),
-                state: OrderState::Todo,
-            }],
-            users: vec![],
-            vin: String::from(""),
-            date: UtcDate {
-                year: 1721,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
-        };
-
-        let mut db = ExpedientDatabase::create(&tempdir.path).unwrap();
-        let id_0 = db.create_expedient(expedient_done.clone());
-        let id_1 = db.create_expedient(expedient_todo.clone());
-        let id_2 = db.create_expedient(old_expedient_todo.clone());
-        let id_3 = db.create_expedient(expedient_done.clone());
-        let id_4 = db.create_expedient(expedient_todo.clone());
-        let id_5 = Uid::DYNAMIC(Id {
-            index: 5,
-            identifier: 6,
-        });
-
-        let mut hook_all_open_has_been_triggered = 0;
-        let mut hook_all_has_been_triggered = 0;
-
-        db.hook_all_open_expedients(
-            UtcDate {
-                year: 4021,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
-            100,
-            |expedeints| {
-                hook_all_open_has_been_triggered += 1;
-                let expedients_ids = expedeints.into_iter().map(|(id, _)| id).collect::<Vec<_>>();
-
-                match hook_all_open_has_been_triggered {
-                    1 => assert_eq!(vec![id_1, id_4, id_2], expedients_ids),
-                    2 => assert_eq!(vec![id_4, id_2], expedients_ids),
-                    3 => assert_eq!(vec![id_5, id_4, id_2], expedients_ids),
-                    4 => assert_eq!(vec![id_5, id_4, id_2], expedients_ids),
-                    5 => assert_eq!(vec![id_5, id_2], expedients_ids),
-                    _ => panic!(),
-                }
-            },
-        );
-
-        db.hook_all_expedients(
-            UtcDate {
-                year: 4021,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
-            100,
-            |expedeints| {
-                hook_all_has_been_triggered += 1;
-
-                let expedients_ids = expedeints.into_iter().map(|(id, _)| id).collect::<Vec<_>>();
-
-                match hook_all_has_been_triggered {
-                    1 => assert_eq!(vec![id_0, id_3, id_1, id_4, id_2], expedients_ids),
-                    2 => assert_eq!(vec![id_0, id_1, id_3, id_4, id_2], expedients_ids),
-                    3 => assert_eq!(vec![id_0, id_1, id_3, id_4, id_2, id_5], expedients_ids),
-                    4 => assert_eq!(vec![id_0, id_1, id_3, id_4, id_2, id_5], expedients_ids),
-                    5 => assert_eq!(vec![id_0, id_1, id_3, id_2, id_5], expedients_ids),
-                    _ => panic!(),
-                }
-            },
-        );
-
-        sleep_for(20);
-        db.update_expedient(id_1, expedient_done);
-        sleep_for(20);
-        db.create_expedient(expedient_urgent.clone());
-        sleep_for(20);
-        db.create_expedient(future_expedient.clone());
-        sleep_for(20);
-        db.delete_expedient(id_4);
-
-        drop(db);
-
-        assert_eq!(5, hook_all_open_has_been_triggered);
-        assert_eq!(5, hook_all_has_been_triggered);
-    }
-
-    #[test]
     fn filter_expedients_hook() {
         let tempdir = TempDir::new();
 
@@ -636,29 +376,28 @@ mod test {
         let mut hook_has_triggered = false;
 
         let mut db = ExpedientDatabase::create(&tempdir.path).unwrap();
-        (db.create_expedient(expedient_0));
+        db.create_expedient(expedient_0);
         let id_1 = db.create_expedient(expedient_1.clone());
-        (db.create_expedient(expedient_2));
+        let id_2 = db.create_expedient(expedient_2.clone());
         let id_3 = db.create_expedient(expedient_3.clone());
 
-        db.hook_expedient_filter(
-            expedient_filter,
-            UtcDate {
-                year: 2900,
-                month: 3,
-                day: 2,
-                hour: 0,
+        db.hook_list_expedients(
+            ListExpedientsHookOptions {
+                filter: expedient_filter,
+                max_list_len: 10,
             },
-            10,
             |filter| {
                 hook_has_triggered = true;
-                assert_eq!(2, filter.len());
+                assert_eq!(3, filter.len());
 
-                assert_eq!(id_3, filter[0].0);
-                assert_eq!(expedient_3, *filter[0].1);
+                assert_eq!(id_2, filter[0].0);
+                assert_eq!(expedient_2, *filter[0].1);
 
-                assert_eq!(id_1, filter[1].0);
-                assert_eq!(expedient_1, *filter[1].1);
+                assert_eq!(id_3, filter[1].0);
+                assert_eq!(expedient_3, *filter[1].1);
+
+                assert_eq!(id_1, filter[2].0);
+                assert_eq!(expedient_1, *filter[2].1);
             },
         );
         drop(db);
