@@ -58,8 +58,9 @@ pub struct ListOrdersHookOptions {
     pub max_list_len: usize,
     pub from_date: i32,
     pub show_todo: bool,
+    pub show_urgent: bool,
     pub show_pending: bool,
-    pub show_closed: bool,
+    pub show_done: bool,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -121,9 +122,18 @@ impl<'a> ExpedientDatabase<'a> {
 
                     let mut list_orders: Vec<_> = database
                         .iter()
-                        .flat_map(|(id, exp)| (0..exp.orders.len()).map(move |index| (id, index, exp)))
+                        .flat_map(|(id, exp)| {
+                            (0..exp.orders.len()).map(move |index| (id, index, exp))
+                        })
                         .filter(|(_, index, expedient)| {
-                            expedient.orders[*index].date.date_hash() <= context.options.from_date
+                            let order = &expedient.orders[*index];
+                            order.date.date_hash() <= context.options.from_date
+                                && match order.state {
+                                    OrderState::Done => context.options.show_done,
+                                    OrderState::Todo => context.options.show_todo,
+                                    OrderState::Urgent => context.options.show_urgent,
+                                    OrderState::Pending => context.options.show_pending,
+                                }
                         })
                         .collect();
 

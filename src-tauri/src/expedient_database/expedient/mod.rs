@@ -27,6 +27,7 @@ pub enum OrderState {
     Done,
     Todo,
     Urgent,
+    Pending,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
