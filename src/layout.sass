@@ -1,58 +1,71 @@
 @mixin row
+	box-sizing: border-box
 	display: flex
 	justify-content: center
 	align-items: center
 
 @mixin row-left
+	box-sizing: border-box
 	display: flex
 	justify-content: flex-start
 	align-items: center
 
 @mixin row-right
+	box-sizing: border-box
 	display: flex
 	justify-content: flex-end
 	align-items: center
 	
 @mixin row-top
+	box-sizing: border-box
 	display: flex
 	justify-content: center
 	align-items: flex-start
 
 @mixin row-bottom
+	box-sizing: border-box
 	display: flex
 	justify-content: center
 	align-items: flex-end
 
 @mixin row-left-top
+	box-sizing: border-box
 	display: flex
 	justify-content: flex-start
 	align-items: flex-start
 
 @mixin row-right-top
+	box-sizing: border-box
 	display: flex
 	justify-content: flex-end
 	align-items: flex-start
 	
 @mixin column
+	box-sizing: border-box
 	@include row
 	flex-direction: column
 
 @mixin column-top
+	box-sizing: border-box
 	@include row-left
 	flex-direction: column
 
 @mixin column-bottom
+	box-sizing: border-box
 	@include row-right
 	flex-direction: column
 
 @mixin column-left
+	box-sizing: border-box
 	@include row-top
 	flex-direction: column
 	
 @mixin column-right
+	box-sizing: border-box
 	@include row-bottom
 	flex-direction: column
 
 @mixin grow
+	box-sizing: border-box
 	flex-grow: 1
 	flex-shrink: 1

@@ -1,0 +1,61 @@
+@use '../../layout'
+@use '../../theme'
+
+.container
+	flex-shrink: 1
+	width: 100%
+	background: white
+	overflow: visible
+	overflow-y: scroll
+	outline: 1px solid #e5e5e5
+
+.container::-webkit-scrollbar-thumb
+	border: 4px solid #fff
+
+
+	
+	
+.editor
+	display: block
+	box-sizing: border-box
+	overflow: visible
+	width: 100%
+	font: unset
+	font-weight: normal
+	outline: none
+	background: #fff
+	padding: 10px 20px 10px 20px
+	color: #000
+
+.editor .placeholder:empty:before, .editor:empty:before
+	color: #0008
+	content: attr(data-placeholder) + " "
+	
+.editor *
+	font-size: 1rem
+	
+.editor *:empty:before
+	content: " "
+	
+.bold
+	// font-weight: bold
+	padding-top: 5px
+	padding-bottom: 5px
+	position: relative
+	font-size: 18px
+	font-weight: normal
+	
+.bold.not_first
+	padding-top: 20px
+
+.bold.not_first:after
+	top: 20px
+
+.bold:after
+	position: absolute
+	font-weight: normal
+	pointer-events: none
+	top: 5px
+	left: 0px
+	color: #bbb
+	content: "#"

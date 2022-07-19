@@ -1,4 +1,3 @@
-import { onCleanup, onMount } from "solid-js"
 import style from "./InputText.module.sass"
 
 type Props = {
@@ -20,7 +19,7 @@ export default function InputText(props: Props) {
 	return <input
 		type="text"
 		onBeforeInput={forcePattern}
-		class={style.input + " " + style.gray}
+		class={style.input}
 		placeholder={props.placeholder}
 		spellcheck={false}
 	/>
