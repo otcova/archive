@@ -2,6 +2,7 @@ import style from "./InputTextArea.module.sass"
 
 type Props = {
 	placeholder?: string,
+	noStyle?: boolean,
 }
 
 export default function InputTextArea(props: Props) {
@@ -23,9 +24,9 @@ export default function InputTextArea(props: Props) {
 		})
 	}
 
-	return <div class={style.container}>
+	return <div class={props.noStyle? style.container_minimal : style.container}>
 		<div
-			class={style.editor}
+			class={style.editor + (props.noStyle? " " + style.editor_minimal : "")}
 			contentEditable={true}
 			spellcheck={false}
 			data-placeholder={props.placeholder}

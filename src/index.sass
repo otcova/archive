@@ -2,15 +2,15 @@
 @use './theme'
 
 html, body, #root
+	@include theme.font-light
 	margin: 0
 	padding: 0
 	width: 100%
-	height: 100%
-	font: lighter 14px Segoe UI
+	height: 100%	
 
 #root
 	@include layout.column-top
-	background: #eee
+	background: theme.$background
 	white-space: pre-wrap
 
 *
@@ -23,7 +23,7 @@ html, body, #root
 
 ::-webkit-scrollbar-track
 	background: none
-	
+
 ::-webkit-scrollbar-thumb
 	border: 4px solid #fff
 	background: #aaa
@@ -35,3 +35,13 @@ html, body, #root
 	font-family: "codicon"
 	font-display: block
 	src: url("./codicon.ttf") format("truetype")
+
+@font-face
+	font-family: "roboto-light"
+	font-display: block
+	src: url("./Roboto-Light.ttf") format("truetype")
+
+@font-face
+	font-family: "roboto"
+	font-display: block
+	src: url("./Roboto-Regular.ttf") format("truetype")

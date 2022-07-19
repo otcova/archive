@@ -1,17 +1,22 @@
 @use '../../layout'
 @use '../../theme'
 
-.input
+.input_minimal, .input
 	box-sizing: border-box
 	flex-shrink: 1
 	width: 100%
 	font: unset
-	font-weight: normal
-	border-radius: 0px
 	border: none
+	border-radius: 0px
+	color: #000
+	outline: none
+	padding: 0px
+	
+.input
+	@include theme.font-normal
+	background: #fff
 	outline: 1px solid #e5e5e5
 	padding: 10px 20px 10px 20px
-	color: #000
 
-.input::placeholder
-	color: #0008
+.input_minimal::placeholder, .input::placeholder
+	@include theme.placeholder

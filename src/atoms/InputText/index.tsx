@@ -4,6 +4,7 @@ type Props = {
 	placeholder?: string,
 	charRegex?: RegExp,
 	maxLen?: number,
+	noStyle?: boolean,
 }
 
 export default function InputText(props: Props) {
@@ -19,7 +20,7 @@ export default function InputText(props: Props) {
 	return <input
 		type="text"
 		onBeforeInput={forcePattern}
-		class={style.input}
+		class={props.noStyle? style.input_minimal : style.input}
 		placeholder={props.placeholder}
 		spellcheck={false}
 	/>

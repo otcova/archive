@@ -15,7 +15,7 @@ export default function OrderList() {
 		show_pending: true,
 		show_urgent: true,
 	})
-	createEffect(() => console.log(expedientList()))
+
 	return <div class={style.container}>
 		<For each={expedientList()?.map(([id, index]) => JSON.stringify([id, index])) ?? []}>{(_, index) =>
 			<Row expedient={expedientList()[index()][2]} expedientId={expedientList()[index()][0]} />

@@ -1,3 +1,15 @@
 $stroke: 1px solid #ccc
 $background: #eee
 $active-color: #0078d4
+
+@mixin placeholder
+	@include font-light
+	color: #0009
+
+@mixin font-light
+	font: lighter 14px "roboto-light"
+	font-weight: lighter
+
+@mixin font-normal
+	font: normal 14px "roboto"
+	font-weight: normal
