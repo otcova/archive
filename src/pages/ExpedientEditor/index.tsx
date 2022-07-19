@@ -2,7 +2,7 @@ import Button from '../../atoms/Button'
 import IconButton from '../../atoms/IconButton'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
-import { useTab } from '../TabSystem'
+import { useTab } from '../../templates/TabSystem'
 import style from './ExpedientEditor.module.sass'
 
 export default function ExpedientEditor() {
@@ -20,6 +20,8 @@ export default function ExpedientEditor() {
 				<InputTextArea placeholder='Description'/>
 			</div>
 			<div class={style.expedient_column_right}>
+				<Button text="Hello!" />
+				<Button text="Hello!" />
 				<Button text="Hello!" />
 				<Button text="Hello!" />
 				<Button text="Hello!" />

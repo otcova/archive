@@ -1,17 +1,24 @@
-import { createSignal, For } from 'solid-js'
+import { createEffect, createSignal, For } from 'solid-js'
 import Checkbox from '../../atoms/Checkbox'
 import { Expedient, ExpedientId, expedientUtils } from '../../database'
 import { createHook } from '../../database/expedientHook'
-import style from './ExpedientList.module.sass'
+import style from './OrderList.module.sass'
 
-export default function ExpedientList(props: { hookType: "all_expedients" | "all_open_expedients" }) {
+export default function OrderList() {
 
-	const [expedientList] = createHook(props.hookType,
-		{ from: expedientUtils.futureDate(), limit: 70 })
-	
+	const [expedientList] = createHook("list_oreders", {
+		sort_by: "Newest",
+		from_date: 10000000,
+		max_list_len: 70,
+		show_done: true,
+		show_todo: true,
+		show_pending: true,
+		show_urgent: true,
+	})
+	createEffect(() => console.log(expedientList()))
 	return <div class={style.container}>
-		<For each={expedientList()?.map(([id]) => JSON.stringify(id)) ?? []}>{(_, index) =>
-			<Row expedient={expedientList()[index()][1]} expedientId={expedientList()[index()][0]} />
+		<For each={expedientList()?.map(([id, index]) => JSON.stringify([id, index])) ?? []}>{(_, index) =>
+			<Row expedient={expedientList()[index()][2]} expedientId={expedientList()[index()][0]} />
 		}</For>
 	</div>
 }
@@ -20,7 +27,7 @@ function Row(props: { expedient: Expedient, expedientId: ExpedientId }) {
 	const [showDescription, setShowDescription] = createSignal(false)
 	const [height, setHeight] = createSignal(null)
 	let content = null
-	
+
 	const toggleDescription = () => {
 		setHeight(content.offsetHeight)
 		setShowDescription(d => !d)

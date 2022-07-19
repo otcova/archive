@@ -1,5 +1,6 @@
 import { invoke, InvokeArgs } from '@tauri-apps/api/tauri'
 import { createEffect, createSignal, onCleanup } from 'solid-js'
+import { Expedient } from './types'
 
 declare global {
 	interface Window {
@@ -9,7 +10,7 @@ declare global {
 }
 window.callbacks = new Map()
 window.callHook = (callbackId, data) => {
-	if (window.callbacks.has(callbackId)) window.callbacks.get(callbackId)?.(data)
+	if (window.callbacks.has(callbackId)) setTimeout(() => window.callbacks.get(callbackId)(data))
 	else console.error("RUST CALL TO NON EXISTING CALLBACK ID")
 }
 
@@ -17,25 +18,38 @@ let nextCallbackId = 0
 function createCallback(callback: (args: any[]) => void) {
 	const callbackId = nextCallbackId++
 	window.callbacks.set(callbackId, callback)
-	return callbackId;
+	return callbackId
+}
+export type ListExpedientsHookOptions = {
+	filter: Expedient,
+	max_list_len: number,
+}
+export type ListOrdersHookOptionsSortBy = {
+	sort_by: "Oldest" | "Newest",
+	max_list_len: number,
+	from_date: number,
+	show_todo: boolean,
+	show_urgent: boolean,
+	show_pending: boolean,
+	show_done: boolean,
 }
 
-export type HookType = "all_expedients" | "all_open_expedients"
-
-export function createHook(hook_name: HookType, parameters?: InvokeArgs) {
+export function createHook(hook_name: "list_expedients", options: ListExpedientsHookOptions);
+export function createHook(hook_name: "list_oreders", options: ListOrdersHookOptionsSortBy);
+export function createHook(hook_name: string, options: object) {
 	const [hookData, setHookData] = createSignal(null)
-	const [hookParameters, setHookParamenters] = createSignal(parameters)
+	const [hookOptions, setHookOptions] = createSignal(options)
 	const [hookId, setHookId] = createSignal(null)
 
 	const jsCallback = createCallback(setHookData)
-	
+
 	let needsCleanup = false
 	const tryCleanup = (hookId) => {
 		if (needsCleanup && Number.isInteger(hookId)) releaseHook({ jsCallback, hookId })
 	}
-	
+
 	createEffect(async () => {
-		const hookId = await invoke("hook_" + hook_name, { jsCallback, ...hookParameters() })
+		const hookId = await invoke("hook_" + hook_name, { jsCallback, options: hookOptions() })
 		setHookId(pastHookId => {
 			if (pastHookId) invoke("release_hook", { hookId: pastHookId })
 			return hookId
@@ -43,12 +57,13 @@ export function createHook(hook_name: HookType, parameters?: InvokeArgs) {
 		tryCleanup(hookId)
 	})
 
+
 	onCleanup(() => {
 		needsCleanup = true
 		tryCleanup(hookId())
 	})
 
-	return [hookData, setHookParamenters]
+	return [hookData, setHookOptions]
 }
 
 async function releaseHook({ jsCallback, hookId }) {

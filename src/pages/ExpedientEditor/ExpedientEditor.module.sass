@@ -1,3 +1,4 @@
+@use '../../theme'
 @use '../../layout'
 	
 .expedient_container
@@ -11,9 +12,11 @@
 	flex-shrink: 1
 	height: 100%
 	width: 50%
+	overflow-x: visible
 	overflow-y: auto
-	overflow: visible
-
+	
+.expedient_column_right::-webkit-scrollbar-thumb
+	border: 4px solid theme.$background
 	
 .bottom_bar
 	@include layout.row-left

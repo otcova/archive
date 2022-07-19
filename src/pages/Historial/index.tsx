@@ -1,7 +1,7 @@
 import { onCleanup } from 'solid-js'
 import Button from '../../atoms/Button'
-import ExpedientList from '../ExpedientList'
-import { useTab } from '../TabSystem'
+import OrderList from '../../templates/OrderList'
+import { useTab } from '../../templates/TabSystem'
 import style from './Historial.module.sass'
 
 let focusHistorial = null
@@ -13,7 +13,7 @@ function Historial() {
 	onCleanup(() => focusHistorial = null)
 	
 	return <>
-		<ExpedientList hookType={'all_expedients'} />
+		<OrderList hookType={'all_expedients'} />
 		<div class={style.bottom_bar}>
 			<Button text="Tancar" action={closeTab} />
 		</div>

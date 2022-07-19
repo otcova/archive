@@ -3,8 +3,8 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
 import { databaseError, setDatabaseError } from ".";
 
-setTimeout(() => {
-	openDatabase()
+setTimeout(async () => {
+	await openDatabase()
 	setInterval(storeDatabase, 1000 * 60)
 }, 0)
 

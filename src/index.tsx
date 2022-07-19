@@ -1,6 +1,6 @@
 import { render } from 'solid-js/web'
 import './index.sass'
-import ErrorPanel from './templates/ErrorPanel'
+import ErrorPanel from './pages/ErrorPanel'
 import TabSystem from './templates/TabSystem'
 import { databaseError } from './database'
 import WindowButtons from './atoms/WindowButtons'

@@ -1,8 +1,8 @@
 import { batch, createContext, createSignal, For, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import WindowButtons from '../../atoms/WindowButtons'
-import Agenda from '../Agenda'
-import ExpedientEditor from '../ExpedientEditor'
+import Agenda from '../../pages/Agenda'
+import ExpedientEditor from '../../pages/ExpedientEditor'
 import style from './TabSystem.module.sass'
 
 const TabContext = createContext<{ focusTab, isActive, tab, createTab, closeTab, rename }>()
