@@ -1,37 +1,57 @@
 @use '../../layout'
 @use '../../theme'
 
-$height: 40px
+$height: 41px
 
 .tab_bar
 	@include layout.row-left
 	width: 100%
 	background-color: adjust-color(theme.$background, $lightness: -10%)
-	border-bottom: theme.$stroke
+	outline: theme.$stroke
 	overflow: visible
 	height: $height
 	flex-shrink: 0
-	
+
 .tab
 	@include layout.row
+	position: relative
 	transition: all 100ms
-	border: theme.$stroke
-	border-color: #fff0
+	outline: theme.$stroke
+	outline-color: #0000
 	height: $height
 	padding: 2px 20px 0px 20px
+	
+.tab::after
+	position: absolute
+	bottom: -1px
+	left: -2px
+	width: unquote("calc(100% + 4px)")
+	height: 1px
+	background: theme.$background
+	content: ""
 
+	
 .tab_active
 	@extend .tab
-	border: theme.$stroke
-	border-bottom-color: theme.$background
+	position: relative
+	outline: theme.$stroke
 	background: theme.$background
+	
+.tab_active::after
+	position: absolute
+	bottom: -1px
+	left: -2px
+	width: unquote("calc(100% + 4px)")
+	height: 1px
+	background: theme.$background
+	content: ""
 
 .tab_content
 	@include layout.column-top
 	@include layout.grow
 	width: 100%
 	overflow: hidden
-	border: theme.$stroke
-	border-top: none
+	outline: theme.$stroke
+	background: theme.$background
 	padding: 30px
 	gap: 30px

@@ -9,7 +9,7 @@ const TabContext = createContext<{ focusTab, isActive, tab, createTab, closeTab,
 export const useTab = () => useContext(TabContext)
 
 const initialTab = [
-	{ name: "Nou Expedient", componentClass: ExpedientEditor, props: {} },
+	// { name: "Nou Expedient", componentClass: ExpedientEditor, props: {} },
 	{ name: " Oberts ", componentClass: Agenda, props: {} },
 	{ name: "Pendents", componentClass: Agenda, props: {} },
 	{ name: " Tancats ", componentClass: Agenda, props: {} },

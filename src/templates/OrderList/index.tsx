@@ -2,6 +2,8 @@ import { createEffect, createSignal, For } from 'solid-js'
 import Checkbox from '../../atoms/Checkbox'
 import { Expedient, ExpedientId, expedientUtils } from '../../database'
 import { createHook } from '../../database/expedientHook'
+import ExpedientEditor from '../../pages/ExpedientEditor'
+import { useTab } from '../TabSystem'
 import style from './OrderList.module.sass'
 
 export default function OrderList() {
@@ -18,40 +20,25 @@ export default function OrderList() {
 
 	return <div class={style.container}>
 		<For each={expedientList()?.map(([id, index]) => JSON.stringify([id, index])) ?? []}>{(_, index) =>
-			<Row expedient={expedientList()[index()][2]} expedientId={expedientList()[index()][0]} />
+			<Row data={expedientList()[index()]} />
 		}</For>
 	</div>
 }
 
-function Row(props: { expedient: Expedient, expedientId: ExpedientId }) {
-	const [showDescription, setShowDescription] = createSignal(false)
-	const [height, setHeight] = createSignal(null)
-	let content = null
+function Row(props: { data: [ExpedientId, number, Expedient] }) {
+	const [expedientId, orderIndex, expedient] = props.data
+	const order = expedient.orders[orderIndex]
+	const { createTab } = useTab()
 
-	const toggleDescription = () => {
-		setHeight(content.offsetHeight)
-		setShowDescription(d => !d)
-		setHeight(content.offsetHeight)
+	const openOrder = () => {
+		createTab("", ExpedientEditor, { expedient, expedientId, orderIndex })
 	}
 
-	return <div class={style.expedient_box} onClick={toggleDescription} style={{ height: height() + "px" }}>
-		<div class={style.expedient_content} ref={content}>
-			<div class={style.title_row}>
-				<Checkbox expedient={props.expedient} expedientId={props.expedientId} />
-				<div class={style.orders_count}>{props.expedient.orders.length}</div>
-				<div class={style.grow}>{expedientUtils.strUsers(props.expedient)}</div>
-				<div class={style.grow}>{props.expedient.model}</div>
-			</div>
-			{
-				showDescription() &&
-				<For each={props.expedient.orders} >{(order, index) =>
-					<div class={style.order_row}>
-						<Checkbox expedient={props.expedient} expedientId={props.expedientId} orderIndex={index()} />
-						<div class={style.order_date}>{expedientUtils.strDate(order.date)}</div>
-						<div class={style.grow}>{order.title}</div>
-					</div>
-				}</For>
-			}
-		</div>
+	return <div class={style.row_container} onClick={openOrder}>
+		<Checkbox expedient={expedient} expedientId={expedientId} orderIndex={orderIndex} />
+		<div class={style.grow}>{order.title}</div>
+		<div class={style.grow}>{expedientUtils.strUsers(expedient)}</div>
+		<div class={style.grow}>{expedient.model}</div>
+		<div>{expedient.license_plate}</div>
 	</div>
 }
