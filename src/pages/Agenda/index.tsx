@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri'
 import Button from '../../atoms/Button'
-import { Order } from '../../database'
+import { Expedient, Order } from '../../database'
 import { createExpedient } from '../../database/expedientState'
 import OrderList from '../../templates/OrderList'
 import Historial, { openHistorial } from '../Historial'
@@ -23,25 +23,30 @@ export default function Agenda() {
 
 function testCreateExpedients() {
 	for (let i = 0; i < 111; ++i) {
-		let year = Math.trunc(Math.random() * 22 + 2000)
-		let month = Math.trunc(Math.random() * 12)
-		let day = Math.trunc(Math.random() * 28)
-		let date = { year, month, day, hour: Math.trunc(Math.random() * 24) }
-
-		let license_plate = Math.trunc(Math.random() * 9000 + 1000)
-		createExpedient({
-			date,
-			description: pickRand(words) + " " + pickRand(words),
-			license_plate: license_plate + " ABC",
-			vin: "FRWOQA" + license_plate + "FWAFEE",
-			model: pickRand(models),
-			orders: Math.random() > 0.9 ? [genOrder(date), genOrder(date), genOrder(date)] :
-				(Math.random() > 0.5 ? [genOrder(date), genOrder(date)] : [genOrder(date)]),
-			users: Math.random() > 0.97 ? [genUser(), genUser()] : [genUser()],
-		})
+		createExpedient(genTextExpedient())
 	}
 }
 
+
+export function genTextExpedient(): Expedient {
+	let year = Math.trunc(Math.random() * 22 + 2000)
+	let month = Math.trunc(Math.random() * 12)
+	let day = Math.trunc(Math.random() * 28)
+	let date = { year, month, day, hour: Math.trunc(Math.random() * 24) }
+
+	let license_plate = Math.trunc(Math.random() * 9000 + 1000)
+	
+	return {
+		date,
+		description: pickRand(words) + " " + pickRand(words),
+		license_plate: license_plate + " ABC",
+		vin: "FRWOQA" + license_plate + "FWAFEE",
+		model: pickRand(models),
+		orders: Math.random() > 0.9 ? [genOrder(date), genOrder(date), genOrder(date)] :
+			(Math.random() > 0.5 ? [genOrder(date), genOrder(date)] : [genOrder(date)]),
+		users: Math.random() > 0.97 ? [genUser(), genUser()] : [genUser()],
+	}
+}
 
 async function calculate() {
 	await invoke("calculate")
