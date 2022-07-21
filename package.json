@@ -6,6 +6,7 @@
     "frontend-dev": "vite",
     "frontend-build": "vite build",
     "tauri": "tauri",
+    "d": "tauri dev",
     "dev": "tauri dev",
     "build": "tauri build",
     "test": "cd src-tauri && cargo test"
