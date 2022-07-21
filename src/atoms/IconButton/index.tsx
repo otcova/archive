@@ -24,7 +24,7 @@ export default function IconButton(props: Props) {
 	onMount(() => addEventListener("keydown", onKeydown))
 	onCleanup(() => removeEventListener("keydown", onKeydown))
 
-	return <div class={style.container} onClick={props.action}>
+	return <div class={style.container} onMouseUp={props.action}>
 		{icons.get(props.icon)()}
 	</div>
 }

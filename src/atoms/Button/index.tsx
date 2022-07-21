@@ -22,7 +22,7 @@ export default function Button(props: Props) {
 	onMount(() => addEventListener("keydown", onKeydown))
 	onCleanup(() => removeEventListener("keydown", onKeydown))
 
-	return <div class={style.button} onClick={props.action}>
+	return <div class={style.button} onMouseUp={props.action}>
 		{props.text}
 	</div>
 }

@@ -1,12 +1,20 @@
 @use '../../layout'
 @use '../../theme'
 
-.container, .star
+.container, .star, .pending
 	@include layout.row
 	width: 20px
 	height: 20px
+
+.pointer
 	cursor: pointer
 
-.container
+.container, .pending
 	border: 1px solid theme.$active-color
 	border-radius: 100%
+	
+.pending::after
+	width: 10px
+	height: 1px
+	background: theme.$active-color
+	content: ""

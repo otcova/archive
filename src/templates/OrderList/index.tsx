@@ -17,11 +17,11 @@ export default function OrderList() {
 		show_pending: true,
 		show_urgent: true,
 	})
-
+	
 	return <div class={style.container}>
-		<For each={expedientList()?.map(([id, index]) => JSON.stringify([id, index])) ?? []}>{(_, index) =>
-			<Row data={expedientList()[index()]} />
-		}</For>
+		<For each={expedientList()?.map(data => JSON.stringify(data)) ?? []}>{(_, index) => {
+			return <Row data={expedientList()[index()]} />
+		}}</For>
 	</div>
 }
 

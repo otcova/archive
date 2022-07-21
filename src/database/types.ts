@@ -30,7 +30,7 @@ export type Order = {
 	date: LocalDate,
 }
 
-export type OrderState = "Urgent" | "Todo" | "Done"
+export type OrderState = "Urgent" | "Todo" | "Pending" | "Done"
 
 export const expedientUtils = {
 	strUsers: (expedient: Expedient) => {

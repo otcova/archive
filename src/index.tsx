@@ -16,7 +16,12 @@ function App() {
 
 render(App, document.getElementById('root') as HTMLElement)
 
-oncontextmenu = e => e.preventDefault()
+oncontextmenu = event => event.preventDefault()
+
+// prevent middle click scroll
+document.body.onmousedown = event => {
+    if (event.button == 1) event.preventDefault()
+}
 
 // Update every frame to prevent input delay bug
 if (!document.getElementById("dummy")) {

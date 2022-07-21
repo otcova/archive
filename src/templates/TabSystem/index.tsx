@@ -1,5 +1,6 @@
 import { batch, createContext, createSignal, For, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
+import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
 import WindowButtons from '../../atoms/WindowButtons'
 import Agenda from '../../pages/Agenda'
 import ExpedientEditor from '../../pages/ExpedientEditor'
@@ -8,15 +9,15 @@ import style from './TabSystem.module.sass'
 const TabContext = createContext<{ focusTab, isActive, tab, createTab, closeTab, rename }>()
 export const useTab = () => useContext(TabContext)
 
-const initialTab = [
-	// { name: "Nou Expedient", componentClass: ExpedientEditor, props: {} },
-	{ name: " Oberts ", componentClass: Agenda, props: {} },
-	{ name: "Pendents", componentClass: Agenda, props: {} },
-	{ name: " Tancats ", componentClass: Agenda, props: {} },
-]
-
 export default function TabSystem() {
-	const [tabs, setTabs] = createStore<{ name, componentClass, props, component?}[]>(initialTab)
+	const staticTabs = [
+		// { name: "Nou Expedient", componentClass: ExpedientEditor, props: {} },
+		{ name: <StaticCheckbox state={"Todo"} />, componentClass: Agenda, props: {} },
+		{ name: <StaticCheckbox state={"Pending"} />, componentClass: Agenda, props: {} },
+		{ name: <StaticCheckbox state={"Done"} />, componentClass: Agenda, props: {} },
+	]
+
+	const [tabs, setTabs] = createStore<{ name, componentClass, props, component?}[]>([...staticTabs])
 	const [activeTab, setActiveTab] = createSignal(0)
 
 	const tabsStore = tabIndex => ({
@@ -25,7 +26,7 @@ export default function TabSystem() {
 		tab: () => tabs[tabIndex()],
 		rename: (newName: string) => setTabs(tabIndex(), "name", newName),
 		createTab: (name, componentClass, props = {}) => {
-			const index = tabIndex() + 1
+			const index = Math.max(staticTabs.length, tabIndex() + 1)
 			const newTab = { name, componentClass, props }
 			batch(() => {
 				setTabs(tabs => [...tabs.slice(0, index), newTab, ...tabs.slice(index, tabs.length)])
@@ -34,8 +35,14 @@ export default function TabSystem() {
 		},
 		closeTab: () => {
 			const index = tabIndex()
+			if (staticTabs.length > index) return
 			batch(() => {
-				if (index + 1 >= tabs.length) setActiveTab(index - 1)
+				// Change selected tab
+				if (index + 1 >= tabs.length) {
+					// Default first static tab
+					if (index == 3) setActiveTab(0)
+					else setActiveTab(index - 1)
+				}
 				setTabs(tabs => [...tabs.slice(0, index), ...tabs.slice(index + 1, tabs.length)])
 			})
 		}
@@ -62,10 +69,16 @@ export default function TabSystem() {
 };
 
 function TabTitle() {
-	const { focusTab, isActive, tab } = useTab()
+	const { focusTab, isActive, tab, closeTab } = useTab()
+	
+	const onClick = (event: MouseEvent) => {
+		if (event.button == 1) closeTab()
+		else focusTab()
+	}
+	
 	return <div
 		class={isActive() ? style.tab_active : style.tab}
-		onClick={focusTab}>
+		onMouseUp={onClick}>
 		{tab().name}
 	</div>
 }
