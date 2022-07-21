@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For } from 'solid-js'
+import { createEffect, createSignal, For, JSX as SolidjsJSX } from 'solid-js'
 import Checkbox from '../../atoms/Checkbox'
 import { Expedient, ExpedientId, expedientUtils } from '../../database'
 import { createHook } from '../../database/expedientHook'
