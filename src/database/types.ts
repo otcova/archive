@@ -17,10 +17,22 @@ export type User = {
 }
 
 export type LocalDate = {
+	year: number
+	month: number,
 	day: number,
 	hour: number,
-	month: number,
-	year: number
+}
+
+export function compareDate(a: LocalDate, b: LocalDate) {
+	if (a.year > b.year) return 1
+	if (a.year < b.year) return -1
+	if (a.month > b.month) return 1
+	if (a.month < b.month) return -1
+	if (a.day > b.day) return 1
+	if (a.day < b.day) return -1
+	if (a.hour > b.hour) return 1
+	if (a.hour < b.hour) return -1
+	return 0
 }
 
 export type Order = {

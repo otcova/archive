@@ -1,5 +1,5 @@
-@use '../../theme'
-@use '../../layout'
+@use '../../globalStyle/theme'
+@use '../../globalStyle/layout'
 
 .expedient_container
 	@include layout.row
@@ -16,6 +16,9 @@
 	overflow-x: visible
 	overflow-y: auto
 	padding: 1px
+	
+.expedient_column_right
+	gap: 20px
 
 .expedient_column_right::-webkit-scrollbar-thumb
 	border: 4px solid theme.$background

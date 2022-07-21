@@ -18,11 +18,11 @@ impl JsCallback {
 pub fn hook_expedient(
     state: tauri::State<ApiState>,
     window: tauri::Window,
-    id: Uid,
+    expedient_id: Uid,
     js_callback: JsCallback,
 ) -> Option<HookId> {
     let mut database = state.database_mutex.lock().unwrap();
-    Some(database.as_mut()?.hook_expedient(id, move |expedient| {
+    Some(database.as_mut()?.hook_expedient(expedient_id, move |expedient| {
         js_callback.call(&window, &expedient);
     }))
 }

@@ -1,9 +1,6 @@
 import { batch, createContext, createSignal, For, useContext } from 'solid-js'
-import { createStore } from 'solid-js/store'
 import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
-import WindowButtons from '../../atoms/WindowButtons'
 import Agenda from '../../pages/Agenda'
-import ExpedientEditor from '../../pages/ExpedientEditor'
 import style from './TabSystem.module.sass'
 
 const TabContext = createContext<{ focusTab, isActive, tab, createTab, closeTab, rename }>()
@@ -17,14 +14,17 @@ export default function TabSystem() {
 		{ name: <StaticCheckbox state={"Done"} />, componentClass: Agenda, props: {} },
 	]
 
-	const [tabs, setTabs] = createStore<{ name, componentClass, props, component?}[]>([...staticTabs])
+	const [tabs, setTabs] = createSignal<{ name, componentClass, props, component?}[]>([...staticTabs])
 	const [activeTab, setActiveTab] = createSignal(0)
 
-	const tabsStore = tabIndex => ({
+	const tabsContext = tabIndex => ({
 		focusTab: () => setActiveTab(tabIndex()),
 		isActive: () => activeTab() == tabIndex(),
-		tab: () => tabs[tabIndex()],
-		rename: (newName: string) => setTabs(tabIndex(), "name", newName),
+		tab: () => tabs()[tabIndex()],
+		rename: (newName: string) => setTabs(tabs => {
+			tabs[tabIndex()].name = newName
+			return [...tabs]
+		}),
 		createTab: (name, componentClass, props = {}) => {
 			const index = Math.max(staticTabs.length, tabIndex() + 1)
 			const newTab = { name, componentClass, props }
@@ -51,15 +51,15 @@ export default function TabSystem() {
 	return (
 		<>
 			<div class={style.tab_bar} data-tauri-drag-region>
-				<For each={tabs}>{(_, index) =>
-					<TabContext.Provider value={tabsStore(index)}>
+				<For each={tabs()}>{(_, index) =>
+					<TabContext.Provider value={tabsContext(index)}>
 						<TabTitle />
 					</TabContext.Provider>
 				}</For>
 			</div >
 			<div class={style.tab_content}>
-				<For each={tabs}>{(_, index) =>
-					<TabContext.Provider value={tabsStore(index)}>
+				<For each={tabs()}>{(_, index) =>
+					<TabContext.Provider value={tabsContext(index)}>
 						<TabContent />
 					</TabContext.Provider>
 				}</For>
@@ -70,12 +70,12 @@ export default function TabSystem() {
 
 function TabTitle() {
 	const { focusTab, isActive, tab, closeTab } = useTab()
-	
+
 	const onClick = (event: MouseEvent) => {
 		if (event.button == 1) closeTab()
 		else focusTab()
 	}
-	
+
 	return <div
 		class={isActive() ? style.tab_active : style.tab}
 		onMouseUp={onClick}>

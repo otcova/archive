@@ -17,10 +17,10 @@ export default function OrderList() {
 		show_pending: true,
 		show_urgent: true,
 	})
-	
+
 	return <div class={style.container}>
-		<For each={expedientList()?.map(data => JSON.stringify(data)) ?? []}>{(_, index) => {
-			return <Row data={expedientList()[index()]} />
+		<For each={expedientList()?.map(([id, index, exp]) => JSON.stringify([id, index, exp])) ?? []}>{(data, _) => {
+			return <Row data={JSON.parse(data as string)} />
 		}}</For>
 	</div>
 }
@@ -29,9 +29,9 @@ function Row(props: { data: [ExpedientId, number, Expedient] }) {
 	const [expedientId, orderIndex, expedient] = props.data
 	const order = expedient.orders[orderIndex]
 	const { createTab } = useTab()
-
+	
 	const openOrder = () => {
-		createTab("", ExpedientEditor, { expedient, expedientId, orderIndex })
+		createTab("", ExpedientEditor, { expedientId, orderIndex })
 	}
 
 	return <div class={style.row_container} onClick={openOrder}>

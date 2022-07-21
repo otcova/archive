@@ -1,6 +1,6 @@
 import { invoke, InvokeArgs } from '@tauri-apps/api/tauri'
-import { createEffect, createSignal, onCleanup } from 'solid-js'
-import { Expedient } from './types'
+import { Accessor, createEffect, createSignal, onCleanup } from 'solid-js'
+import { Expedient, ExpedientId } from './types'
 
 declare global {
 	interface Window {
@@ -34,6 +34,7 @@ export type ListOrdersHookOptionsSortBy = {
 	show_done: boolean,
 }
 
+export function createHook(hook_name: "expedient", id: ExpedientId): [Accessor<Expedient>];
 export function createHook(hook_name: "list_expedients", options: ListExpedientsHookOptions);
 export function createHook(hook_name: "list_oreders", options: ListOrdersHookOptionsSortBy);
 export function createHook(hook_name: string, options: object) {
@@ -49,7 +50,11 @@ export function createHook(hook_name: string, options: object) {
 	}
 
 	createEffect(async () => {
-		const hookId = await invoke("hook_" + hook_name, { jsCallback, options: hookOptions() })
+		let params
+		if (hook_name == "expedient") params = { jsCallback, expedientId: hookOptions() }
+		else params = { jsCallback, options: hookOptions() }
+
+		const hookId = await invoke("hook_" + hook_name, params)
 		setHookId(pastHookId => {
 			if (pastHookId) invoke("release_hook", { hookId: pastHookId })
 			return hookId

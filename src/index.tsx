@@ -1,5 +1,5 @@
 import { render } from 'solid-js/web'
-import './index.sass'
+import './globalStyle/index.sass'
 import ErrorPanel from './pages/ErrorPanel'
 import TabSystem from './templates/TabSystem'
 import { databaseError } from './database'

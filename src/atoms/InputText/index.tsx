@@ -23,7 +23,7 @@ export default function InputText(props: Props) {
 	
 	return <input
 		type="text"
-		value={props.defaultValue}
+		value={props.defaultValue ?? ""}
 		onInput={event => props.onChange?.((event.target as HTMLInputElement).value)}
 		onBeforeInput={forcePattern}
 		class={props.noStyle ? style.input_minimal : style.input}

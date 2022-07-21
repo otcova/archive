@@ -1,5 +1,5 @@
-@use '../../layout'
-@use '../../theme'
+@use '../../globalStyle/layout'
+@use '../../globalStyle/theme'
 
 .input_minimal, .input
 	box-sizing: border-box
@@ -16,7 +16,7 @@
 	@include theme.font-normal
 	font-size: 16px
 	background: #fff
-	outline: 1px solid #e5e5e5
+	outline: theme.$light-stroke
 	padding: 10px 20px 10px 20px
 
 .input_minimal::placeholder, .input::placeholder

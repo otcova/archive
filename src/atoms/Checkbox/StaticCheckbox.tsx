@@ -11,9 +11,13 @@ type Props = {
 }
 
 export default function StaticCheckbox(props: Props) {
-	const onClick = event => event.stopPropagation()
+	const onClick = event => {
+		if (!props.onChange) return
+		event.stopPropagation()
+	}
 
 	const onMouseUp = event => {
+		if (!props.onChange) return
 		event.stopPropagation()
 
 		const leftButton = event.button == 0
@@ -25,18 +29,22 @@ export default function StaticCheckbox(props: Props) {
 		}
 	}
 
-	let pointer = "", clickProps = {}
-	if (props.onChange) {
-		pointer = " " + style.pointer
-		clickProps = { onClick, onMouseUp }
-	}
+	const pointer = () => props.onChange ? " " + style.pointer : ""
 
-	switch (props.state) {
-		case "Todo": return <div class={style.container + pointer} {...clickProps}></div>
-		case "Urgent": return <div class={style.star + pointer} {...clickProps}>{star()}</div>
-		case "Pending": return <div class={style.pending + pointer} {...clickProps}></div>
-		case "Done": return <div class={style.container + pointer} {...clickProps}>{tick()}</div>
-	}
+	return <>
+		<Show when={props.state == "Todo"}>
+			<div class={style.container + pointer()} onClick={onClick} onMouseUp={onMouseUp}></div>
+		</Show>
+		<Show when={props.state == "Urgent"}>
+			<div class={style.star + pointer()} onClick={onClick} onMouseUp={onMouseUp}>{star()}</div>
+		</Show>
+		<Show when={props.state == "Pending"}>
+			<div class={style.pending + pointer()} onClick={onClick} onMouseUp={onMouseUp}></div>
+		</Show>
+		<Show when={props.state == "Done"}>
+			<div class={style.container + pointer()} onClick={onClick} onMouseUp={onMouseUp}>{tick()}</div>
+		</Show>
+	</>
 }
 
 const star = () => <svg width="25" height="26" style="fill:none;stroke:#0078d4;stroke-width:1;">

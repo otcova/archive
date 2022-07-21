@@ -1,6 +1,7 @@
 import style from "./InputTextArea.module.sass"
 
 type Props = {
+	defaultValue?: string,
 	placeholder?: string,
 	noStyle?: boolean,
 }
@@ -32,7 +33,7 @@ export default function InputTextArea(props: Props) {
 			data-placeholder={props.placeholder}
 			ref={onEditorLoad}
 		>
-			{/* {textExample} */}
+			{props.defaultValue}
 		</div>
 	</div>
 }
