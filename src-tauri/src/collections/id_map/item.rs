@@ -7,12 +7,15 @@ pub struct Id {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Item<T: Send + Sync> {
+pub struct Item<T> {
     pub identifier: usize,
     data: Option<T>,
 }
 
-impl<T: Send + Sync> Item<T> {
+unsafe impl<T: Send> Send for Item<T> {}
+unsafe impl<T: Sync> Sync for Item<T> {}
+
+impl<T> Item<T> {
     pub fn new(identifier: usize, data: T) -> Self {
         Self {
             identifier,
@@ -66,13 +69,13 @@ impl<T: Clone + Send + Sync> Item<T> {
 }
 
 #[derive(Debug)]
-pub struct RefItem<'a, T: Send + Sync> {
+pub struct RefItem<'a, T> {
     pub id: Id,
     pub data: &'a T,
 }
 
 #[derive(Debug)]
-pub struct MutItem<'a, T: Send + Sync> {
+pub struct MutItem<'a, T> {
     pub id: Id,
     pub data: &'a mut T,
 }

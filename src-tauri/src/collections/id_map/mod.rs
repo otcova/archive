@@ -7,13 +7,16 @@ pub use serializer::*;
 use std::slice::{Iter, IterMut};
 
 #[derive(Debug, Deserialize)]
-pub struct IdMap<T: Send + Sync> {
+pub struct IdMap<T> {
     data: Vec<Item<T>>,
     empty_indexes: Vec<usize>,
     last_identifier: usize,
 }
 
-impl<T: Send + Sync> Default for IdMap<T> {
+unsafe impl<T: Send> Send for IdMap<T> {}
+unsafe impl<T: Sync> Sync for IdMap<T> {}
+
+impl<T> Default for IdMap<T> {
     fn default() -> Self {
         Self {
             data: vec![],
@@ -23,7 +26,7 @@ impl<T: Send + Sync> Default for IdMap<T> {
     }
 }
 
-impl<T: Send + Sync> IdMap<T> {
+impl<T> IdMap<T> {
     pub fn len(&self) -> usize {
         self.data.len() - self.empty_indexes.len()
     }
@@ -122,12 +125,12 @@ impl<T: Clone + Send + Sync> IdMap<T> {
     }
 }
 
-pub struct IdMapIter<'a, T: Send + Sync> {
+pub struct IdMapIter<'a, T> {
     data_iter: Iter<'a, Item<T>>,
     index: usize,
 }
 
-impl<'a, T: Send + Sync> Iterator for IdMapIter<'a, T> {
+impl<'a, T> Iterator for IdMapIter<'a, T> {
     type Item = RefItem<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -147,12 +150,12 @@ impl<'a, T: Send + Sync> Iterator for IdMapIter<'a, T> {
     }
 }
 
-pub struct IdMapIterMut<'a, T: Send + Sync> {
+pub struct IdMapIterMut<'a, T> {
     data_iter: IterMut<'a, Item<T>>,
     index: usize,
 }
 
-impl<'a, T: Send + Sync> Iterator for IdMapIterMut<'a, T> {
+impl<'a, T> Iterator for IdMapIterMut<'a, T> {
     type Item = MutItem<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
