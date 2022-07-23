@@ -1,0 +1,17 @@
+@use '../../globalStyle/theme'
+@use '../../globalStyle/layout'
+
+.input_row
+	@include layout.row
+	position: relative
+	width: 100%
+
+.input_row::before
+	position: absolute
+	top: 68px
+	content: ''
+	width: 100vw
+	border-bottom: theme.$stroke
+
+.input_vin
+	width: 200px
