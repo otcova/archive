@@ -65,7 +65,7 @@ impl<T: Item> Chunk<T> {
 
         self.database.data.items.take(oldest_id?)
     }
-    
+
     pub fn save(&mut self) -> Result<()> {
         if self.modifyed {
             self.database.store()?;
@@ -73,14 +73,14 @@ impl<T: Item> Chunk<T> {
         }
         Ok(())
     }
-    
+
     pub fn ref_data(&self, id: Id) -> Option<&T> {
         self.database.data.items.get_ref(id)
     }
     pub fn len(&self) -> usize {
         self.database.data.items.len()
     }
-    
+
     // Functions to modify data from database
     pub fn iter(&self) -> IdMapIter<T> {
         self.database.data.items.iter()
@@ -89,7 +89,7 @@ impl<T: Item> Chunk<T> {
         self.modifyed = true;
         self.database.data.items.push(data)
     }
-    
+
     pub fn update(&mut self, id: Id, data: T) {
         self.modifyed = true;
         self.database.data.items.update(id, data)

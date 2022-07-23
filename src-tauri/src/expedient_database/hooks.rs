@@ -4,9 +4,9 @@ use std::sync::{Arc, Mutex, RwLock};
 
 #[derive(Default)]
 pub struct HookPool<'a> {
-    observable: Observable<'a, HookContext<'a>>,
-    list_observable: Observable<'a, ListExpedientsHookContext<'a>>,
-    list_oreders_observable: Observable<'a, ListOrdersHookContext<'a>>,
+    observable: Observable<HookContext<'a>>,
+    list_observable: AsyncObservable<'a, ListExpedientsHookContext<'a>>,
+    list_oreders_observable: AsyncObservable<'a, ListOrdersHookContext<'a>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -31,7 +31,7 @@ struct HookContext<'a> {
 struct ListExpedientsHookContext<'a> {
     pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
     pub callback:
-        Arc<Mutex<Box<dyn for<'r> FnMut(Vec<(Uid, &'r Expedient, f32)>) + Send + Sync + 'a>>>,
+        Arc<Mutex<Box<dyn for<'r> FnMut(&Vec<(Uid, &'r Expedient, f32)>) + Send + Sync + 'a>>>,
     pub options: ListExpedientsHookOptions,
 }
 
@@ -47,7 +47,7 @@ pub struct ListExpedientsHookOptions {
 struct ListOrdersHookContext<'a> {
     pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
     pub callback:
-        Arc<Mutex<Box<dyn for<'r> FnMut(Vec<(Uid, usize, &'r Expedient)>) + Send + Sync + 'a>>>,
+        Arc<Mutex<Box<dyn for<'r> FnMut(&Vec<(Uid, usize, &'r Expedient)>) + Send + Sync + 'a>>>,
     pub options: ListOrdersHookOptions,
 }
 
@@ -82,10 +82,14 @@ impl<'a> ExpedientDatabase<'a> {
     pub fn release_all_hooks(&mut self) {
         self.hook_pool = Default::default();
     }
-    pub fn dispath_change(&mut self) {
+    pub fn interrupt_dispatch(&mut self) {
+        self.hook_pool.list_observable.stop_trigger();
+        self.hook_pool.list_oreders_observable.stop_trigger();
+    }
+    pub fn dispatch_change(&mut self) {
         self.hook_pool.observable.trigger();
-        self.hook_pool.list_observable.async_trigger();
-        self.hook_pool.list_oreders_observable.async_trigger();
+        self.hook_pool.list_observable.trigger();
+        self.hook_pool.list_oreders_observable.trigger();
     }
 
     pub fn hook_expedient(
@@ -94,30 +98,35 @@ impl<'a> ExpedientDatabase<'a> {
         callback: impl for<'r> FnMut(Option<&'r Expedient>) -> () + Send + Sync + 'a,
     ) -> HookId {
         HookId::Expedient(self.hook_pool.observable.subscrive(
-            Callback {
-                callback: |context| {
-                    let database = context.database.read().unwrap();
-                    let expedient = database.read(context.expedient_id);
-                    (context.callback.lock().unwrap())(expedient)
-                },
-                context: HookContext {
+            Callback::new(
+                HookContext {
                     database: self.database.clone(),
                     expedient_id: id,
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
-            },
-            InstantTriggerType::Sync,
+                |context| {
+                    let database = context.database.read().unwrap();
+                    let expedient = database.read(context.expedient_id);
+                    (context.callback.lock().unwrap())(expedient)
+                },
+            ),
+            true,
         ))
     }
 
     pub fn hook_list_oreders(
         &mut self,
         options: ListOrdersHookOptions,
-        callback: impl for<'r> FnMut(Vec<(Uid, usize, &'r Expedient)>) -> () + Send + Sync + 'a,
+        callback: impl for<'r> FnMut(&Vec<(Uid, usize, &'r Expedient)>) -> () + Send + Sync + 'a,
     ) -> HookId {
         HookId::ListExpedientOrders(self.hook_pool.list_oreders_observable.subscrive(
-            Callback {
-                callback: |context| {
+            AsyncCallback::new(
+                ListOrdersHookContext {
+                    database: self.database.clone(),
+                    options,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+                |context, join| {
                     let database = context.database.read().unwrap();
 
                     let mut list_orders: Vec<_> = database
@@ -137,6 +146,10 @@ impl<'a> ExpedientDatabase<'a> {
                         })
                         .collect();
 
+                    if join.join_requested() {
+                        return;
+                    }
+
                     match context.options.sort_by {
                         ListOrdersHookOptionsSortBy::Newest => {
                             list_orders.sort_unstable_by_key(|(_, index, expedient)| {
@@ -149,29 +162,78 @@ impl<'a> ExpedientDatabase<'a> {
                             })
                         }
                     };
-                    list_orders.truncate(context.options.max_list_len);
-                    (context.callback.lock().unwrap())(list_orders);
 
-                    // TODO: check on ancient database
+                    list_orders.truncate(context.options.max_list_len);
+
+                    if join.join_requested() {
+                        return;
+                    }
+
+                    (context.callback.lock().unwrap())(&list_orders);
+
+                    // Check on ancient database
+
+                    let mut ancient_list_orders: Vec<_> = database
+                        .iter_ancient()
+                        .flat_map(|(id, exp)| {
+                            (0..exp.orders.len()).map(move |index| (id, index, exp))
+                        })
+                        .filter(|(_, index, expedient)| {
+                            let order = &expedient.orders[*index];
+                            order.date.date_hash() <= context.options.from_date
+                                && match order.state {
+                                    OrderState::Done => context.options.show_done,
+                                    OrderState::Todo => context.options.show_todo,
+                                    OrderState::Urgent => context.options.show_urgent,
+                                    OrderState::Pending => context.options.show_pending,
+                                }
+                        })
+                        .collect();
+                    list_orders.append(&mut ancient_list_orders);
+
+                    if join.join_requested() {
+                        return;
+                    }
+
+                    match context.options.sort_by {
+                        ListOrdersHookOptionsSortBy::Newest => {
+                            list_orders.sort_unstable_by_key(|(_, index, expedient)| {
+                                -expedient.orders[*index].date.date_hash()
+                            })
+                        }
+                        ListOrdersHookOptionsSortBy::Oldest => {
+                            list_orders.sort_unstable_by_key(|(_, index, expedient)| {
+                                expedient.orders[*index].date.date_hash()
+                            })
+                        }
+                    };
+
+                    list_orders.truncate(context.options.max_list_len);
+
+                    if join.join_requested() {
+                        return;
+                    }
+
+                    (context.callback.lock().unwrap())(&list_orders);
                 },
-                context: ListOrdersHookContext {
-                    database: self.database.clone(),
-                    options,
-                    callback: Arc::new(Mutex::new(Box::new(callback))),
-                },
-            },
-            InstantTriggerType::Async,
+            ),
+            true,
         ))
     }
 
     pub fn hook_list_expedients(
         &mut self,
         options: ListExpedientsHookOptions,
-        callback: impl for<'r> FnMut(Vec<(Uid, &'r Expedient, f32)>) -> () + Send + Sync + 'a,
+        callback: impl for<'r> FnMut(&Vec<(Uid, &'r Expedient, f32)>) -> () + Send + Sync + 'a,
     ) -> HookId {
         HookId::ListExpedients(self.hook_pool.list_observable.subscrive(
-            Callback {
-                callback: |context| {
+            AsyncCallback::new(
+                ListExpedientsHookContext {
+                    database: self.database.clone(),
+                    options,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+                |context, join| {
                     let database = context.database.read().unwrap();
 
                     let mut list: Vec<_> = database
@@ -182,6 +244,10 @@ impl<'a> ExpedientDatabase<'a> {
                         .filter(|(_, _, similarity)| *similarity > 0.)
                         .collect();
 
+                    if join.join_requested() {
+                        return;
+                    }
+
                     // Sort by similarity
                     list.sort_unstable_by(|(_, _, a), (_, _, b)| {
                         b.partial_cmp(a)
@@ -189,17 +255,17 @@ impl<'a> ExpedientDatabase<'a> {
                     });
 
                     list.truncate(context.options.max_list_len);
-                    (context.callback.lock().unwrap())(list);
+
+                    if join.join_requested() {
+                        return;
+                    }
+
+                    (context.callback.lock().unwrap())(&list);
 
                     // TODO: check on ancient database
                 },
-                context: ListExpedientsHookContext {
-                    database: self.database.clone(),
-                    options,
-                    callback: Arc::new(Mutex::new(Box::new(callback))),
-                },
-            },
-            InstantTriggerType::Async,
+            ),
+            true,
         ))
     }
 }

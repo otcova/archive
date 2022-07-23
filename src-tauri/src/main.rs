@@ -1,4 +1,4 @@
-#![feature(thread_spawn_unchecked, thread_is_running)]
+#![feature(thread_spawn_unchecked, thread_is_running, bool_to_option)]
 #![allow(dead_code)]
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
@@ -12,10 +12,10 @@ mod api;
 mod chunked_database;
 mod collections;
 mod database;
-mod observable;
 mod error;
 mod expedient_database;
 mod mean;
+mod observable;
 
 use tauri::RunEvent;
 

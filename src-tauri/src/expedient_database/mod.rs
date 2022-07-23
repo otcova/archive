@@ -60,17 +60,20 @@ impl<'a> ExpedientDatabase<'a> {
     }
 
     pub fn update_expedient(&mut self, id: Uid, expedient: Expedient) {
+        self.interrupt_dispatch();
         self.database.write().unwrap().update(id, expedient);
-        self.dispath_change();
+        self.dispatch_change();
     }
     pub fn create_expedient(&mut self, expedient: Expedient) -> Uid {
+        self.interrupt_dispatch();
         let id = self.database.write().unwrap().push(expedient);
-        self.dispath_change();
+        self.dispatch_change();
         id
     }
     pub fn delete_expedient(&mut self, id: Uid) {
+        self.interrupt_dispatch();
         self.database.write().unwrap().delete(id);
-        self.dispath_change();
+        self.dispatch_change();
     }
     pub fn merge_expedient(&self, _id_a: Uid, _id_b: Uid) {
         todo!()

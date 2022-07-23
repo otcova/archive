@@ -113,9 +113,23 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
 
     /// Moves items from the dynamic chunk to the ancient chunk to satisfy 'max_dynamic_len'
     fn move_old_items(&mut self) {
-        while self.dynamic.len() > self.max_dynamic_len {
-            println!("{} > {}", self.dynamic.len(), self.max_dynamic_len);
-            self.ancient.push(self.dynamic.pop_oldest().unwrap());
+        if self.dynamic.len() > self.max_dynamic_len {
+            println!(
+                "Moving {} expedient to ancient database",
+                self.dynamic.len() - self.max_dynamic_len
+            );
+            while self.dynamic.len() > self.max_dynamic_len {
+                self.ancient.push(
+                    self.dynamic
+                        .pop_oldest()
+                        .expect("Dynamic len is > 0 but pop_oldest didn't find any"),
+                );
+            }
+            println!(
+                "Dinamic database: {}  Ancient database: {}",
+                self.dynamic.len(),
+                self.ancient.len()
+            );
         }
     }
 

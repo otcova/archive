@@ -22,9 +22,13 @@ pub fn hook_expedient(
     js_callback: JsCallback,
 ) -> Option<HookId> {
     let mut database = state.database_mutex.lock().unwrap();
-    Some(database.as_mut()?.hook_expedient(expedient_id, move |expedient| {
-        js_callback.call(&window, &expedient);
-    }))
+    Some(
+        database
+            .as_mut()?
+            .hook_expedient(expedient_id, move |expedient| {
+                js_callback.call(&window, &expedient);
+            }),
+    )
 }
 
 #[tauri::command]
@@ -39,7 +43,7 @@ pub fn hook_list_expedients(
         database
             .as_mut()?
             .hook_list_expedients(options, move |expedients| {
-                js_callback.call(&window, &expedients)
+                js_callback.call(&window, expedients)
             }),
     )
 }
@@ -56,7 +60,7 @@ pub fn hook_list_oreders(
         database
             .as_mut()?
             .hook_list_oreders(options, move |expedients| {
-                js_callback.call(&window, &expedients)
+                js_callback.call(&window, expedients)
             }),
     )
 }
