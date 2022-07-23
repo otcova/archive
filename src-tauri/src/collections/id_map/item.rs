@@ -34,6 +34,7 @@ impl<T> Item<T> {
     }
     pub fn take(&mut self) -> Option<T> {
         if self.is_some() {
+            self.identifier = 0;
             self.data.take()
         } else {
             None

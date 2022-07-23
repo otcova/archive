@@ -71,9 +71,9 @@ impl<'a> AsyncCallbackInstance<'a> {
         self.join_handle.try_join()
     }
 
-    pub fn join(&mut self) -> bool {
+    pub fn join(&mut self) {
         self.request_join();
-        self.join_handle.try_join()
+        self.join_handle.join();
     }
 }
 

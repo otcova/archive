@@ -25,7 +25,7 @@ impl<'a> Thread<'a> {
     /// true -> thread is no longer runing
     /// false -> thread is still runing
     pub fn try_join(&mut self) -> bool {
-        if let Some(ref mut thread) = self.handle {
+        if let Some(thread) = self.handle.as_mut() {
             if thread.is_finished() {
                 self.join();
                 true

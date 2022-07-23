@@ -427,7 +427,7 @@ mod test {
     }
 
     #[test]
-    fn exists() {
+    fn exists_before_and_after_delete() {
         let mut map = IdMap::<i32>::default();
 
         let id_0 = map.push(12);
@@ -439,6 +439,22 @@ mod test {
         assert!(map.exists(id_2));
 
         map.delete(id_0);
+        assert!(!map.exists(id_0));
+    }
+
+    #[test]
+    fn exists_before_and_after_take() {
+        let mut map = IdMap::<i32>::default();
+
+        let id_0 = map.push(12);
+        let id_1 = map.push(543);
+        let id_2 = map.push(21);
+
+        assert!(map.exists(id_0));
+        assert!(map.exists(id_1));
+        assert!(map.exists(id_2));
+
+        map.take(id_0);
         assert!(!map.exists(id_0));
     }
 }

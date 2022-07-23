@@ -403,6 +403,7 @@ mod test {
                 assert_eq!(expedient_1, *filter[2].1);
             },
         );
+        sleep_for(20);
         drop(db);
 
         assert!(hook_has_triggered);
