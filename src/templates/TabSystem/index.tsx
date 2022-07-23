@@ -10,9 +10,9 @@ export const useTab = () => useContext(TabContext)
 
 export default function TabSystem() {
 	const staticTabs = [
-		{ name: <StaticCheckbox state={"Done"} />, componentClass: DoneList, props: {} },
 		{ name: <StaticCheckbox state={"Todo"} />, componentClass: OpenList, props: {} },
 		{ name: <StaticCheckbox state={"Pending"} />, componentClass: PendingList, props: {} },
+		{ name: <StaticCheckbox state={"Done"} />, componentClass: DoneList, props: {} },
 	]
 
 	const [tabs, setTabs] = createSignal<{ name, componentClass, props, component?}[]>([...staticTabs])
