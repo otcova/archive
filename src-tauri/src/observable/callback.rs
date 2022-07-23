@@ -27,28 +27,32 @@ impl<Context> Callback<Context> {
 }
 
 pub struct AsyncCallback<'a, Context: 'a + Send + Sync> {
-    callback: fn(&Context, CallbackRequestedJoin),
+    callback: fn(&Context, CallbackProcess) -> Option<()>,
     context: Arc<Context>,
     instances: IdMap<CallbackInstance<'a>>,
 }
 
 pub struct CallbackInstance<'a> {
-    join_handle: Thread<'a, ()>,
+    join_handle: Thread<'a, Option<()>>,
     request_join: Arc<Mutex<bool>>,
 }
 
-pub struct CallbackRequestedJoin {
+pub struct CallbackProcess {
     request_join: Arc<Mutex<bool>>,
 }
 
-impl CallbackRequestedJoin {
-    pub fn join_requested(&self) -> bool {
-        *self.request_join.lock().unwrap()
+impl CallbackProcess {
+    pub fn terminate_if_requested(&self) -> Option<()> {
+        if *self.request_join.lock().unwrap() {
+            None
+        } else {
+            Some(())
+        }
     }
 }
 
 impl<'a, Context: 'a + Send + Sync> AsyncCallback<'a, Context> {
-    pub fn new(context: Context, callback: fn(&Context, CallbackRequestedJoin)) -> Self {
+    pub fn new(context: Context, callback: fn(&Context, CallbackProcess) -> Option<()>) -> Self {
         Self {
             context: Arc::new(context),
             callback,
@@ -58,7 +62,7 @@ impl<'a, Context: 'a + Send + Sync> AsyncCallback<'a, Context> {
     pub fn call(&mut self) {
         let request_join = Arc::new(Mutex::new(false));
 
-        let requested_join = CallbackRequestedJoin {
+        let requested_join = CallbackProcess {
             request_join: request_join.clone(),
         };
         let context = self.context.clone();

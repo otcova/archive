@@ -114,6 +114,52 @@ impl<'a> ExpedientDatabase<'a> {
         ))
     }
 
+    fn list_orders<'b>(
+        options: &ListOrdersHookOptions,
+        orders: impl Iterator<Item = (Uid, &'b Expedient)>,
+        concat_with: &mut Vec<(Uid, usize, &'b Expedient)>,
+        process: &CallbackProcess,
+    ) -> Option<Vec<(Uid, usize, &'b Expedient)>> {
+        let mut list_orders: Vec<_> = orders
+            .flat_map(|(id, exp)| (0..exp.orders.len()).map(move |index| (id, index, exp)))
+            .filter(|(_, index, expedient)| {
+                let order = &expedient.orders[*index];
+                order.date.date_hash() <= options.from_date
+                    && match order.state {
+                        OrderState::Done => options.show_done,
+                        OrderState::Todo => options.show_todo,
+                        OrderState::Urgent => options.show_urgent,
+                        OrderState::Pending => options.show_pending,
+                    }
+            })
+            .collect();
+
+        process.terminate_if_requested()?;
+
+        list_orders.append(concat_with);
+
+        process.terminate_if_requested()?;
+
+        match options.sort_by {
+            ListOrdersHookOptionsSortBy::Newest => {
+                list_orders.sort_unstable_by_key(|(_, index, expedient)| {
+                    -expedient.orders[*index].date.date_hash()
+                })
+            }
+            ListOrdersHookOptionsSortBy::Oldest => {
+                list_orders.sort_unstable_by_key(|(_, index, expedient)| {
+                    expedient.orders[*index].date.date_hash()
+                })
+            }
+        };
+
+        list_orders.truncate(options.max_list_len);
+
+        process.terminate_if_requested()?;
+
+        Some(list_orders)
+    }
+
     pub fn hook_list_oreders(
         &mut self,
         options: ListOrdersHookOptions,
@@ -126,95 +172,26 @@ impl<'a> ExpedientDatabase<'a> {
                     options,
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
-                |context, join| {
+                |context, process| {
                     let database = context.database.read().unwrap();
 
-                    let mut list_orders: Vec<_> = database
-                        .iter()
-                        .flat_map(|(id, exp)| {
-                            (0..exp.orders.len()).map(move |index| (id, index, exp))
-                        })
-                        .filter(|(_, index, expedient)| {
-                            let order = &expedient.orders[*index];
-                            order.date.date_hash() <= context.options.from_date
-                                && match order.state {
-                                    OrderState::Done => context.options.show_done,
-                                    OrderState::Todo => context.options.show_todo,
-                                    OrderState::Urgent => context.options.show_urgent,
-                                    OrderState::Pending => context.options.show_pending,
-                                }
-                        })
-                        .collect();
+                    let mut dynamic_list = Self::list_orders(
+                        &context.options,
+                        database.iter(),
+                        &mut vec![],
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(&dynamic_list);
 
-                    if join.join_requested() {
-                        return;
-                    }
+                    let full_list = Self::list_orders(
+                        &context.options,
+                        database.iter_ancient(),
+                        &mut dynamic_list,
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(&full_list);
 
-                    match context.options.sort_by {
-                        ListOrdersHookOptionsSortBy::Newest => {
-                            list_orders.sort_unstable_by_key(|(_, index, expedient)| {
-                                -expedient.orders[*index].date.date_hash()
-                            })
-                        }
-                        ListOrdersHookOptionsSortBy::Oldest => {
-                            list_orders.sort_unstable_by_key(|(_, index, expedient)| {
-                                expedient.orders[*index].date.date_hash()
-                            })
-                        }
-                    };
-
-                    list_orders.truncate(context.options.max_list_len);
-
-                    if join.join_requested() {
-                        return;
-                    }
-
-                    (context.callback.lock().unwrap())(&list_orders);
-
-                    // Check on ancient database
-
-                    let mut ancient_list_orders: Vec<_> = database
-                        .iter_ancient()
-                        .flat_map(|(id, exp)| {
-                            (0..exp.orders.len()).map(move |index| (id, index, exp))
-                        })
-                        .filter(|(_, index, expedient)| {
-                            let order = &expedient.orders[*index];
-                            order.date.date_hash() <= context.options.from_date
-                                && match order.state {
-                                    OrderState::Done => context.options.show_done,
-                                    OrderState::Todo => context.options.show_todo,
-                                    OrderState::Urgent => context.options.show_urgent,
-                                    OrderState::Pending => context.options.show_pending,
-                                }
-                        })
-                        .collect();
-                    list_orders.append(&mut ancient_list_orders);
-
-                    if join.join_requested() {
-                        return;
-                    }
-
-                    match context.options.sort_by {
-                        ListOrdersHookOptionsSortBy::Newest => {
-                            list_orders.sort_unstable_by_key(|(_, index, expedient)| {
-                                -expedient.orders[*index].date.date_hash()
-                            })
-                        }
-                        ListOrdersHookOptionsSortBy::Oldest => {
-                            list_orders.sort_unstable_by_key(|(_, index, expedient)| {
-                                expedient.orders[*index].date.date_hash()
-                            })
-                        }
-                    };
-
-                    list_orders.truncate(context.options.max_list_len);
-
-                    if join.join_requested() {
-                        return;
-                    }
-
-                    (context.callback.lock().unwrap())(&list_orders);
+                    Some(())
                 },
             ),
             true,
@@ -233,7 +210,7 @@ impl<'a> ExpedientDatabase<'a> {
                     options,
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
-                |context, join| {
+                |context, process| {
                     let database = context.database.read().unwrap();
 
                     let mut list: Vec<_> = database
@@ -244,9 +221,7 @@ impl<'a> ExpedientDatabase<'a> {
                         .filter(|(_, _, similarity)| *similarity > 0.)
                         .collect();
 
-                    if join.join_requested() {
-                        return;
-                    }
+                    process.terminate_if_requested()?;
 
                     // Sort by similarity
                     list.sort_unstable_by(|(_, _, a), (_, _, b)| {
@@ -256,13 +231,13 @@ impl<'a> ExpedientDatabase<'a> {
 
                     list.truncate(context.options.max_list_len);
 
-                    if join.join_requested() {
-                        return;
-                    }
+                    process.terminate_if_requested()?;
 
                     (context.callback.lock().unwrap())(&list);
 
                     // TODO: check on ancient database
+
+                    Some(())
                 },
             ),
             true,
