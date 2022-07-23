@@ -49,20 +49,21 @@ pub fn hook_list_expedients(
 }
 
 #[tauri::command]
-pub fn hook_list_oreders(
+pub fn hook_list_orders(
     state: tauri::State<ApiState>,
     window: tauri::Window,
     options: ListOrdersHookOptions,
     js_callback: JsCallback,
 ) -> Option<HookId> {
     let mut database = state.database_mutex.lock().unwrap();
-    Some(
+    let v = Some(
         database
             .as_mut()?
-            .hook_list_oreders(options, move |expedients| {
+            .hook_list_orders(options, move |expedients| {
                 js_callback.call(&window, expedients)
             }),
-    )
+    );
+    v
 }
 
 #[tauri::command]

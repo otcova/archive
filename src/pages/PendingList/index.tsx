@@ -2,8 +2,8 @@ import OrderList, { lableByDate } from '../../templates/OrderList'
 import { createHook } from '../../database/expedientHook'
 
 export default function PendingList() {
-	
-	const [orderList] = createHook("list_oreders", {
+
+	const [orderList] = createHook("list_orders", {
 		sort_by: "Oldest",
 		from_date: 10000000,
 		max_list_len: 70,
@@ -12,6 +12,6 @@ export default function PendingList() {
 		show_pending: true,
 		show_urgent: false,
 	})
-	
+
 	return <OrderList orderList={() => [...lableByDate(orderList())]} />
 }

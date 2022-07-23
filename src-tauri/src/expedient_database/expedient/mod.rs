@@ -37,6 +37,22 @@ pub struct User {
     pub phones: Vec<String>,
 }
 
+impl User {
+    pub fn to_string(&self) -> String {
+        [&self.name]
+            .into_iter()
+            .chain(self.emails.iter())
+            .chain(self.phones.iter())
+            .cloned()
+            .intersperse(String::from(" "))
+            .collect()
+    }
+
+    pub fn to_lowercase_string(&self) -> String {
+        self.to_string().to_lowercase()
+    }
+}
+
 impl Expedient {
     pub fn vin_is_complete(&self) -> bool {
         self.vin.len() >= 17

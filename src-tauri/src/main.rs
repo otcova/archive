@@ -1,4 +1,9 @@
-#![feature(thread_spawn_unchecked, thread_is_running, bool_to_option)]
+#![feature(
+    thread_spawn_unchecked,
+    thread_is_running,
+    bool_to_option,
+    iter_intersperse
+)]
 #![allow(dead_code)]
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
@@ -34,7 +39,7 @@ fn main() {
             // hooks
             api::hook_expedient,
             api::hook_list_expedients,
-            api::hook_list_oreders,
+            api::hook_list_orders,
             api::release_hook,
             api::release_all_hooks,
             // expedients

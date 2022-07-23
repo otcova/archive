@@ -36,7 +36,7 @@ export type ListOrdersHookOptionsSortBy = {
 
 export function createHook(hook_name: "expedient", id: ExpedientId): [Accessor<Expedient>];
 export function createHook(hook_name: "list_expedients", options: ListExpedientsHookOptions);
-export function createHook(hook_name: "list_oreders", options: ListOrdersHookOptionsSortBy);
+export function createHook(hook_name: "list_orders", options: ListOrdersHookOptionsSortBy);
 export function createHook(hook_name: string, options: object) {
 	const [hookData, setHookData] = createSignal(null)
 	const [hookOptions, setHookOptions] = createSignal(options)
@@ -55,6 +55,7 @@ export function createHook(hook_name: string, options: object) {
 		else params = { jsCallback, options: hookOptions() }
 
 		const hookId = await invoke("hook_" + hook_name, params)
+
 		setHookId(pastHookId => {
 			if (pastHookId) invoke("release_hook", { hookId: pastHookId })
 			return hookId

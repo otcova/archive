@@ -58,9 +58,20 @@ impl<T> IdMap<T> {
     }
 
     pub fn delete(&mut self, id: Id) {
-        if self.exists(id) {
-            self.data[id.index].delete();
-            self.empty_indexes.push(id.index);
+        self.take(id);
+    }
+
+    pub fn filter(&mut self, mut filter: impl FnMut(MutItem<T>) -> bool) {
+        for index in 0..self.data.len() {
+            let id = Id {
+                index,
+                identifier: self.data[index].identifier,
+            };
+            if let Some(data) = self.data[index].as_mut() {
+                if !filter(MutItem { id, data }) {
+                    self.delete(id);
+                }
+            }
         }
     }
 

@@ -3,7 +3,7 @@ import { createHook } from '../../database/expedientHook'
 
 export default function OpenList() {
 
-	const [urgentList] = createHook("list_oreders", {
+	const [urgentList] = createHook("list_orders", {
 		sort_by: "Oldest",
 		from_date: 10000000,
 		max_list_len: 70,
@@ -13,7 +13,7 @@ export default function OpenList() {
 		show_urgent: true,
 	})
 
-	const [todoList] = createHook("list_oreders", {
+	const [todoList] = createHook("list_orders", {
 		sort_by: "Oldest",
 		from_date: 10000000,
 		max_list_len: 70,

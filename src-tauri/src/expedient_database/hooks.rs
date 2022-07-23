@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex, RwLock};
 pub struct HookPool<'a> {
     observable: Observable<HookContext<'a>>,
     list_observable: AsyncObservable<'a, ListExpedientsHookContext<'a>>,
-    list_oreders_observable: AsyncObservable<'a, ListOrdersHookContext<'a>>,
+    list_orders_observable: AsyncObservable<'a, ListOrdersHookContext<'a>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -51,9 +51,24 @@ struct ListOrdersHookContext<'a> {
     pub options: ListOrdersHookOptions,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ListOrdersHookFilter {
+    pub car_code: String,
+    pub user: String,
+    pub body: String,
+}
+
+impl ListOrdersHookFilter {
+    fn to_lowercase(&mut self) {
+        self.car_code = self.car_code.to_lowercase();
+        self.user = self.user.to_lowercase();
+        self.body = self.body.to_lowercase();
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ListOrdersHookOptions {
-    pub filter: Option<Expedient>,
+    pub filter: Option<ListOrdersHookFilter>,
     pub sort_by: ListOrdersHookOptionsSortBy,
     pub max_list_len: usize,
     pub from_date: i32,
@@ -63,7 +78,7 @@ pub struct ListOrdersHookOptions {
     pub show_done: bool,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum ListOrdersHookOptionsSortBy {
     Oldest,
     Newest,
@@ -75,7 +90,7 @@ impl<'a> ExpedientDatabase<'a> {
             HookId::Expedient(id) => self.hook_pool.observable.unsubscrive(id),
             HookId::ListExpedients(id) => self.hook_pool.list_observable.unsubscrive(id),
             HookId::ListExpedientOrders(id) => {
-                self.hook_pool.list_oreders_observable.unsubscrive(id)
+                self.hook_pool.list_orders_observable.unsubscrive(id)
             }
         }
     }
@@ -84,12 +99,12 @@ impl<'a> ExpedientDatabase<'a> {
     }
     pub fn interrupt_dispatch(&mut self) {
         self.hook_pool.list_observable.stop_trigger();
-        self.hook_pool.list_oreders_observable.stop_trigger();
+        self.hook_pool.list_orders_observable.stop_trigger();
     }
     pub fn dispatch_change(&mut self) {
         self.hook_pool.observable.trigger();
         self.hook_pool.list_observable.trigger();
-        self.hook_pool.list_oreders_observable.trigger();
+        self.hook_pool.list_orders_observable.trigger();
     }
 
     pub fn hook_expedient(
@@ -116,23 +131,92 @@ impl<'a> ExpedientDatabase<'a> {
 
     fn list_orders<'b>(
         options: &ListOrdersHookOptions,
-        orders: impl Iterator<Item = (Uid, &'b Expedient)>,
+        expedients: impl Iterator<Item = (Uid, &'b Expedient)>,
         concat_with: &mut Vec<(Uid, usize, &'b Expedient)>,
-        process: &CallbackProcess,
+        process: &AsyncCallbackProcess,
     ) -> Option<Vec<(Uid, usize, &'b Expedient)>> {
-        let mut list_orders: Vec<_> = orders
-            .flat_map(|(id, exp)| (0..exp.orders.len()).map(move |index| (id, index, exp)))
-            .filter(|(_, index, expedient)| {
-                let order = &expedient.orders[*index];
-                order.date.date_hash() <= options.from_date
-                    && match order.state {
-                        OrderState::Done => options.show_done,
-                        OrderState::Todo => options.show_todo,
-                        OrderState::Urgent => options.show_urgent,
-                        OrderState::Pending => options.show_pending,
-                    }
-            })
-            .collect();
+        process.terminate_if_requested()?;
+
+        let mut filtered_expedients: Box<dyn Iterator<Item = _>> = Box::new(expedients);
+
+        if let Some(ref filter) = options.filter {
+            if filter.car_code != "" {
+                filtered_expedients = Box::new(filtered_expedients.filter(|(_, exp)| {
+                    filter
+                        .car_code
+                        .split_whitespace()
+                        .find(|keyword| {
+                            exp.license_plate.to_lowercase().contains(keyword)
+                                || exp.vin.to_lowercase().contains(keyword)
+                        })
+                        .is_some()
+                }))
+            }
+        }
+
+        process.terminate_if_requested()?;
+
+        if let Some(ref filter) = options.filter {
+            if filter.user != "" {
+                filtered_expedients = Box::new(filtered_expedients.filter(|(_, exp)| {
+                    filter
+                        .user
+                        .split_whitespace()
+                        .find(|keyword| {
+                            exp.users
+                                .iter()
+                                .find(|user| user.to_lowercase_string().contains(keyword))
+                                .is_some()
+                        })
+                        .is_some()
+                }))
+            }
+        }
+
+        process.terminate_if_requested()?;
+
+        let mut orders: Box<dyn Iterator<Item = _>> = Box::new(
+            filtered_expedients
+                .flat_map(|(id, exp)| (0..exp.orders.len()).map(move |index| (id, index, exp)))
+                .filter(|(_, index, expedient)| {
+                    let order = &expedient.orders[*index];
+                    order.date.date_hash() <= options.from_date
+                        && match order.state {
+                            OrderState::Done => options.show_done,
+                            OrderState::Todo => options.show_todo,
+                            OrderState::Urgent => options.show_urgent,
+                            OrderState::Pending => options.show_pending,
+                        }
+                }),
+        );
+
+        process.terminate_if_requested()?;
+
+        if let Some(ref filter) = options.filter {
+            if filter.body != "" {
+                orders = Box::new(orders.filter(|(_, index, expedient)| {
+                    filter
+                        .body
+                        .split_whitespace()
+                        .find(|keyword| {
+                            expedient.description.to_lowercase().contains(keyword)
+                                || expedient.orders[*index]
+                                    .title
+                                    .to_lowercase()
+                                    .contains(keyword)
+                                || expedient.orders[*index]
+                                    .description
+                                    .to_lowercase()
+                                    .contains(keyword)
+                        })
+                        .is_some()
+                }))
+            }
+        }
+
+        process.terminate_if_requested()?;
+
+        let mut list_orders: Vec<_> = orders.collect();
 
         process.terminate_if_requested()?;
 
@@ -160,12 +244,16 @@ impl<'a> ExpedientDatabase<'a> {
         Some(list_orders)
     }
 
-    pub fn hook_list_oreders(
+    pub fn hook_list_orders(
         &mut self,
-        options: ListOrdersHookOptions,
+        mut options: ListOrdersHookOptions,
         callback: impl for<'r> FnMut(&Vec<(Uid, usize, &'r Expedient)>) -> () + Send + Sync + 'a,
     ) -> HookId {
-        HookId::ListExpedientOrders(self.hook_pool.list_oreders_observable.subscrive(
+        if let Some(ref mut filter) = options.filter {
+            filter.to_lowercase();
+        }
+
+        HookId::ListExpedientOrders(self.hook_pool.list_orders_observable.subscrive(
             AsyncCallback::new(
                 ListOrdersHookContext {
                     database: self.database.clone(),
