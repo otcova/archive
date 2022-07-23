@@ -97,7 +97,7 @@ async function loadRollback() {
 	}
 }
 
-async function storeDatabase() {
+export async function storeDatabase() {
 	if (!databaseError()) {
 		try { await invoke('store_database') }
 		catch (error) {

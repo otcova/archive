@@ -35,6 +35,24 @@ export function compareDate(a: LocalDate, b: LocalDate) {
 	return 0
 }
 
+export function localDateToString(date: LocalDate): string {
+	return date.day + " - " + date.month + " - " + date.year
+}
+
+export function LocalDateNow(): LocalDate {
+	const date = new Date()
+	return {
+		year: date.getFullYear(),
+		month: date.getMonth() + 1,
+		day: date.getDate(),
+		hour: date.getHours(),
+	}
+}
+
+export function equalDay(a: LocalDate, b: LocalDate) {
+	return a.day == b.day && a.month == b.month && a.year == b.year
+}
+
 export type Order = {
 	title: string,
 	description: string,
@@ -50,7 +68,6 @@ export const expedientUtils = {
 		expedient.users.forEach(user => str += user.name + " | ")
 		return str.substring(0, str.length - 3)
 	},
-	strDate: (date: LocalDate) => date.day + " - " + date.month + " - " + date.year,
 	futureDate: () => ({ year: 32767, month: 1, day: 1, hour: 1 }),
 	globalOrderState: (expedient: Expedient): OrderState => (
 		expedient.orders.reduce((state, order) =>
@@ -62,14 +79,14 @@ export const expedientUtils = {
 		switch (newState) {
 			case "Done":
 				return expedient.orders.forEach(order => order.state = "Done")
-				
+
 			case "Todo":
 				if (state == "Done")
 					return expedient.orders.forEach(order => order.state = "Todo")
 				else if (state == "Urgent")
 					return expedient.orders.forEach(
 						order => order.state = order.state == "Urgent" ? "Todo" : order.state)
-						
+
 			case "Urgent":
 				if (state == "Done")
 					return expedient.orders.forEach(order => order.state = "Urgent")
@@ -77,6 +94,5 @@ export const expedientUtils = {
 					return expedient.orders.forEach(
 						order => order.state = order.state == "Todo" ? "Urgent" : order.state)
 		}
-	}
-
+	},
 }

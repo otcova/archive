@@ -1,6 +1,8 @@
 import { batch, createContext, createSignal, For, useContext } from 'solid-js'
 import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
-import Agenda from '../../pages/Agenda'
+import DoneList from '../../pages/DoneList'
+import OpenList from '../../pages/OpenList'
+import PendingList from '../../pages/PendingList'
 import style from './TabSystem.module.sass'
 
 const TabContext = createContext<{ focusTab, isActive, tab, createTab, closeTab, rename }>()
@@ -8,10 +10,9 @@ export const useTab = () => useContext(TabContext)
 
 export default function TabSystem() {
 	const staticTabs = [
-		// { name: "Nou Expedient", componentClass: ExpedientEditor, props: {} },
-		{ name: <StaticCheckbox state={"Todo"} />, componentClass: Agenda, props: {} },
-		{ name: <StaticCheckbox state={"Pending"} />, componentClass: Agenda, props: {} },
-		{ name: <StaticCheckbox state={"Done"} />, componentClass: Agenda, props: {} },
+		{ name: <StaticCheckbox state={"Todo"} />, componentClass: OpenList, props: {} },
+		{ name: <StaticCheckbox state={"Pending"} />, componentClass: PendingList, props: {} },
+		{ name: <StaticCheckbox state={"Done"} />, componentClass: DoneList, props: {} },
 	]
 
 	const [tabs, setTabs] = createSignal<{ name, componentClass, props, component?}[]>([...staticTabs])

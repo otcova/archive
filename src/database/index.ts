@@ -8,3 +8,4 @@ export { expedientUtils } from "./types"
 export type { Expedient, ExpedientId, LocalDate, Order, User } from "./types"
 
 import "./databaseState"
+import "./temporal"

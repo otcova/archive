@@ -1,26 +1,22 @@
-import { createEffect, createSignal, For, JSX as SolidjsJSX } from 'solid-js'
+import { Accessor, createEffect, createSignal, For, JSX as SolidjsJSX } from 'solid-js'
 import Checkbox from '../../atoms/Checkbox'
-import { Expedient, ExpedientId, expedientUtils } from '../../database'
+import { Expedient, ExpedientId, expedientUtils, Order } from '../../database'
 import { createHook } from '../../database/expedientHook'
+import { equalDay, LocalDate, localDateToString as localDateToString } from '../../database/types'
 import ExpedientEditor from '../../pages/ExpedientEditor'
 import { useTab } from '../TabSystem'
 import style from './OrderList.module.sass'
 
-export default function OrderList() {
+type Props = {
+	orderList: Accessor<([ExpedientId, number, Expedient] | string)[]>
+}
 
-	const [expedientList] = createHook("list_oreders", {
-		sort_by: "Newest",
-		from_date: 10000000,
-		max_list_len: 70,
-		show_done: true,
-		show_todo: true,
-		show_pending: true,
-		show_urgent: true,
-	})
-
+export default function OrderList(props: Props) {
 	return <div class={style.container}>
-		<For each={expedientList()?.map(([id, index, exp]) => JSON.stringify([id, index, exp])) ?? []}>{(data, _) => {
-			return <Row data={JSON.parse(data as string)} />
+		<For each={props.orderList()?.map(data => JSON.stringify(data))}>{(data, _) => {
+			const order = JSON.parse(data)
+			if (typeof order == "string") return <Lable text={order} />
+			return <Row data={order} />
 		}}</For>
 	</div>
 }
@@ -29,7 +25,7 @@ function Row(props: { data: [ExpedientId, number, Expedient] }) {
 	const [expedientId, orderIndex, expedient] = props.data
 	const order = expedient.orders[orderIndex]
 	const { createTab } = useTab()
-	
+
 	const openOrder = () => {
 		createTab("", ExpedientEditor, { expedientId, orderIndex })
 	}
@@ -41,4 +37,26 @@ function Row(props: { data: [ExpedientId, number, Expedient] }) {
 		<div class={style.grow}>{expedient.model}</div>
 		<div>{expedient.license_plate}</div>
 	</div>
+}
+
+function Lable({ text }: { text: string }) {
+	return <div class={style.lable}>{text}</div>
+}
+
+export function lableByDate(list?: [ExpedientId, number, Expedient][]): ([ExpedientId, number, Expedient] | string)[] {
+	if (!list) return []
+	let pastDate = {} as LocalDate
+	let labledList = []
+
+	for (const data of list) {
+		const order = data[2].orders[data[1]]
+		if (!equalDay(order.date, pastDate)) {
+			pastDate = order.date
+			labledList.push(localDateToString(pastDate))
+		}
+
+		labledList.push(data)
+	}
+
+	return labledList
 }

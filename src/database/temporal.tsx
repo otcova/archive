@@ -1,8 +1,13 @@
+import Button from "../atoms/Button"
+import { storeDatabase } from "./databaseState"
 import { createExpedient } from "./expedientState"
 import { Expedient, Order } from "./types"
 
+// document.body.prepend(<Button text="create expedients" action={testCreateExpedients}/>())
+// document.body.prepend(<Button text="save database" action={storeDatabase}/>())
+
 export function testCreateExpedients() {
-	for (let i = 0; i < 111; ++i) {
+	for (let i = 0; i < 11100; ++i) {
 		createExpedient(genTestExpedient())
 	}
 }
@@ -10,8 +15,8 @@ export function testCreateExpedients() {
 
 export function genTestExpedient(): Expedient {
 	let year = Math.trunc(Math.random() * 22 + 2000)
-	let month = Math.trunc(Math.random() * 12)
-	let day = Math.trunc(Math.random() * 28)
+	let month = Math.trunc(Math.random() * 12) + 1
+	let day = Math.trunc(Math.random() * 28) + 1
 	let date = { year, month, day, hour: Math.trunc(Math.random() * 24) }
 
 	let license_plate = Math.trunc(Math.random() * 9000 + 1000)

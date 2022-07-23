@@ -11,10 +11,6 @@ type Props = {
 	orderIndex?: number,
 }
 export default function Checkbox(props: Props) {
-	if (props.t) {
-		createEffect(() => console.log(props.expedient.orders[props.orderIndex].state))
-	}
-	
 	const state = () => Number.isInteger(props.orderIndex) ?
 		props.expedient.orders[props.orderIndex].state :
 		expedientUtils.globalOrderState(props.expedient)
