@@ -1,6 +1,6 @@
 import { invoke, InvokeArgs } from '@tauri-apps/api/tauri'
 import { Accessor, createEffect, createSignal, onCleanup } from 'solid-js'
-import { Expedient, ExpedientId } from './types'
+import { Expedient, ExpedientId, UtcDate } from './types'
 
 declare global {
 	interface Window {
@@ -27,7 +27,7 @@ export type ListExpedientsHookOptions = {
 export type ListOrdersHookOptionsSortBy = {
 	sort_by: "Oldest" | "Newest",
 	max_list_len: number,
-	from_date: number,
+	from_date: UtcDate,
 	show_todo: boolean,
 	show_urgent: boolean,
 	show_pending: boolean,

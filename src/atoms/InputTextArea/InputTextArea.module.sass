@@ -28,6 +28,7 @@
 
 .editor .placeholder:empty:before, .editor:empty:before
 	@include theme.placeholder
+	pointer-events: none
 	content: attr(data-placeholder) + " "
 
 .editor *

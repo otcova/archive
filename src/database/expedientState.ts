@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/tauri"
-import { Expedient, ExpedientId } from "."
+import { Expedient, ExpedientId } from "./types"
 
 export async function createExpedient(expedient: Expedient) {
 	return await invoke("create_expedient", { expedient }) as ExpedientId

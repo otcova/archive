@@ -1,8 +1,7 @@
 import { createEffect } from 'solid-js'
 import { Show } from 'solid-js/web'
-import { Expedient, ExpedientId, expedientUtils } from '../../database'
 import { updateExpedient } from '../../database/expedientState'
-import { OrderState } from '../../database/types'
+import { Expedient, ExpedientId, expedientUtils, OrderState } from '../../database/types'
 import StaticCheckbox from './StaticCheckbox'
 
 type Props = {

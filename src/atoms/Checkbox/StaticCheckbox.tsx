@@ -1,6 +1,4 @@
 import { Show } from 'solid-js/web'
-import { Expedient, ExpedientId, expedientUtils } from '../../database'
-import { updateExpedient } from '../../database/expedientState'
 import { OrderState } from '../../database/types'
 import style from './StaticCheckbox.module.sass'
 

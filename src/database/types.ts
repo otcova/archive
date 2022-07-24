@@ -1,7 +1,7 @@
 export type ExpedientId = { DYNAMIC: number } | { ANCIENT: number }
 
 export type Expedient = {
-	date: LocalDate,
+	date: UtcDate,
 	description: string,
 	license_plate: string,
 	model: string,
@@ -16,14 +16,21 @@ export type User = {
 	emails: string[],
 }
 
-export type LocalDate = {
+export type UtcDate = {
 	year: number
 	month: number,
 	day: number,
 	hour: number,
 }
 
-export function compareDate(a: LocalDate, b: LocalDate) {
+type LocalDate = {
+	year: number
+	month: number,
+	day: number,
+	hour: number,
+}
+
+export function compareDate(a: UtcDate, b: UtcDate) {
 	if (a.year > b.year) return 1
 	if (a.year < b.year) return -1
 	if (a.month > b.month) return 1
@@ -35,12 +42,10 @@ export function compareDate(a: LocalDate, b: LocalDate) {
 	return 0
 }
 
-export function localDateToString(date: LocalDate): string {
-	return date.day + " - " + date.month + " - " + date.year
-}
-
-export function localDateNow(): LocalDate {
-	const date = new Date()
+function utcToLocalDate(utcDate: UtcDate): LocalDate {
+	let date = new Date(
+		`${utcDate.month}/${utcDate.day}/${utcDate.year} ${utcDate.hour}:0 UTC`
+	)
 	return {
 		year: date.getFullYear(),
 		month: date.getMonth() + 1,
@@ -49,7 +54,24 @@ export function localDateNow(): LocalDate {
 	}
 }
 
-export function equalDay(a: LocalDate, b: LocalDate) {
+export function utcDateToString(utcDate: UtcDate): string {
+	const date = utcToLocalDate(utcDate)
+	return date.day + " - " + date.month + " - " + date.year
+}
+
+export function utcDateNow(): UtcDate {
+	const date = new Date()
+	return {
+		year: date.getUTCFullYear(),
+		month: date.getUTCMonth() + 1,
+		day: date.getUTCDate(),
+		hour: date.getUTCHours(),
+	}
+}
+
+export function equalDay(utcA: UtcDate, utcB: UtcDate) {
+	const a = utcToLocalDate(utcA)
+	const b = utcToLocalDate(utcB)
 	return a.day == b.day && a.month == b.month && a.year == b.year
 }
 
@@ -57,7 +79,7 @@ export type Order = {
 	title: string,
 	description: string,
 	state: OrderState,
-	date: LocalDate,
+	date: UtcDate,
 }
 
 export type OrderState = "Urgent" | "Todo" | "Pending" | "Done"
@@ -95,8 +117,8 @@ export const expedientUtils = {
 						order => order.state = order.state == "Todo" ? "Urgent" : order.state)
 		}
 	},
-	newBlank: () => ({
-		date: localDateNow(),
+	newBlank: (): Expedient => ({
+		date: utcDateNow(),
 		description: "",
 		license_plate: "",
 		model: "",
@@ -104,7 +126,7 @@ export const expedientUtils = {
 			title: "",
 			description: "",
 			state: "Todo",
-			date: localDateNow(),
+			date: utcDateNow(),
 		}],
 		users: [],
 		vin: "",

@@ -1,8 +1,7 @@
 import { Accessor, createEffect, createSignal, For, JSX as SolidjsJSX } from 'solid-js'
 import Checkbox from '../../atoms/Checkbox'
-import { Expedient, ExpedientId, expedientUtils, Order } from '../../database'
 import { createHook } from '../../database/expedientHook'
-import { equalDay, LocalDate, localDateToString as localDateToString } from '../../database/types'
+import { equalDay, Expedient, ExpedientId, expedientUtils, UtcDate, utcDateToString } from '../../database/types'
 import ExpedientEditor from '../../pages/ExpedientEditor'
 import { useTab } from '../TabSystem'
 import style from './OrderList.module.sass'
@@ -27,7 +26,7 @@ function Row(props: { data: [ExpedientId, number, Expedient] }) {
 	const { createTab } = useTab()
 
 	const openOrder = () => {
-		createTab("", ExpedientEditor, { expedientId, orderIndex })
+		createTab("", ExpedientEditor, { expedientId })
 	}
 
 	return <div class={style.row_container} onClick={openOrder}>
@@ -45,14 +44,14 @@ function Lable({ text }: { text: string }) {
 
 export function lableByDate(list?: [ExpedientId, number, Expedient][]): ([ExpedientId, number, Expedient] | string)[] {
 	if (!list) return []
-	let pastDate = {} as LocalDate
+	let pastDate = {} as UtcDate
 	let labledList = []
 
 	for (const data of list) {
 		const order = data[2].orders[data[1]]
 		if (!equalDay(order.date, pastDate)) {
 			pastDate = order.date
-			labledList.push(localDateToString(pastDate))
+			labledList.push(utcDateToString(pastDate))
 		}
 
 		labledList.push(data)

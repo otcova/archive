@@ -1,18 +1,26 @@
+import { createEffect, createSignal, untrack } from "solid-js"
 import style from "./InputTextArea.module.sass"
 
 type Props = {
-	defaultValue?: string,
+	value?: string,
+	onChange?: (data: string) => void,
 	placeholder?: string,
 	noStyle?: boolean,
 }
 
 export default function InputTextArea(props: Props) {
-	const onEditorLoad = editableDiv => {
+	const [inputText, setInputText] = createSignal(props.value ?? "");
 
-		editableDiv.onkeydown = _ => setTimeout(() =>
-			format_textarea(editableDiv, props.placeholder))
-		setTimeout(() => format_textarea(editableDiv, props.placeholder))
+	const onEditorLoad = (editableDiv: HTMLElement) => {
+		const updateData = () => {
+			format_textarea(editableDiv, props.placeholder)
+			const newData = editableDiv.innerText
+			if (newData != inputText()) setInputText(newData)
+		}
 
+		editableDiv.addEventListener("keydown", _ => setTimeout(updateData))
+
+		setTimeout(updateData)
 
 		editableDiv.addEventListener('paste', (event) => {
 			event.preventDefault()
@@ -23,17 +31,36 @@ export default function InputTextArea(props: Props) {
 			selection.getRangeAt(0).insertNode(document.createTextNode(paste))
 			selection.collapseToEnd()
 		})
+
+		createEffect(() => {
+			console.log("Change: ", props.value)
+			if (props.value != untrack(() => inputText())) {
+				editableDiv.innerText = props.value
+				updateData()
+			}
+		})
 	}
 
-	return <div class={props.noStyle? style.container_minimal : style.container}>
+	if (props.onChange) {
+		createEffect(() => {
+			const data = inputText()
+			untrack(() => props.onChange(data))
+		})
+	}
+
+
+
+	const value = props.value
+
+	return <div class={props.noStyle ? style.container_minimal : style.container}>
 		<div
-			class={style.editor + (props.noStyle? " " + style.editor_minimal : "")}
+			class={style.editor + (props.noStyle ? " " + style.editor_minimal : "")}
 			contentEditable={true}
 			spellcheck={false}
 			data-placeholder={props.placeholder}
 			ref={onEditorLoad}
 		>
-			{props.defaultValue}
+			{value}
 		</div>
 	</div>
 }
@@ -180,44 +207,3 @@ function group_into_fragment(nodes) {
 	}
 	return fragment
 }
-
-const textExample = `# Información general
-Marca	BMW
-Modelo	Serie 2
-Generación	Serie 2 Gran Coupé (F44)
-Modificación (motor)	220i (178 CV) xDrive Steptronic
-Año de la puesta en producción	Marzo, 2021 años
-Arquitectura de la unidad de potencia	Motor de combustión interna
-Tipo de carrocería	Coupe
-Numero de plazas	5
-Numero de puertas	4
-# Rendimiento
-Consumo de combustible combinado (WLTP)	6.5-7.3 l/100 km
-36.19 - 32.22 US mpg
-43.46 - 38.7 UK mpg
-15.38 - 13.7 km/l
-Emisión CO2 Ponderada (WLTP)	149-165 gr/km
-Consumo de combustible urbano (NEDC)	7.4-7.8 l/100 km
-31.79 - 30.16 US mpg
-38.17 - 36.22 UK mpg
-13.51 - 12.82 km/l
-Consumo de combustible extraurbano (NEDC)	5.2-5.6 l/100 km
-45.23 - 42 US mpg
-54.32 - 50.44 UK mpg
-19.23 - 17.86 km/l
-Consumo de combustible combinado (NEDC)	6.1-6.4 l/100 km
-38.56 - 36.75 US mpg
-46.31 - 44.14 UK mpg
-16.39 - 15.63 km/l
-Emisión CO2 Ponderada (NEDC)	139-147 gr/km
-Combustible	Gasolina
-Aceleración 0 - 100 km/h	7.1 s
-Aceleración 0 - 62 mph	7.1 s
-Aceleración 0 - 60 mph (Calculado por Auto-Data.net)	6.7 s
-Velocidad máxima	234 km/h
-145.4 mph
-Clasificación de los gases de escape	Euro 6d
-Relación peso/potencia	8.5 kg/CV, 117.1 CV/tonelada
-Relación peso/Par	5.4 kg/Nm, 184.2 Nm/tonelada
-2021 BMW Serie 2 Gran Coupé (F44) 220i (178 CV) xDrive Steptronic | Ficha técnica y consumo , Medidas: https://www.auto-data.net/es/bmw-2-series-gran-coupe-f44-220i-178hp-xdrive-steptronic-42769
-`

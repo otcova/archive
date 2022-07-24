@@ -71,7 +71,7 @@ pub struct ListOrdersHookOptions {
     pub filter: Option<ListOrdersHookFilter>,
     pub sort_by: ListOrdersHookOptionsSortBy,
     pub max_list_len: usize,
-    pub from_date: i32,
+    pub from_date: UtcDate,
     pub show_todo: bool,
     pub show_urgent: bool,
     pub show_pending: bool,
@@ -180,7 +180,7 @@ impl<'a> ExpedientDatabase<'a> {
                 .flat_map(|(id, exp)| (0..exp.orders.len()).map(move |index| (id, index, exp)))
                 .filter(|(_, index, expedient)| {
                     let order = &expedient.orders[*index];
-                    order.date.date_hash() <= options.from_date
+                    order.date.date_hash() <= options.from_date.date_hash()
                         && match order.state {
                             OrderState::Done => options.show_done,
                             OrderState::Todo => options.show_todo,

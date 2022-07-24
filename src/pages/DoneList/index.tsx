@@ -3,6 +3,7 @@ import { createHook } from '../../database/expedientHook'
 import style from "./DoneList.module.sass"
 import InputText from '../../atoms/InputText'
 import { createEffect, createSignal } from 'solid-js'
+import { utcDateNow } from '../../database/types'
 
 export default function DoneList() {
 
@@ -12,7 +13,7 @@ export default function DoneList() {
 
 	const [orderList, setHookOptions] = createHook("list_orders", {
 		sort_by: "Newest",
-		from_date: 10000000,
+		from_date: utcDateNow(),
 		max_list_len: 70,
 		show_done: true,
 		show_todo: false,

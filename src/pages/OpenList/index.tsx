@@ -1,11 +1,12 @@
 import OrderList, { lableByDate } from '../../templates/OrderList'
 import { createHook } from '../../database/expedientHook'
+import { utcDateNow } from '../../database/types'
 
 export default function OpenList() {
 
 	const [urgentList] = createHook("list_orders", {
 		sort_by: "Oldest",
-		from_date: 10000000,
+		from_date: utcDateNow(),
 		max_list_len: 70,
 		show_done: false,
 		show_todo: false,
@@ -15,7 +16,7 @@ export default function OpenList() {
 
 	const [todoList] = createHook("list_orders", {
 		sort_by: "Oldest",
-		from_date: 10000000,
+		from_date: utcDateNow(),
 		max_list_len: 70,
 		show_done: false,
 		show_todo: true,

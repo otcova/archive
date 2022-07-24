@@ -2,7 +2,7 @@ import style from "./InputText.module.sass"
 
 type Props = {
 	placeholder?: string,
-	defaultValue?: string,
+	value?: string,
 	onChange?: (data: string) => void,
 	charRegex?: RegExp,
 	maxLen?: number,
@@ -18,12 +18,12 @@ export default function InputText(props: Props) {
 		if (props.charRegex && !props.charRegex.test(event.data))
 			event.preventDefault()
 	}
-	
-	if (props.defaultValue) props.onChange?.(props.defaultValue)
-	
+
+	if (props.value) props.onChange?.(props.value)
+
 	return <input
 		type="text"
-		value={props.defaultValue ?? ""}
+		value={props.value ?? ""}
 		onInput={event => props.onChange?.((event.target as HTMLInputElement).value)}
 		onBeforeInput={forcePattern}
 		class={props.noStyle ? style.input_minimal : style.input}
