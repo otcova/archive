@@ -12,10 +12,9 @@ import style from './ExpedientEditor.module.sass'
 
 type Props = {
 	expedientId: ExpedientId,
-	selectOrder?: number,
 }
 
-export default function ExpedientEditor({ expedientId, selectOrder }: Props) {
+export default function ExpedientEditor({ expedientId }: Props) {
 	const { closeTab, rename } = useTab()
 
 	const [expedient] = createHook("expedient", expedientId)
@@ -24,7 +23,7 @@ export default function ExpedientEditor({ expedientId, selectOrder }: Props) {
 	return <Show when={expedient()}>
 		<div class={style.expedient_container}>
 			<div class={style.expedient_column_left}>
-				<InputText placeholder='Usuari' defaultValue={expedient().users[0].name} onChange={rename} />
+				<InputText placeholder='Usuari' defaultValue={expedient().users[0]?.name ?? ""} onChange={rename} />
 				<InputText placeholder='Model' defaultValue={expedient().model} />
 				<div class={style.input_row}>
 					<InputText placeholder='Matricula' defaultValue={expedient().license_plate} />
@@ -36,8 +35,7 @@ export default function ExpedientEditor({ expedientId, selectOrder }: Props) {
 			</div>
 			<div class={style.expedient_column_right}>
 				<For each={orders().map(([_, orderIndex]) => orderIndex)}>{(orderIndex) => {
-					return <OrderEditor expedient={expedient} expedientId={expedientId}
-						orderIndex={orderIndex} defaultOpen={selectOrder == orderIndex} />
+					return <OrderEditor expedient={expedient} expedientId={expedientId} orderIndex={orderIndex} />
 				}}</For>
 			</div>
 		</div>

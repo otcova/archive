@@ -3,20 +3,21 @@
 
 .container
 	cursor: pointer
-	
+
 .button, .close, .minimize
+	@include layout.row
 	background-color: #fff0
 	transition: background-color 100ms
 	padding: 12px
-	
+
 .button:hover, .minimize:hover
 	background-color: #fff8
-	
+
 .close:hover
 	background-color: #f008
 	color: #fff
-		
-.close, .minimize
+
+.close, .minimize, .create
 	font: normal normal normal 16px/1 codicon
 
 .close::before
@@ -24,3 +25,23 @@
 
 .minimize::before
 	content: '\eaba'
+
+.create
+	@include layout.row
+	box-sizing: content-box
+	padding: 15px
+	width: 22px
+	height: 22px
+
+.create::before
+	content: '\ea60'
+	font-size: 12px
+	padding: 2px
+	border: theme.$stroke
+	background: theme.$background
+	border-radius: 1px
+	color: #555
+
+.create:hover::before
+	border-color: #888
+	color: #000

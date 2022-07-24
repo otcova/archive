@@ -1,11 +1,31 @@
-import { batch, createContext, createSignal, For, useContext } from 'solid-js'
+import { batch, createContext, createSignal, For, JSX, useContext } from 'solid-js'
+import Button from '../../atoms/Button'
 import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
+import IconButton from '../../atoms/IconButton'
+import { expedientUtils } from '../../database'
+import { createExpedient } from '../../database/expedientState'
 import DoneList from '../../pages/DoneList'
+import ExpedientEditor from '../../pages/ExpedientEditor'
 import OpenList from '../../pages/OpenList'
 import PendingList from '../../pages/PendingList'
 import style from './TabSystem.module.sass'
 
-const TabContext = createContext<{ focusTab, isActive, tab, createTab, closeTab, rename }>()
+type Tab = {
+	name,
+	componentClass,
+	props,
+	component?,
+}
+
+const TabContext = createContext<{
+	focusTab: () => void,
+	isActive: () => boolean,
+	tab: () => Tab,
+	createTab: <T>(name: string, componentClass: (props: T) => JSX.Element, props: T) => void,
+	closeTab: () => void,
+	rename: (newName: string) => void
+}>()
+
 export const useTab = () => useContext(TabContext)
 
 export default function TabSystem() {
@@ -15,7 +35,7 @@ export default function TabSystem() {
 		{ name: <StaticCheckbox state={"Done"} />, componentClass: DoneList, props: {} },
 	]
 
-	const [tabs, setTabs] = createSignal<{ name, componentClass, props, component?}[]>([...staticTabs])
+	const [tabs, setTabs] = createSignal<Tab[]>([...staticTabs])
 	const [activeTab, setActiveTab] = createSignal(0)
 
 	const tabsContext = tabIndex => ({
@@ -49,6 +69,13 @@ export default function TabSystem() {
 		}
 	})
 
+	const createExpedientOnNewTab = async () => {
+		const { createTab } = tabsContext(() => tabs().length - 1)
+		createTab("Nou Expedient", ExpedientEditor, {
+			expedientId: await createExpedient(expedientUtils.newBlank()),
+		})
+	}
+
 	return (
 		<>
 			<div class={style.tab_bar} data-tauri-drag-region>
@@ -57,6 +84,7 @@ export default function TabSystem() {
 						<TabTitle />
 					</TabContext.Provider>
 				}</For>
+				<IconButton icon='create' action={createExpedientOnNewTab} />
 			</div >
 			<div class={style.tab_content}>
 				<For each={tabs()}>{(_, index) =>

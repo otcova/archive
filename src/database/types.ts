@@ -39,7 +39,7 @@ export function localDateToString(date: LocalDate): string {
 	return date.day + " - " + date.month + " - " + date.year
 }
 
-export function LocalDateNow(): LocalDate {
+export function localDateNow(): LocalDate {
 	const date = new Date()
 	return {
 		year: date.getFullYear(),
@@ -95,4 +95,18 @@ export const expedientUtils = {
 						order => order.state = order.state == "Todo" ? "Urgent" : order.state)
 		}
 	},
+	newBlank: () => ({
+		date: localDateNow(),
+		description: "",
+		license_plate: "",
+		model: "",
+		orders: [{
+			title: "",
+			description: "",
+			state: "Todo",
+			date: localDateNow(),
+		}],
+		users: [],
+		vin: "",
+	})
 }

@@ -11,7 +11,6 @@ type Props = {
 	expedient: Accessor<Expedient>,
 	expedientId: ExpedientId,
 	orderIndex: number,
-	defaultOpen?: boolean
 }
 
 export function OrderEditor(props: Props) {
