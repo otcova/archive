@@ -5,7 +5,7 @@
   "scripts": {
     "frontend-dev": "vite",
     "frontend-build": "vite build",
-    "tauri": "tauri",
+    "check": "tsc --project tsconfig.json --noEmit",
     "d": "tauri dev",
     "dev": "tauri dev",
     "build": "tauri build",
