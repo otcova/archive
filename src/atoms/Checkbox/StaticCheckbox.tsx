@@ -20,12 +20,30 @@ export default function StaticCheckbox(props: Props) {
 		if (!props.onChange) return
 		event.stopPropagation()
 
-		const leftButton = event.button == 0
-		switch (props.state) {
-			case "Urgent": return leftButton ? props.onChange("Pending") : props.onChange("Done")
-			case "Todo": return leftButton ? props.onChange("Pending") : props.onChange("Done")
-			case "Pending": return props.onChange("Done")
-			case "Done": return leftButton ? props.onChange("Todo") : props.onChange("Urgent")
+		if (event.button == 0) {
+			// Left button
+			switch (props.state) {
+				case "Urgent": return props.onChange("Pending")
+				case "Todo": return props.onChange("Pending")
+				case "Pending": return props.onChange("Done")
+				case "Done": return props.onChange("Todo")
+			}
+		} else if (event.button == 2) {
+			// Right button
+			switch (props.state) {
+				case "Urgent": return props.onChange("Done")
+				case "Todo": return props.onChange("Done")
+				case "Pending": return props.onChange("Todo")
+				case "Done": return props.onChange("Pending")
+			}
+		} else {
+			// Midle button
+			switch (props.state) {
+				case "Urgent": return props.onChange("Todo")
+				case "Todo": return props.onChange("Urgent")
+				case "Pending": return props.onChange("Urgent")
+				case "Done": return props.onChange("Urgent")
+			}
 		}
 	}
 

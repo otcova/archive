@@ -24,15 +24,15 @@ document.body.onmousedown = event => {
 }
 
 // Update every frame to prevent input delay bug
-// if (!document.getElementById("dummy")) {
-//     let dummy = document.createElement("div")
-//     dummy.id = "dummy"
-//     dummy.style.position = "absolute"
-//     document.body.appendChild(dummy)
-//     let pos = 0
-//     let draw = () => {
-//         dummy.style.top = (pos = 100 - pos) + "px"
-//         requestAnimationFrame(draw)
-//     }
-//     draw()
-// }
+if (!document.getElementById("dummy")) {
+    let dummy = document.createElement("div")
+    dummy.id = "dummy"
+    dummy.style.position = "absolute"
+    document.body.appendChild(dummy)
+    let pos = 0
+    let draw = () => {
+        dummy.style.top = (pos = 1 - pos) + "px"
+        requestAnimationFrame(draw)
+    }
+    draw()
+}
