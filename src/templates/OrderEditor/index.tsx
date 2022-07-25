@@ -9,24 +9,27 @@ import style from './OrderEditor.module.sass'
 type Props = {
 	expedient: Accessor<Expedient>,
 	expedientId: ExpedientId,
+	setOrder: (Order, path: string) => void,
 	orderIndex: number,
 }
 
 export function OrderEditor(props: Props) {
 	const order = () => props.expedient().orders[props.orderIndex]
 
-	const onTitleChange = newUser => {
-		const expedient = props.expedient()
-		expedient.orders[props.orderIndex].title = newUser
-		updateExpedient(props.expedientId, expedient)
-	}
-
 	return <div class={style.container}>
 		<div class={style.title_bar}>
-			<InputText placeholder='Títol' noStyle value={order().title} onChange={onTitleChange} />
+			<InputText noStyle
+				placeholder='Títol'
+				value={order().title}
+				onChange={data => props.setOrder(data, "title")}
+			/>
 			<div class={style.date}>{utcDateToString(order().date)}</div>
 			<Checkbox expedient={props.expedient()} expedientId={props.expedientId} orderIndex={props.orderIndex} />
 		</div>
-		<InputTextArea placeholder='Comanda' noStyle value={order().description} />
+		<InputTextArea noStyle
+			placeholder='Comanda'
+			value={order().description}
+			onChange={data => props.setOrder(data, "description")}
+		/>
 	</div>
 }

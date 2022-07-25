@@ -1,4 +1,4 @@
-import { createEffect, createSignal, untrack } from "solid-js"
+import { createEffect, createSignal, on, untrack } from "solid-js"
 import style from "./InputTextArea.module.sass"
 
 type Props = {
@@ -7,20 +7,24 @@ type Props = {
 	placeholder?: string,
 	noStyle?: boolean,
 }
-
 export default function InputTextArea(props: Props) {
-	const [inputText, setInputText] = createSignal(props.value ?? "");
+	let pastValue = props.value
 
 	const onEditorLoad = (editableDiv: HTMLElement) => {
+		const format = () => format_textarea(editableDiv, props.placeholder)
+		setTimeout(format)
+
 		const updateData = () => {
-			format_textarea(editableDiv, props.placeholder)
-			const newData = editableDiv.innerText
-			if (newData != inputText()) setInputText(newData)
+			format()
+			const innerText = readInnerText(editableDiv)
+			if (props.onChange && pastValue != innerText) {
+				pastValue = innerText
+				console.log(pastValue)
+				props.onChange(innerText)
+			}
 		}
 
 		editableDiv.addEventListener("keydown", _ => setTimeout(updateData))
-
-		setTimeout(updateData)
 
 		editableDiv.addEventListener('paste', (event) => {
 			event.preventDefault()
@@ -33,24 +37,11 @@ export default function InputTextArea(props: Props) {
 		})
 
 		createEffect(() => {
-			console.log("Change: ", props.value)
-			if (props.value != untrack(() => inputText())) {
-				editableDiv.innerText = props.value
-				updateData()
-			}
+			if (readInnerText(editableDiv) == props.value) return
+			editableDiv.innerHTML = props.value
+			format()
 		})
 	}
-
-	if (props.onChange) {
-		createEffect(() => {
-			const data = inputText()
-			untrack(() => props.onChange(data))
-		})
-	}
-
-
-
-	const value = props.value
 
 	return <div class={props.noStyle ? style.container_minimal : style.container}>
 		<div
@@ -60,7 +51,7 @@ export default function InputTextArea(props: Props) {
 			data-placeholder={props.placeholder}
 			ref={onEditorLoad}
 		>
-			{value}
+			{pastValue}
 		</div>
 	</div>
 }
@@ -84,12 +75,13 @@ function paste_format(text: string): string {
 }
 
 function format_textarea(element: HTMLElement, placeholder: string) {
+
 	merge_inline_elements(element)
 	wrap_text_inside_span(element)
 	merge_inline_elements(element)
 	delete_nested_parent_elements(element)
 
-	// // Convert every element to div
+	// Convert every element to div
 	for (const line of element.children) {
 		if (line.tagName != "DIV") {
 			let div = document.createElement("div")
@@ -100,8 +92,7 @@ function format_textarea(element: HTMLElement, placeholder: string) {
 
 	// Separate lines into different divs
 	for (const line of element.children) {
-
-		let text_lines = line.textContent.split(/[\r\n]+/)
+		let text_lines = line.textContent.replace("\r", "").split("\n")
 		if (text_lines.length > 1) {
 			let div_list = new DocumentFragment()
 			for (const line_text of text_lines) {
@@ -112,6 +103,7 @@ function format_textarea(element: HTMLElement, placeholder: string) {
 			line.replaceWith(div_list)
 		}
 	}
+
 
 	// Clear class
 	for (const line of element.children) {
@@ -206,4 +198,8 @@ function group_into_fragment(nodes) {
 		fragment.appendChild(node)
 	}
 	return fragment
+}
+
+function readInnerText(element: Element): string {
+	return [...element.children].map(line => line.textContent).join("\n")
 }

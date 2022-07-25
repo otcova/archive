@@ -34,7 +34,7 @@ export type ListOrdersHookOptionsSortBy = {
 	show_done: boolean,
 }
 
-export function createHook(hook_name: "expedient", id: ExpedientId): [Accessor<Expedient>];
+export function createHook(hook_name: "expedient", id: ExpedientId): [Accessor<Expedient | null>];
 export function createHook(hook_name: "list_expedients", options: ListExpedientsHookOptions);
 export function createHook(hook_name: "list_orders", options: ListOrdersHookOptionsSortBy);
 export function createHook(hook_name: string, options: object) {

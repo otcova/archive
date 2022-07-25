@@ -3,8 +3,7 @@ import Button from '../../atoms/Button'
 import IconButton from '../../atoms/IconButton'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
-import { createHook } from '../../database/expedientHook'
-import { updateExpedient } from '../../database/expedientState'
+import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
 import { compareDate, ExpedientId, expedientUtils, Order } from '../../database/types'
 import { OrderEditor } from '../../templates/OrderEditor'
 import { useTab } from '../../templates/TabSystem'
@@ -17,7 +16,8 @@ type Props = {
 export default function ExpedientEditor({ expedientId }: Props) {
 	const { closeTab, rename } = useTab()
 
-	const [expedient] = createHook("expedient", expedientId)
+	const [expedient, setExpedient] = realTimeDatabaseExpedientEditor(expedientId)
+
 	const orders = () => arrangeOrders(expedient().orders)
 
 	const updateTabName = () => {
@@ -36,60 +36,36 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		if (expedient()) updateTabName()
 	})
 
-	const onLicensePlateChange = newLicensePlate => {
+	const updateExpedient = (data, ...path: (string | number)[]) => {
 		const exp = expedient()
-		if (exp.license_plate == newLicensePlate) return
-		exp.license_plate = newLicensePlate
-		updateExpedient(expedientId, exp)
-	}
-
-	const onVINChange = newVin => {
-		const exp = expedient()
-		if (exp.vin == newVin) return
-		exp.vin = newVin
-		updateExpedient(expedientId, exp)
-	}
-
-	const onModelChange = newModel => {
-		const exp = expedient()
-		if (exp.model == newModel) return
-		exp.model = newModel
-		updateExpedient(expedientId, exp)
-	}
-
-	const onUserChange = newUser => {
-		const exp = expedient()
-		if (exp.users.length == 0) exp.users = [{ name: "", emails: [], phones: [] }]
-		else if (exp.users[0].name == newUser) return
-		exp.users[0].name = newUser
-		updateExpedient(expedientId, exp)
-		updateTabName()
-	}
-
-	const onDescriptionChange = newDescription => {
-		const exp = expedient()
-		if (exp.description == newDescription) return
-		exp.description = newDescription
-		updateExpedient(expedientId, exp)
+		if (readDeepPath(exp, path) == data) return
+		const newExpedient = { ...exp }
+		setDeepPath(newExpedient, path, data)
+		setExpedient(newExpedient)
 	}
 
 
 	return <Show when={expedient()}>
 		<div class={style.expedient_container}>
 			<div class={style.expedient_column_left}>
-				<InputText placeholder='Usuari' value={expedient().users[0]?.name ?? ""} onChange={onUserChange} />
-				<InputText placeholder='Model' value={expedient().model} onChange={onModelChange} />
+				<InputText placeholder='Usuari' value={expedient().users[0]?.name ?? ""} />
+				<InputText placeholder='Model' value={expedient().model} onChange={data => updateExpedient(data, "model")} />
 				<div class={style.input_row}>
-					<InputText placeholder='Matricula' value={expedient().license_plate} onChange={onLicensePlateChange} />
+					<InputText placeholder='Matricula' value={expedient().license_plate} onChange={data => updateExpedient(data, "license_plate")} />
 					<div class={style.vin_expand_more}>
-						<InputText placeholder='VIN' value={expedient().vin} onChange={onVINChange} />
+						<InputText placeholder='VIN' value={expedient().vin} onChange={data => updateExpedient(data, "vin")} />
 					</div>
 				</div>
-				<InputTextArea placeholder='Descripció' value={expedient().description} onChange={onDescriptionChange} />
+				<InputTextArea placeholder='Descripció' value={expedient().description} onChange={data => updateExpedient(data, "description")} />
 			</div>
 			<div class={style.expedient_column_right}>
 				<For each={orders().map(([_, orderIndex]) => orderIndex)}>{(orderIndex) => {
-					return <OrderEditor expedient={expedient} expedientId={expedientId} orderIndex={orderIndex} />
+					return <OrderEditor
+						expedient={expedient}
+						expedientId={expedientId}
+						setOrder={(order, path) => updateExpedient(order, "orders", orderIndex, path)}
+						orderIndex={orderIndex}
+					/>
 				}}</For>
 			</div>
 		</div>
@@ -119,4 +95,15 @@ function arrangeOrders(orders: Order[]): [Order, number][] {
 	}
 
 	return arrangedOrders
+}
+
+function readDeepPath(obj: object, path: (string | number)[], _index = 0) {
+	const child = obj[path[_index]]
+	if (path.length - _index == 1) return child
+	return readDeepPath(child, path, _index + 1);
+}
+
+function setDeepPath(obj: object, path: (string | number)[], value: any, _index = 0) {
+	if (path.length - 1 == _index) obj[path[_index]] = value
+	else setDeepPath(obj[path[_index]], path, value, _index + 1);
 }
