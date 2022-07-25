@@ -34,7 +34,7 @@ function Row(props: { data: [ExpedientId, number, Expedient] }) {
 		<div class={style.grow}>{order.title}</div>
 		<div class={style.grow}>{expedient.user}</div>
 		<div class={style.grow}>{expedient.model}</div>
-		<div>{expedient.license_plate}</div>
+		<div class={style.license_plate}>{expedient.license_plate}</div>
 	</div>
 }
 
