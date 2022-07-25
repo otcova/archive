@@ -164,7 +164,7 @@ impl<'a> ExpedientDatabase<'a> {
                     filter
                         .user
                         .split_whitespace()
-                        .find(|keyword| exp.user.contains(keyword))
+                        .find(|keyword| exp.user.to_lowercase().contains(keyword))
                         .is_some()
                 }))
             }
