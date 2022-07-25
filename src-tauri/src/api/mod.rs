@@ -16,8 +16,8 @@ use std::{
 };
 
 #[derive(Default, Clone)]
-pub struct ApiState<'a> {
-    pub database_mutex: Arc<Mutex<Option<ExpedientDatabase<'a>>>>,
+pub struct ApiState {
+    pub database_mutex: Arc<Mutex<Option<ExpedientDatabase<'static>>>>,
 }
 
 #[tauri::command]
@@ -66,7 +66,7 @@ pub fn database_rollback_info(
 }
 
 #[tauri::command]
-pub fn store_database(state: tauri::State<ApiState>) -> Result<()> {
+pub async fn store_database(state: tauri::State<'_, ApiState>) -> Result<()> {
     if let Some(database) = state.database_mutex.lock().unwrap().as_mut() {
         database.save()
     } else {

@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex, RwLock};
 
 #[derive(Default)]
 pub struct HookPool<'a> {
-    observable: Observable<HookContext<'a>>,
+    observable: AsyncObservable<'a, HookContext<'a>>,
     list_observable: AsyncObservable<'a, ListExpedientsHookContext<'a>>,
     list_orders_observable: AsyncObservable<'a, ListOrdersHookContext<'a>>,
 }
@@ -113,16 +113,18 @@ impl<'a> ExpedientDatabase<'a> {
         callback: impl for<'r> FnMut(Option<&'r Expedient>) -> () + Send + Sync + 'a,
     ) -> HookId {
         HookId::Expedient(self.hook_pool.observable.subscrive(
-            Callback::new(
+            AsyncCallback::new(
                 HookContext {
                     database: self.database.clone(),
                     expedient_id: id,
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
-                |context| {
+                |context, process| {
                     let database = context.database.read().unwrap();
                     let expedient = database.read(context.expedient_id);
-                    (context.callback.lock().unwrap())(expedient)
+                    process.terminate_if_requested()?;
+                    (context.callback.lock().unwrap())(expedient);
+                    Some(())
                 },
             ),
             true,
