@@ -22,17 +22,19 @@ export default function InputText(props: Props) {
 
 	const onInput = event => {
 		const input = event.target as HTMLInputElement
-		maintainCursorPosition(input, () => {
-			input.value = input.value.trimStart().replace(/\s+/g, " ")
+		if (props.autoFormat) {
+			maintainCursorPosition(input, () => {
+				input.value = input.value.trimStart().replace(/\s+/g, " ")
 
-			if (props.autoFormat.includes("firstCapital")) {
-				input.value = capitalizeFirstLetter(input.value)
-			} if (props.autoFormat.includes("allCapital")) {
-				input.value = input.value.toUpperCase()
-			} if (props.autoFormat.includes("spaceAfterNumber")) {
-				input.value = input.value.replace(/(?<=\d)(?=[a-zA-Z])/g, " ")
-			}
-		})
+				if (props.autoFormat.includes("firstCapital")) {
+					input.value = capitalizeFirstLetter(input.value)
+				} if (props.autoFormat.includes("allCapital")) {
+					input.value = input.value.toUpperCase()
+				} if (props.autoFormat.includes("spaceAfterNumber")) {
+					input.value = input.value.replace(/(?<=\d)(?=[a-zA-Z])/g, " ")
+				}
+			})
+		}
 		props.onChange?.(input.value)
 	}
 
