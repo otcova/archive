@@ -3,7 +3,7 @@ use chrono::prelude::*;
 use serde::Serialize;
 
 const UTC_INSTANT_FORMAT: &str = "%Y_%m_%d %H_%M_%S";
-const LOCAL_INSTANT_FORMAT: &str = "%H:%M:%S %d/%m/%Y";
+const LOCAL_INSTANT_FORMAT: &str = "dia: %d/%m/%Y   hora: %Hh %Mm %Ss";
 
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct Instant(DateTime<Utc>);
