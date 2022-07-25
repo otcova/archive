@@ -48,15 +48,38 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	return <Show when={expedient()}>
 		<div class={style.expedient_container}>
 			<div class={style.expedient_column_left}>
-				<InputText placeholder='Usuari' value={expedient().user} onChange={data => updateExpedient(data, "user")} />
-				<InputText placeholder='Model' value={expedient().model} onChange={data => updateExpedient(data, "model")} />
+				<InputText
+					placeholder='Usuari'
+					value={expedient().user}
+					onChange={data => updateExpedient(data, "user")}
+					autoFormat={['firstCapital']}
+				/>
+				<InputText
+					placeholder='Model'
+					value={expedient().model}
+					onChange={data => updateExpedient(data, "model")}
+				/>
 				<div class={style.input_row}>
-					<InputText placeholder='Matricula' value={expedient().license_plate} onChange={data => updateExpedient(data, "license_plate")} />
+					<InputText
+						autoFormat={['allCapital', 'spaceAfterNumber']}
+						placeholder='Matricula'
+						value={expedient().license_plate}
+						onChange={data => updateExpedient(data, "license_plate")}
+					/>
 					<div class={style.vin_expand_more}>
-						<InputText placeholder='VIN' value={expedient().vin} onChange={data => updateExpedient(data, "vin")} />
+						<InputText
+							autoFormat={['allCapital']}
+							placeholder='VIN'
+							value={expedient().vin}
+							onChange={data => updateExpedient(data, "vin")}
+						/>
 					</div>
 				</div>
-				<InputTextArea placeholder='Descripció' value={expedient().description} onChange={data => updateExpedient(data, "description")} />
+				<InputTextArea
+					placeholder='Descripció'
+					value={expedient().description}
+					onChange={data => updateExpedient(data, "description")}
+				/>
 			</div>
 			<div class={style.expedient_column_right}>
 				<For each={orders().map(([_, orderIndex]) => orderIndex)}>{(orderIndex) => {

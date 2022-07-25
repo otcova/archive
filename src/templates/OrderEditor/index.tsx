@@ -2,7 +2,6 @@ import { Accessor, createEffect } from 'solid-js'
 import Checkbox from '../../atoms/Checkbox'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
-import { updateExpedient } from '../../database/expedientState'
 import { Expedient, ExpedientId, utcDateToString } from '../../database/types'
 import style from './OrderEditor.module.sass'
 
@@ -20,6 +19,7 @@ export function OrderEditor(props: Props) {
 		<div class={style.title_bar}>
 			<InputText noStyle
 				placeholder='Títol'
+				autoFormat={['firstCapital']}
 				value={order().title}
 				onChange={data => props.setOrder(data, "title")}
 			/>
