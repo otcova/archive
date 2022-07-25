@@ -5,7 +5,7 @@ pub use similarity::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Expedient {
-    pub users: Vec<User>,
+    pub user: String,
     pub model: String,
     pub license_plate: String,
     pub vin: String,
@@ -28,29 +28,6 @@ pub enum OrderState {
     Todo,
     Urgent,
     Pending,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct User {
-    pub name: String,
-    pub emails: Vec<String>,
-    pub phones: Vec<String>,
-}
-
-impl User {
-    pub fn to_string(&self) -> String {
-        [&self.name]
-            .into_iter()
-            .chain(self.emails.iter())
-            .chain(self.phones.iter())
-            .cloned()
-            .intersperse(String::from(" "))
-            .collect()
-    }
-
-    pub fn to_lowercase_string(&self) -> String {
-        self.to_string().to_lowercase()
-    }
 }
 
 impl Expedient {
@@ -101,25 +78,25 @@ mod test {
         };
 
         let expedient = Expedient {
-            description: String::from(""),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![
                 Order {
                     date: date_a,
-                    title: String::from(":)"),
-                    description: String::from(""),
+                    title: ":)".into(),
+                    description: "".into(),
                     state: OrderState::Urgent,
                 },
                 Order {
                     date: date_b,
-                    title: String::from(""),
-                    description: String::from("few ew fgwegfwe"),
+                    title: "".into(),
+                    description: "few ew fgwegfwe".into(),
                     state: OrderState::Done,
                 },
             ],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 2010,
                 month: 1,
@@ -135,25 +112,25 @@ mod test {
     fn sort_expedients() {
         let sorted_expedients = vec![
             Expedient {
-                description: String::from("any stuff"),
-                license_plate: String::from("very"),
-                model: String::from("any stuff"),
+                description: "any stuff".into(),
+                license_plate: "very".into(),
+                model: "any stuff".into(),
                 orders: vec![
                     Order {
                         date: UtcDate::utc_ymdh(2022, 10, 2, 0),
-                        title: String::from("Placa"),
-                        description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
+                        title: "Placa".into(),
+                        description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                         state: OrderState::Done,
                     },
                     Order {
                         date: UtcDate::utc_ymdh(2022, 10, 2, 10),
-                        title: String::from("Coses Rares"),
-                        description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
+                        title: "Coses Rares".into(),
+                        description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                         state: OrderState::Done,
                     },
                 ],
-                users: vec![],
-                vin: String::from("2HGES16503H591599"),
+                user: "".into(),
+                vin: "2HGES16503H591599".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -162,17 +139,17 @@ mod test {
                 },
             },
             Expedient {
-                description: String::from("any stuff"),
-                license_plate: String::from("very"),
-                model: String::from("any stuff"),
+                description: "any stuff".into(),
+                license_plate: "very".into(),
+                model: "any stuff".into(),
                 orders: vec![Order {
                     date: UtcDate::utc_ymdh(2022, 10, 2, 0),
-                    title: String::from("Ell"),
-                    description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
+                    title: "Ell".into(),
+                    description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                     state: OrderState::Done,
                 }],
-                users: vec![],
-                vin: String::from("2HGES16503H591599"),
+                user: "".into(),
+                vin: "2HGES16503H591599".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -181,12 +158,12 @@ mod test {
                 },
             },
             Expedient {
-                description: String::from("any stuff"),
-                license_plate: String::from("very"),
-                model: String::from("any stuff"),
+                description: "any stuff".into(),
+                license_plate: "very".into(),
+                model: "any stuff".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from("2HGES16503H591599"),
+                user: "".into(),
+                vin: "2HGES16503H591599".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -209,25 +186,25 @@ mod test {
     #[test]
     fn global_order_state() {
         let expedient = Expedient {
-            description: String::from("any stuff"),
-            license_plate: String::from("very"),
-            model: String::from("any stuff"),
+            description: "any stuff".into(),
+            license_plate: "very".into(),
+            model: "any stuff".into(),
             orders: vec![
                 Order {
                     date: UtcDate::utc_ymdh(2022, 10, 2, 0),
-                    title: String::from("Pastilles de fre"),
-                    description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
+                    title: "Pastilles de fre".into(),
+                    description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                     state: OrderState::Done,
                 },
                 Order {
                     date: UtcDate::utc_ymdh(2022, 10, 2, 10),
-                    title: String::from(":O"),
-                    description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
+                    title: ":O".into(),
+                    description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                     state: OrderState::Todo,
                 },
             ],
-            users: vec![],
-            vin: String::from("2HGES16503H591599"),
+            user: "".into(),
+            vin: "2HGES16503H591599".into(),
             date: UtcDate {
                 year: 2010,
                 month: 1,

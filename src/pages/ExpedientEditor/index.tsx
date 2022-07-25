@@ -21,7 +21,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	const orders = () => arrangeOrders(expedient().orders)
 
 	const updateTabName = () => {
-		const user = expedientUtils.strUsers(expedient())
+		const user = expedient().user.split(/\s/)[0]
 		const orderTitles = orders()
 			.filter(([order]) => order.state != "Done")
 			.filter(([order]) => order.title)
@@ -48,7 +48,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	return <Show when={expedient()}>
 		<div class={style.expedient_container}>
 			<div class={style.expedient_column_left}>
-				<InputText placeholder='Usuari' value={expedient().users[0]?.name ?? ""} />
+				<InputText placeholder='Usuari' value={expedient().user} onChange={data => updateExpedient(data, "user")} />
 				<InputText placeholder='Model' value={expedient().model} onChange={data => updateExpedient(data, "model")} />
 				<div class={style.input_row}>
 					<InputText placeholder='Matricula' value={expedient().license_plate} onChange={data => updateExpedient(data, "license_plate")} />

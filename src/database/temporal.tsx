@@ -29,7 +29,7 @@ export function genTestExpedient(): Expedient {
 		model: pickRand(models),
 		orders: Math.random() > 0.9 ? [genOrder(date), genOrder(date), genOrder(date)] :
 			(Math.random() > 0.5 ? [genOrder(date), genOrder(date)] : [genOrder(date)]),
-		users: Math.random() > 0.97 ? [genUser(), genUser()] : [genUser()],
+		user: Math.random() > 0.93 ? pickRand(names) + " " + pickRand(names) : pickRand(names)
 	}
 }
 
@@ -45,14 +45,6 @@ function genOrder(date) {
 		date: { ...date, year: date.year + randInt(10) },
 		state: Math.random() < 0.98 ? "Done" : (Math.random() < .8 ? "Todo" : "Urgent")
 	} as Order
-}
-
-function genUser() {
-	return {
-		name: Math.random() > 0.93 ? pickRand(names) + " " + pickRand(names) : pickRand(names),
-		phones: [],
-		emails: [],
-	}
 }
 
 function randInt(max: number) {

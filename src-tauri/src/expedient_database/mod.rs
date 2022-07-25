@@ -104,12 +104,12 @@ mod test {
         let tempdir = TempDir::new();
 
         let expedient = Expedient {
-            description: String::from("Vermell Audi"),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "Vermell Audi".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 2010,
                 month: 1,
@@ -133,12 +133,12 @@ mod test {
         let tempdir = TempDir::new();
 
         let expedient_a = Expedient {
-            description: String::from("Eduardo Dato"),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "Eduardo Dato".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 1921,
                 month: 3,
@@ -148,12 +148,12 @@ mod test {
         };
 
         let expedient_b = Expedient {
-            description: String::from("Eduardo Pedro"),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "Eduardo Pedro".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 1921,
                 month: 3,
@@ -187,12 +187,12 @@ mod test {
         let tempdir = TempDir::new();
 
         let expedient_a = Expedient {
-            description: String::from("Eduardo Dato"),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "Eduardo Dato".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 1921,
                 month: 3,
@@ -202,12 +202,12 @@ mod test {
         };
 
         let expedient_b = Expedient {
-            description: String::from("Eduardo Pedro"),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "Eduardo Pedro".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 1921,
                 month: 3,
@@ -249,12 +249,12 @@ mod test {
         let tempdir = TempDir::new();
 
         let expedient_a = Expedient {
-            description: String::from("Eduardo Dato"),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "Eduardo Dato".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 1921,
                 month: 3,
@@ -264,12 +264,12 @@ mod test {
         };
 
         let expedient_b = Expedient {
-            description: String::from("Eduardo Pedro"),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "Eduardo Pedro".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 1921,
                 month: 3,
@@ -302,12 +302,12 @@ mod test {
         let tempdir = TempDir::new();
 
         let expedient_0 = Expedient {
-            description: String::from("Jeronimo Dato"),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "Jeronimo Dato".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 1921,
                 month: 3,
@@ -317,12 +317,12 @@ mod test {
         };
 
         let expedient_1 = Expedient {
-            description: String::from("Eduardo Pedro"),
-            license_plate: String::from(""),
-            model: String::from(""),
+            description: "Eduardo Pedro".into(),
+            license_plate: "".into(),
+            model: "".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 1921,
                 month: 3,
@@ -332,12 +332,12 @@ mod test {
         };
 
         let expedient_2 = Expedient {
-            description: String::from("Eduardo Pedro"),
-            license_plate: String::from(""),
-            model: String::from("Car"),
+            description: "Eduardo Pedro".into(),
+            license_plate: "".into(),
+            model: "Car".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 3921,
                 month: 3,
@@ -347,12 +347,12 @@ mod test {
         };
 
         let expedient_3 = Expedient {
-            description: String::from("Eduardo Dato"),
-            license_plate: String::from(""),
-            model: String::from("Car"),
+            description: "Eduardo Dato".into(),
+            license_plate: "".into(),
+            model: "Car".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 1921,
                 month: 3,
@@ -362,12 +362,12 @@ mod test {
         };
 
         let expedient_filter = Expedient {
-            description: String::from("Pedro"),
-            license_plate: String::from(""),
-            model: String::from("Car"),
+            description: "Pedro".into(),
+            license_plate: "".into(),
+            model: "Car".into(),
             orders: vec![],
-            users: vec![],
-            vin: String::from(""),
+            user: "".into(),
+            vin: "".into(),
             date: UtcDate {
                 year: 2921,
                 month: 4,
@@ -416,12 +416,12 @@ mod test {
             let mut database = ExpedientDatabase::create(&tempdir.path).unwrap();
             database.save().unwrap();
             database.create_expedient(Expedient {
-                description: String::from("Pedro"),
-                license_plate: String::from(""),
-                model: String::from("Car"),
+                description: "Pedro".into(),
+                license_plate: "".into(),
+                model: "Car".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from(""),
+                user: "".into(),
+                vin: "".into(),
                 date: UtcDate {
                     year: 2921,
                     month: 4,

@@ -110,7 +110,10 @@ mod tests {
     #[test]
     fn instant_from_converts_to_local_time() {
         let instant = Instant::from_utc("2022_05_01 15_02_29").unwrap();
-        assert_eq!(instant.to_local_time(), "17:02:29 01/05/2022");
+        assert_eq!(
+            instant.to_local_time(),
+            "dia: 01/05/2022   hora: 17h 02m 29s"
+        );
     }
 
     #[test]

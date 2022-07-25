@@ -91,7 +91,7 @@ pub fn gen_data2() -> DataType2 {
 }
 pub fn gen_data3() -> DataType3 {
     DataType3 {
-        name: String::from("Some persone"),
+        name: "Some persone".into(),
         matrix: vec![vec![2., 0., 1.], vec![0., 1e10, -5.], vec![1.3, 0.3, -1.]],
     }
 }

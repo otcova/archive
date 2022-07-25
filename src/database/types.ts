@@ -6,15 +6,11 @@ export type Expedient = {
 	license_plate: string,
 	model: string,
 	orders: Order[],
-	users: User[],
+	user: User,
 	vin: string
 }
 
-export type User = {
-	name: string,
-	phones: string[],
-	emails: string[],
-}
+export type User = string
 
 export type UtcDate = {
 	year: number
@@ -85,11 +81,6 @@ export type Order = {
 export type OrderState = "Urgent" | "Todo" | "Pending" | "Done"
 
 export const expedientUtils = {
-	strUsers: (expedient: Expedient) => {
-		let str = ""
-		expedient.users.forEach(user => str += user.name + " | ")
-		return str.substring(0, str.length - 3)
-	},
 	futureDate: () => ({ year: 32767, month: 1, day: 1, hour: 1 }),
 	globalOrderState: (expedient: Expedient): OrderState => (
 		expedient.orders.reduce((state, order) =>
@@ -128,7 +119,7 @@ export const expedientUtils = {
 			state: "Todo",
 			date: utcDateNow(),
 		}],
-		users: [],
+		user: "",
 		vin: "",
 	})
 }

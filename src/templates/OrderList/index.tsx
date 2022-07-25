@@ -32,7 +32,7 @@ function Row(props: { data: [ExpedientId, number, Expedient] }) {
 	return <div class={style.row_container} onClick={openOrder}>
 		<Checkbox expedient={expedient} expedientId={expedientId} orderIndex={orderIndex} />
 		<div class={style.grow}>{order.title}</div>
-		<div class={style.grow}>{expedientUtils.strUsers(expedient)}</div>
+		<div class={style.grow}>{expedient.user}</div>
 		<div class={style.grow}>{expedient.model}</div>
 		<div>{expedient.license_plate}</div>
 	</div>

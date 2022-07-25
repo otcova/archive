@@ -53,23 +53,10 @@ impl Similarity for Order {
     }
 }
 
-impl Similarity for User {
-    fn similarity(&self, other: &Self) -> f32 {
-        let email_match = mean_match_if_exist(&self.emails, &other.emails, 4.);
-        let phone_match = mean_match_if_exist(&self.phones, &other.phones, 4.);
-        let name_match = Some((self.name.similarity(&other.name), 2.));
-
-        [email_match, phone_match, name_match]
-            .into_iter()
-            .flatten()
-            .weighted_mean()
-    }
-}
-
 impl Similarity for Expedient {
     fn similarity(&self, other: &Self) -> f32 {
         [
-            mean_match_if_exist(&self.users, &other.users, 2.),
+            match_if_exist(&self.user, &other.user, 2.),
             mean_match_if_exist(&self.orders, &other.orders, 1.),
             match_if_exist(&self.description, &other.description, 1.),
             match_if_exist(&self.model, &other.model, 1.),
@@ -128,14 +115,14 @@ mod test {
 
     #[test]
     fn string() {
-        assert_eq!(0., String::from("").similarity(&String::from("")));
-        assert_eq!(0., String::from("some word").similarity(&String::from("")));
-        assert_eq!(0., String::from("").similarity(&String::from("any")));
-        assert_eq!(0.5, String::from("p Ma").similarity(&String::from("P R")));
-        assert_eq!(0.75, String::from("p").similarity(&String::from("P M")));
-        assert_eq!(0.75, String::from("P M").similarity(&String::from("p")));
-        assert_eq!(1., String::from("equal").similarity(&String::from("EQUAL")));
-        assert_eq!(1., String::from("= w").similarity(&String::from("= w")));
+        assert_eq!(0., String::from("").similarity(&"".into()));
+        assert_eq!(0., String::from("some word").similarity(&"".into()));
+        assert_eq!(0., String::from("").similarity(&"any".into()));
+        assert_eq!(0.5, String::from("p Ma").similarity(&"P R".into()));
+        assert_eq!(0.75, String::from("p").similarity(&"P M".into()));
+        assert_eq!(0.75, String::from("P M").similarity(&"p".into()));
+        assert_eq!(1., String::from("equal").similarity(&"EQUAL".into()));
+        assert_eq!(1., String::from("= w").similarity(&"= w".into()));
     }
 
     #[test]
@@ -143,20 +130,20 @@ mod test {
         let orders = [
             Order {
                 date: UtcDate::utc_ymdh(2022, 10, 2, 0),
-                title: String::from("Pastilles Fre"),
-                description: String::from("Pastilles de fre XL\n\n34€ en Sasr"),
+                title: "Pastilles Fre".into(),
+                description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                 state: OrderState::Done,
             },
             Order {
                 date: UtcDate::utc_ymdh(2020, 2, 1, 0),
-                title: String::from("Frena Ara"),
-                description: String::from("frena JA!!!!"),
+                title: "Frena Ara".into(),
+                description: "frena JA!!!!".into(),
                 state: OrderState::Done,
             },
             Order {
                 date: UtcDate::utc_ymdh(2020, 2, 1, 0),
-                title: String::from("Fre"),
-                description: String::from("Me aburro!!!\nEn Sasr"),
+                title: "Fre".into(),
+                description: "Me aburro!!!\nEn Sasr".into(),
                 state: OrderState::Todo,
             },
         ];
@@ -172,58 +159,17 @@ mod test {
     }
 
     #[test]
-    fn user() {
-        let juan = User {
-            name: String::from("Juan Antonio Mario"),
-            emails: vec![],
-            phones: vec![String::from("932123456")],
-        };
-        let juan_name = User {
-            name: String::from("Juan"),
-            emails: vec![],
-            phones: vec![],
-        };
-        let juan_phone = User {
-            name: String::from(""),
-            emails: vec![],
-            phones: vec![String::from("932123456")],
-        };
-        let mario = User {
-            name: String::from("Mario Bro"),
-            emails: vec![String::from("mariobro@email.com")],
-            phones: vec![String::from("123456789")],
-        };
-        let mario_emal = User {
-            name: String::from(""),
-            emails: vec![String::from("mariobro@email.com")],
-            phones: vec![],
-        };
-        let pepa = User {
-            name: String::from("Pepa la pera"),
-            emails: vec![],
-            phones: vec![],
-        };
-
-        assert_eq!(1., juan.similarity(&juan));
-        assert_eq!(2. / 3., juan.similarity(&juan_phone));
-        assert_eq!(0.4, mario.similarity(&mario_emal));
-        assert_eq!(2. / 9., juan.similarity(&juan_name));
-        assert_eq!(1. / 12., juan.similarity(&mario));
-        assert_eq!(0.0, juan.similarity(&pepa));
-    }
-
-    #[test]
     fn expedient() {
         // Same vin
         assert_eq!(
             5. / 6.,
             Expedient {
-                description: String::from("any stuff"),
-                license_plate: String::from(""),
-                model: String::from("any stuff"),
+                description: "any stuff".into(),
+                license_plate: "".into(),
+                model: "any stuff".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from("2HGES16503H591599"),
+                user: "".into(),
+                vin: "2HGES16503H591599".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -232,12 +178,12 @@ mod test {
                 }
             }
             .similarity(&Expedient {
-                description: String::from("random"),
-                license_plate: String::from(""),
-                model: String::from("random"),
+                description: "random".into(),
+                license_plate: "".into(),
+                model: "random".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from("2HGES16503H591599"),
+                user: "".into(),
+                vin: "2HGES16503H591599".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -250,12 +196,12 @@ mod test {
         assert_eq!(
             5. / 11.,
             Expedient {
-                description: String::from("any stuff"),
-                license_plate: String::from("very"),
-                model: String::from("any stuff"),
+                description: "any stuff".into(),
+                license_plate: "very".into(),
+                model: "any stuff".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from("2HGES16503H591599"),
+                user: "".into(),
+                vin: "2HGES16503H591599".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -264,12 +210,12 @@ mod test {
                 }
             }
             .similarity(&Expedient {
-                description: String::from("random"),
-                license_plate: String::from("different"),
-                model: String::from("random"),
+                description: "random".into(),
+                license_plate: "different".into(),
+                model: "random".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from("2HGES16503H591599"),
+                user: "".into(),
+                vin: "2HGES16503H591599".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -282,12 +228,12 @@ mod test {
         assert_eq!(
             5. / 11.,
             Expedient {
-                description: String::from("any stuff"),
-                license_plate: String::from("5KEB573"),
-                model: String::from("any stuff"),
+                description: "any stuff".into(),
+                license_plate: "5KEB573".into(),
+                model: "any stuff".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from("1RGEF16503R521594"),
+                user: "".into(),
+                vin: "1RGEF16503R521594".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -296,12 +242,12 @@ mod test {
                 }
             }
             .similarity(&Expedient {
-                description: String::from("random"),
-                license_plate: String::from("5KEB573"),
-                model: String::from("random"),
+                description: "random".into(),
+                license_plate: "5KEB573".into(),
+                model: "random".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from("2HGES16503H591599"),
+                user: "".into(),
+                vin: "2HGES16503H591599".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -314,16 +260,12 @@ mod test {
         assert_eq!(
             1.0,
             Expedient {
-                description: String::from(""),
-                license_plate: String::from(""),
-                model: String::from(""),
+                description: "".into(),
+                license_plate: "".into(),
+                model: "".into(),
                 orders: vec![],
-                users: vec![User {
-                    name: String::from("Pepa"),
-                    emails: vec![],
-                    phones: vec![String::from("923149288")]
-                }],
-                vin: String::from(""),
+                user: "Pepa 923149288".into(),
+                vin: "".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -332,16 +274,12 @@ mod test {
                 }
             }
             .similarity(&Expedient {
-                description: String::from(""),
-                license_plate: String::from(""),
-                model: String::from(""),
+                description: "".into(),
+                license_plate: "".into(),
+                model: "".into(),
                 orders: vec![],
-                users: vec![User {
-                    name: String::from("Pepa"),
-                    emails: vec![],
-                    phones: vec![String::from("923149288")]
-                }],
-                vin: String::from(""),
+                user: "Pepa 923149288".into(),
+                vin: "".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -354,16 +292,12 @@ mod test {
         assert_eq!(
             1. / 6.,
             Expedient {
-                description: String::from(""),
-                license_plate: String::from("5KEB573"),
-                model: String::from(""),
+                description: "".into(),
+                license_plate: "5KEB573".into(),
+                model: "".into(),
                 orders: vec![],
-                users: vec![User {
-                    name: String::from("Pepa"),
-                    emails: vec![],
-                    phones: vec![String::from("923149288")]
-                }],
-                vin: String::from(""),
+                user: "Pepa 923149288".into(),
+                vin: "".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -372,16 +306,12 @@ mod test {
                 }
             }
             .similarity(&Expedient {
-                description: String::from(""),
-                license_plate: String::from("5WEC222"),
-                model: String::from(""),
+                description: "".into(),
+                license_plate: "5WEC222".into(),
+                model: "".into(),
                 orders: vec![],
-                users: vec![User {
-                    name: String::from("Pepa"),
-                    emails: vec![],
-                    phones: vec![String::from("923149288")]
-                }],
-                vin: String::from(""),
+                user: "Pepa 923149288".into(),
+                vin: "".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -394,16 +324,12 @@ mod test {
         assert_eq!(
             3. / 65.,
             Expedient {
-                description: String::from("Audi vermell, de 4.2 persones"),
-                license_plate: String::from("5KEB573"),
-                model: String::from(""),
+                description: "Audi vermell, de 4.2 persones".into(),
+                license_plate: "5KEB573".into(),
+                model: "".into(),
                 orders: vec![],
-                users: vec![User {
-                    name: String::from("Pepa"),
-                    emails: vec![],
-                    phones: vec![String::from("923149288")]
-                }],
-                vin: String::from(""),
+                user: "Pepa 923149288".into(),
+                vin: "".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -412,12 +338,12 @@ mod test {
                 }
             }
             .similarity(&Expedient {
-                description: String::from("Vermell Audi"),
-                license_plate: String::from(""),
-                model: String::from(""),
+                description: "Vermell Audi".into(),
+                license_plate: "".into(),
+                model: "".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from(""),
+                user: "".into(),
+                vin: "".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -430,12 +356,12 @@ mod test {
         assert_eq!(
             0.0,
             Expedient {
-                description: String::from(""),
-                license_plate: String::from(""),
-                model: String::from(""),
+                description: "".into(),
+                license_plate: "".into(),
+                model: "".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from(""),
+                user: "".into(),
+                vin: "".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
@@ -444,12 +370,12 @@ mod test {
                 }
             }
             .similarity(&Expedient {
-                description: String::from(""),
-                license_plate: String::from(""),
-                model: String::from(""),
+                description: "".into(),
+                license_plate: "".into(),
+                model: "".into(),
                 orders: vec![],
-                users: vec![],
-                vin: String::from(""),
+                user: "".into(),
+                vin: "".into(),
                 date: UtcDate {
                     year: 2010,
                     month: 1,
