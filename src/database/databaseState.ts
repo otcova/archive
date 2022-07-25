@@ -1,12 +1,12 @@
 import { documentDir } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/tauri";
-import { appWindow } from "@tauri-apps/api/window";
 import { databaseError, setDatabaseError } from ".";
+import { UtcDate } from "./types";
 
 setTimeout(async () => {
 	await openDatabase()
-	setInterval(storeDatabase, 1000 * 60)
-}, 0)
+	setInterval(saveDatabase, 1000 * 30)
+})
 
 const databaseDir = async () => ({ path: await documentDir() + "Archive" })
 
@@ -14,7 +14,7 @@ const criticalError = (error, msg?) => setDatabaseError({
 	error,
 	msg,
 	button: "Tancar",
-	action: closeApp,
+	action: () => { console.log("CLOSE", window.close()) },
 })
 
 const unclassifiedError = (error) => criticalError("Error", error)
@@ -65,11 +65,11 @@ async function loadRollbackInfo() {
 		msg: "Buscant la copia de seguretat més recent no corrupte ...",
 	})
 	try {
-		const info = await invoke("database_rollback_info", await databaseDir()) as any
-		const { newestInstant, rollbackInstant } = info
+		const info: { newest_instant: string, rollback_instant: string } =
+			await invoke("database_rollback_info", await databaseDir())
 		setDatabaseError({
 			error: "S'ha trobat informació corrupte a la base de dades",
-			msg: `Dades corruptes:   ${newestInstant}\nCopia de seguretat:   ${rollbackInstant}`,
+			msg: `Dades corruptes:   ${info.newest_instant}\nCopia de seguretat:   ${info.rollback_instant}`,
 			button: "Continuar a partir de la copia de seguretat",
 			action: loadRollback,
 		})
@@ -86,7 +86,7 @@ async function loadRollbackInfo() {
 
 async function loadRollback() {
 	try {
-		await invoke('rollback_database', { path: await databaseDir() })
+		await invoke('rollback_database', await databaseDir())
 		setDatabaseError(null)
 	} catch (error) {
 		switch (error) {
@@ -97,7 +97,7 @@ async function loadRollback() {
 	}
 }
 
-export async function storeDatabase() {
+export async function saveDatabase() {
 	if (!databaseError()) {
 		try { await invoke('store_database') }
 		catch (error) {
@@ -107,7 +107,7 @@ export async function storeDatabase() {
 	}
 }
 
-export async function closeApp() {
-	await storeDatabase();
-	appWindow.close();
+export async function saveAndCloseApp() {
+	await saveDatabase()
+	window.close()
 }

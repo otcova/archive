@@ -4,6 +4,7 @@ import ErrorPanel from './pages/ErrorPanel'
 import TabSystem from './templates/TabSystem'
 import { databaseError } from './database'
 import WindowButtons from './atoms/WindowButtons'
+import { saveAndCloseApp, saveDatabase } from './database/databaseState'
 
 function App() {
     return <>
@@ -36,3 +37,8 @@ if (!document.getElementById("dummy")) {
     }
     draw()
 }
+
+addEventListener("keydown", event => {
+    if (event.ctrlKey && event.key.toLowerCase() == "r")
+        saveDatabase()
+})
