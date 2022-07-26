@@ -1,5 +1,4 @@
 import { batch, createContext, createSignal, For, JSX, useContext } from 'solid-js'
-import Button from '../../atoms/Button'
 import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
 import IconButton from '../../atoms/IconButton'
 import { createExpedient } from '../../database/expedientState'
@@ -11,7 +10,7 @@ import PendingList from '../../pages/PendingList'
 import style from './TabSystem.module.sass'
 
 type Tab = {
-	name,
+	name: string | JSX.Element,
 	componentClass,
 	props,
 	component?,
@@ -23,14 +22,14 @@ const TabContext = createContext<{
 	tab: () => Tab,
 	createTab: <T>(name: string, componentClass: (props: T) => JSX.Element, props: T) => void,
 	closeTab: () => void,
-	rename: (newName: string) => void
+	rename: (newName: string | JSX.Element) => void
 }>()
 
 export const useTab = () => useContext(TabContext)
 
 export default function TabSystem() {
 	const staticTabs = [
-		{ name: <StaticCheckbox state={"Todo"} />, componentClass: OpenList, props: {} },
+		{ name: "", componentClass: OpenList, props: {} },
 		{ name: <StaticCheckbox state={"Pending"} />, componentClass: PendingList, props: {} },
 		{ name: <StaticCheckbox state={"Done"} />, componentClass: DoneList, props: {} },
 	]
@@ -42,7 +41,7 @@ export default function TabSystem() {
 		focusTab: () => setActiveTab(tabIndex()),
 		isActive: () => activeTab() == tabIndex(),
 		tab: () => tabs()[tabIndex()],
-		rename: (newName: string) => setTabs(tabs => {
+		rename: (newName: string | JSX.Element) => setTabs(tabs => {
 			tabs[tabIndex()].name = newName
 			return [...tabs]
 		}),
