@@ -1,14 +1,13 @@
-import { createEffect } from 'solid-js'
-import { Show } from 'solid-js/web'
 import { updateExpedient } from '../../database/expedientState'
-import { Expedient, ExpedientId, expedientUtils, OrderState } from '../../database/types'
+import { Expedient, ExpedientId, expedientUtils, OrderState, utcDateNow } from '../../database/types'
 import StaticCheckbox from './StaticCheckbox'
 
 type Props = {
 	expedientId: ExpedientId,
 	expedient: Expedient,
-	orderIndex?: number,
+	orderIndex: number,
 }
+
 export default function Checkbox(props: Props) {
 	const state = () => Number.isInteger(props.orderIndex) ?
 		props.expedient.orders[props.orderIndex].state :
@@ -16,11 +15,8 @@ export default function Checkbox(props: Props) {
 
 	const changeState = (newState: OrderState) => {
 		let expedient = props.expedient
-		if (Number.isInteger(props.orderIndex))
-			expedient.orders[props.orderIndex].state = newState
-		else
-			expedientUtils.setGlobalOrderState(expedient, newState)
-
+		expedient.orders[props.orderIndex].state = newState
+		expedient.orders[props.orderIndex].date = utcDateNow()
 		updateExpedient(props.expedientId, expedient)
 	}
 
