@@ -1,0 +1,24 @@
+@use '../../globalStyle/layout'
+@use '../../globalStyle/theme'
+
+.container
+	@include layout.row
+	background: #fff
+	outline: theme.$stroke
+	border-radius: 1px
+	width: 100%
+
+.item, .selected_item
+	@include layout.row
+	cursor: pointer
+	padding: 10px 20px 10px 20px
+	background: #fff0
+	color: #000
+	transition: all 100ms
+	width: 100%
+	flex-shrink: 1
+
+.selected_item
+	cursor: unset
+	background: theme.$active-color
+	color: #fff

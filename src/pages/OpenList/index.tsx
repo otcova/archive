@@ -14,7 +14,8 @@ export default function OpenList() {
 		max_list_len: 70,
 		show_done: false,
 		show_todo: false,
-		show_pending: false,
+		show_awaiting: false,
+		show_instore: false,
 		show_urgent: true,
 	})
 
@@ -24,16 +25,19 @@ export default function OpenList() {
 		max_list_len: 70,
 		show_done: false,
 		show_todo: true,
-		show_pending: false,
+		show_awaiting: false,
+		show_instore: false,
 		show_urgent: false,
 	})
 
 	// Rename tab
 	createEffect(() => {
-		if (urgentList() && urgentList().length == 0) {
-			rename(<StaticCheckbox state={"Todo"} />)
-		} else {
+		if (urgentList() && urgentList().length != 0) {
 			rename(<StaticCheckbox state={"Urgent"} />)
+		} else if (todoList() && todoList().length == 0) {
+			rename(<StaticCheckbox state={"Done"} />)
+		} else {
+			rename(<StaticCheckbox state={"Todo"} />)
 		}
 	})
 

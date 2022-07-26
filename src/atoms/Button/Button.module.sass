@@ -1,7 +1,7 @@
 @use '../../globalStyle/layout'
 @use '../../globalStyle/theme'
-	
-.button
+
+.button, .button_red
 	@include layout.row
 	cursor: pointer
 	transition: all 100ms
@@ -12,6 +12,10 @@
 	border-radius: 2px
 	color: #000
 
-.button:hover
+.button:hover, .button_red:hover
 	color: #fff
 	background: theme.$active-color
+
+.button_red:hover
+	border-color: #f44
+	background: #f44

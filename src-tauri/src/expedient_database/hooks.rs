@@ -72,9 +72,10 @@ pub struct ListOrdersHookOptions {
     pub sort_by: ListOrdersHookOptionsSortBy,
     pub max_list_len: usize,
     pub from_date: UtcDate,
-    pub show_todo: bool,
     pub show_urgent: bool,
-    pub show_pending: bool,
+    pub show_todo: bool,
+    pub show_awaiting: bool,
+    pub show_instore: bool,
     pub show_done: bool,
 }
 
@@ -179,10 +180,11 @@ impl<'a> ExpedientDatabase<'a> {
                     let order = &expedient.orders[*index];
                     order.date.date_hash() <= options.from_date.date_hash()
                         && match order.state {
-                            OrderState::Done => options.show_done,
-                            OrderState::Todo => options.show_todo,
                             OrderState::Urgent => options.show_urgent,
-                            OrderState::Pending => options.show_pending,
+                            OrderState::Todo => options.show_todo,
+                            OrderState::Awaiting => options.show_awaiting,
+                            OrderState::InStore => options.show_instore,
+                            OrderState::Done => options.show_done,
                         }
                 }),
         );

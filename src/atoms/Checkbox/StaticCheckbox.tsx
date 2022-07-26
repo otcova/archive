@@ -4,61 +4,43 @@ import style from './StaticCheckbox.module.sass'
 
 
 type Props = {
-	state: OrderState,
-	onChange?: (newState: OrderState) => void,
+	state: "Awaiting" | OrderState,
+	onMouseUp?: (event: MouseEvent) => void,
 }
 
 export default function StaticCheckbox(props: Props) {
+	const state = () => props.state
+
 	const onClick = event => {
-		if (!props.onChange) return
+		if (!props.onMouseUp) return
 		event.stopPropagation()
 	}
 
-	const onMouseUp = event => {
-		if (!props.onChange) return
-		event.stopPropagation()
-
-		if (event.button == 0) {
-			// Left button
-			switch (props.state) {
-				case "Urgent": return props.onChange("Pending")
-				case "Todo": return props.onChange("Pending")
-				case "Pending": return props.onChange("Done")
-				case "Done": return props.onChange("Todo")
-			}
-		} else if (event.button == 2) {
-			// Right button
-			switch (props.state) {
-				case "Urgent": return props.onChange("Done")
-				case "Todo": return props.onChange("Done")
-				case "Pending": return props.onChange("Todo")
-				case "Done": return props.onChange("Pending")
-			}
-		} else {
-			// Midle button
-			switch (props.state) {
-				case "Urgent": return props.onChange("Todo")
-				case "Todo": return props.onChange("Urgent")
-				case "Pending": return props.onChange("Urgent")
-				case "Done": return props.onChange("Urgent")
-			}
-		}
-	}
-
-	const pointer = () => props.onChange ? " " + style.pointer : ""
+	const pointer = () => props.onMouseUp ? " " + style.pointer : ""
 
 	return <>
-		<Show when={props.state == "Todo"}>
-			<div class={style.container + pointer()} onClick={onClick} onMouseUp={onMouseUp}></div>
+		<Show when={state() == "Todo"}>
+			<div class={style.container + pointer()} onClick={onClick} onMouseUp={props.onMouseUp}>
+			</div>
 		</Show>
-		<Show when={props.state == "Urgent"}>
-			<div class={style.star + pointer()} onClick={onClick} onMouseUp={onMouseUp}>{star()}</div>
+		<Show when={state() == "Urgent"}>
+			<div class={style.star + pointer()} onClick={onClick} onMouseUp={props.onMouseUp}>
+				{star()}
+			</div>
 		</Show>
-		<Show when={props.state == "Pending"}>
-			<div class={style.pending + pointer()} onClick={onClick} onMouseUp={onMouseUp}></div>
+		<Show when={state() == "Awaiting"}>
+			<div class={style.awaiting + pointer()} onClick={onClick} onMouseUp={props.onMouseUp}>
+				<div class={style.dot}></div>
+			</div>
 		</Show>
-		<Show when={props.state == "Done"}>
-			<div class={style.container + pointer()} onClick={onClick} onMouseUp={onMouseUp}>{tick()}</div>
+		<Show when={state() == "InStore"}>
+			<div class={style.pending + pointer()} onClick={onClick} onMouseUp={props.onMouseUp}>
+			</div>
+		</Show>
+		<Show when={state() == "Done"}>
+			<div class={style.container + pointer()} onClick={onClick} onMouseUp={props.onMouseUp}>
+				{tick()}
+			</div>
 		</Show>
 	</>
 }

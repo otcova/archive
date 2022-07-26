@@ -1,20 +1,42 @@
 @use '../../globalStyle/layout'
 @use '../../globalStyle/theme'
 
-.container, .star, .pending
+.container, .star, .pending, .awaiting
 	@include layout.row
-	width: 20px
-	height: 20px
+	width: 21px
+	height: 21px
 
 .pointer
 	cursor: pointer
 
-.container, .pending
+.container, .pending, .awaiting
 	border: 1px solid theme.$active-color
 	border-radius: 100%
-	
+
 .pending::after
+	content: ""
+	background: theme.$active-color
 	width: 10px
 	height: 1px
+
+.dot
+	width: 3px
+	height: 3px
+	border-radius: 100%
 	background: theme.$active-color
+
+.awaiting::after
+	position: absolute
 	content: ""
+	background: theme.$active-color
+	width: 1px
+	height: 8px
+	margin-bottom: 8px
+
+.awaiting::before
+	position: absolute
+	content: ""
+	background: theme.$active-color
+	width: 1px
+	height: 6px
+	transform: rotate(135deg) translateY(-3px)

@@ -19,13 +19,6 @@ export type UtcDate = {
 	hour: number,
 }
 
-type LocalDate = {
-	year: number
-	month: number,
-	day: number,
-	hour: number,
-}
-
 export function compareDate(a: UtcDate, b: UtcDate) {
 	if (a.year > b.year) return 1
 	if (a.year < b.year) return -1
@@ -38,28 +31,33 @@ export function compareDate(a: UtcDate, b: UtcDate) {
 	return 0
 }
 
-function utcToLocalDate(utcDate: UtcDate): LocalDate {
-	let date = new Date(
+export function utcToJsDate(utcDate: UtcDate): Date {
+	return new Date(
 		`${utcDate.month}/${utcDate.day}/${utcDate.year} ${utcDate.hour}:0 UTC`
 	)
+}
+
+export function jsDateToUtc(jsDate: Date): UtcDate {
 	return {
-		year: date.getFullYear(),
-		month: date.getMonth() + 1,
-		day: date.getDate(),
-		hour: date.getHours(),
+		year: jsDate.getUTCFullYear(),
+		month: jsDate.getUTCMonth() + 1,
+		day: jsDate.getUTCDate(),
+		hour: jsDate.getUTCHours(),
 	}
 }
 
 export function utcDateToString(utcDate: UtcDate): string {
-	const localDate = utcToLocalDate(utcDate)
+	const jsDate = utcToJsDate(utcDate)
 	const today = utcDateNow()
 	if (equalDay(utcDate, today)) {
-		if (localDate.hour < 14) return "Matí"
+		if (jsDate.getHours() < 14) return "Matí"
 		else return "Tarda"
 	} else if (equalDay(utcDate, yesterdayOf(today))) {
 		return "Ahir"
+	} else if (equalDay(yesterdayOf(utcDate), today)) {
+		return "Demà"
 	}
-	return localDate.day + " - " + localDate.month + " - " + localDate.year
+	return jsDate.getDate() + " - " + (jsDate.getMonth() + 1) + " - " + jsDate.getFullYear()
 }
 
 export function utcDateNow(): UtcDate {
@@ -72,23 +70,24 @@ export function utcDateNow(): UtcDate {
 	}
 }
 
+export function utcDateFuture(): UtcDate {
+	return { year: 30000, month: 1, day: 1, hour: 0 }
+}
+
 export function equalDay(utcA: UtcDate, utcB: UtcDate) {
-	const a = utcToLocalDate(utcA)
-	const b = utcToLocalDate(utcB)
-	return a.day == b.day && a.month == b.month && a.year == b.year
+	const a = utcToJsDate(utcA)
+	const b = utcToJsDate(utcB)
+	return a.toLocaleDateString() == b.toLocaleDateString()
 }
 
 export function yesterdayOf(utcDate: UtcDate) {
-	let date = new Date(
-		`${utcDate.month}/${utcDate.day}/${utcDate.year} ${utcDate.hour}:0 UTC`
-	)
-	date.setDate(date.getDate() - 1)
-	return {
-		year: date.getFullYear(),
-		month: date.getMonth() + 1,
-		day: date.getDate(),
-		hour: date.getHours(),
-	}
+	return addHours(utcDate, -24)
+}
+
+export function addHours(utcDate: UtcDate, hours: number): UtcDate {
+	let date = utcToJsDate(utcDate)
+	date.setHours(date.getHours() + hours)
+	return jsDateToUtc(date)
 }
 
 export type Order = {
@@ -98,7 +97,7 @@ export type Order = {
 	date: UtcDate,
 }
 
-export type OrderState = "Urgent" | "Todo" | "Pending" | "Done"
+export type OrderState = "Urgent" | "Todo" | "Awaiting" | "InStore" | "Done"
 
 export const expedientUtils = {
 	futureDate: () => ({ year: 32767, month: 1, day: 1, hour: 1 }),

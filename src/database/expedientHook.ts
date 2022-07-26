@@ -28,9 +28,10 @@ export type ListOrdersHookOptionsSortBy = {
 	sort_by: "Oldest" | "Newest",
 	max_list_len: number,
 	from_date: UtcDate,
-	show_todo: boolean,
 	show_urgent: boolean,
-	show_pending: boolean,
+	show_todo: boolean,
+	show_awaiting: boolean,
+	show_instore: boolean,
 	show_done: boolean,
 }
 

@@ -4,7 +4,7 @@ import IconButton from '../../atoms/IconButton'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
 import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
-import { compareDate, ExpedientId, expedientUtils, Order } from '../../database/types'
+import { compareDate, ExpedientId, Order } from '../../database/types'
 import { OrderEditor } from '../../templates/OrderEditor'
 import { useTab } from '../../templates/TabSystem'
 import style from './ExpedientEditor.module.sass'
@@ -20,7 +20,9 @@ export default function ExpedientEditor({ expedientId }: Props) {
 
 	const orders = () => arrangeOrders(expedient().orders)
 
-	const updateTabName = () => {
+	// updateTabName
+	createEffect(() => {
+		if (!expedient()) return
 		const user = expedient().user.split(/\s/)[0]
 		const orderTitles = orders()
 			.filter(([order]) => order.state != "Done")
@@ -30,10 +32,6 @@ export default function ExpedientEditor({ expedientId }: Props) {
 
 		if (newName) rename(newName)
 		else rename("Expedient")
-	}
-
-	createEffect(() => {
-		if (expedient()) updateTabName()
 	})
 
 	const updateExpedient = (data, ...path: (string | number)[]) => {
@@ -110,7 +108,7 @@ function arrangeOrders(orders: Order[]): [Order, number][] {
 	const indexedOrders: [Order, number][] = [...orders].map((order, index) => [order, index])
 	const sortedOrders = indexedOrders.sort(([a], [b]) => compareDate(a.date, b.date))
 
-	for (const state of ["Urgent", "Todo", "Pending", "Done"]) {
+	for (const state of ["Urgent", "Todo", "InStore", "Awaiting", "Done"]) {
 		for (const order of sortedOrders) {
 			if (order[0].state == state)
 				arrangedOrders.push(order)

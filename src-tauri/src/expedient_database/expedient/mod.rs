@@ -22,12 +22,13 @@ pub struct Order {
     pub state: OrderState,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Copy)]
 pub enum OrderState {
-    Done,
-    Todo,
     Urgent,
-    Pending,
+    Todo,
+    Awaiting,
+    InStore,
+    Done,
 }
 
 impl Expedient {
@@ -36,13 +37,6 @@ impl Expedient {
     }
     pub fn license_is_complete(&self) -> bool {
         self.license_plate.len() >= 7
-    }
-    pub fn global_order_state(&self) -> OrderState {
-        self.orders
-            .iter()
-            .map(|order| order.state)
-            .max()
-            .unwrap_or(OrderState::Done)
     }
 }
 
@@ -181,37 +175,5 @@ mod test {
         unsorted_expedients.sort_unstable_by_key(|e| -e.date());
 
         assert_eq!(sorted_expedients, unsorted_expedients,);
-    }
-
-    #[test]
-    fn global_order_state() {
-        let expedient = Expedient {
-            description: "any stuff".into(),
-            license_plate: "very".into(),
-            model: "any stuff".into(),
-            orders: vec![
-                Order {
-                    date: UtcDate::utc_ymdh(2022, 10, 2, 0),
-                    title: "Pastilles de fre".into(),
-                    description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
-                    state: OrderState::Done,
-                },
-                Order {
-                    date: UtcDate::utc_ymdh(2022, 10, 2, 10),
-                    title: ":O".into(),
-                    description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
-                    state: OrderState::Todo,
-                },
-            ],
-            user: "".into(),
-            vin: "2HGES16503H591599".into(),
-            date: UtcDate {
-                year: 2010,
-                month: 1,
-                day: 3,
-                hour: 23,
-            },
-        };
-        assert_eq!(OrderState::Todo, expedient.global_order_state());
     }
 }

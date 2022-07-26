@@ -1,5 +1,4 @@
 # Fundamental
-- Change pending for: Awaiting(time) and InStore
 - Autocompete expedient on vin, licenceplate or phone number
 - Similar panel with merge option
 - Expedient custom folder

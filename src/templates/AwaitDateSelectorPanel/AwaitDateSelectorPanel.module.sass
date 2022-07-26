@@ -1,0 +1,37 @@
+@use '../../globalStyle/layout'
+@use '../../globalStyle/theme'
+
+.container
+	@include layout.column
+	position: absolute
+	top: 0px
+	bottom: 0px
+	left: 0px
+	right: 0px
+	z-index: 10000
+	background: #0005
+
+.panel
+	@include layout.column
+	gap: 20px
+	border-radius: 1px
+	width: 360px
+	height: 220px
+	outline: theme.$stroke
+	background: theme.$background
+
+.date_container
+	@include layout.column
+	background: #fff
+	border-radius: 1px
+	outline: theme.$stroke
+	min-width: 200px
+
+.buttons_row
+	@include layout.row
+	width: 300px
+	justify-content: space-evenly
+
+.row
+	@include layout.row
+	padding: 20px

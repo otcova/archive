@@ -30,12 +30,12 @@ export const useTab = () => useContext(TabContext)
 export default function TabSystem() {
 	const staticTabs = [
 		{ name: "", componentClass: OpenList, props: {} },
-		{ name: <StaticCheckbox state={"Pending"} />, componentClass: PendingList, props: {} },
+		{ name: "", componentClass: PendingList, props: {} },
 		{ name: <StaticCheckbox state={"Done"} />, componentClass: DoneList, props: {} },
 	]
 
 	const [tabs, setTabs] = createSignal<Tab[]>([...staticTabs])
-	const [activeTab, setActiveTab] = createSignal(2)
+	const [activeTab, setActiveTab] = createSignal(0)
 
 	const tabsContext = tabIndex => ({
 		focusTab: () => setActiveTab(tabIndex()),

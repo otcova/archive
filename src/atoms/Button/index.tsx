@@ -3,6 +3,7 @@ import style from "./Button.module.sass"
 
 type Props = {
 	text: string,
+	red?: boolean,
 	shortCut?: string, // examples: ctrl a, alt r, ctrl alt n
 	style?: number,
 	action?: () => any,
@@ -22,7 +23,7 @@ export default function Button(props: Props) {
 	onMount(() => addEventListener("keydown", onKeydown))
 	onCleanup(() => removeEventListener("keydown", onKeydown))
 
-	return <div class={style.button} onMouseUp={props.action}>
+	return <div class={props.red ? style.button_red : style.button} onMouseUp={props.action}>
 		{props.text}
 	</div>
 }

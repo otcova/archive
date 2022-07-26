@@ -24,7 +24,11 @@ export function OrderEditor(props: Props) {
 				onChange={data => props.setOrder(data, "title")}
 			/>
 			<div class={style.date}>{utcDateToString(order().date)}</div>
-			<Checkbox expedient={props.expedient()} expedientId={props.expedientId} orderIndex={props.orderIndex} />
+			<Checkbox
+				expedient={props.expedient()}
+				expedientId={props.expedientId}
+				orderIndex={props.orderIndex}
+			/>
 		</div>
 		<InputTextArea noStyle
 			placeholder='Comanda'
