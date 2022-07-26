@@ -35,7 +35,7 @@ export default function TabSystem() {
 	]
 
 	const [tabs, setTabs] = createSignal<Tab[]>([...staticTabs])
-	const [activeTab, setActiveTab] = createSignal(0)
+	const [activeTab, setActiveTab] = createSignal(2)
 
 	const tabsContext = tabIndex => ({
 		focusTab: () => setActiveTab(tabIndex()),

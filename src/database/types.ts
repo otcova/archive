@@ -51,8 +51,15 @@ function utcToLocalDate(utcDate: UtcDate): LocalDate {
 }
 
 export function utcDateToString(utcDate: UtcDate): string {
-	const date = utcToLocalDate(utcDate)
-	return date.day + " - " + date.month + " - " + date.year
+	const localDate = utcToLocalDate(utcDate)
+	const today = utcDateNow()
+	if (equalDay(utcDate, today)) {
+		if (localDate.hour < 14) return "Matí"
+		else return "Tarda"
+	} else if (equalDay(utcDate, yesterdayOf(today))) {
+		return "Ahir"
+	}
+	return localDate.day + " - " + localDate.month + " - " + localDate.year
 }
 
 export function utcDateNow(): UtcDate {
@@ -69,6 +76,19 @@ export function equalDay(utcA: UtcDate, utcB: UtcDate) {
 	const a = utcToLocalDate(utcA)
 	const b = utcToLocalDate(utcB)
 	return a.day == b.day && a.month == b.month && a.year == b.year
+}
+
+export function yesterdayOf(utcDate: UtcDate) {
+	let date = new Date(
+		`${utcDate.month}/${utcDate.day}/${utcDate.year} ${utcDate.hour}:0 UTC`
+	)
+	date.setDate(date.getDate() - 1)
+	return {
+		year: date.getFullYear(),
+		month: date.getMonth() + 1,
+		day: date.getDate(),
+		hour: date.getHours(),
+	}
 }
 
 export type Order = {

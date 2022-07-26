@@ -43,8 +43,12 @@ export default function DoneList() {
 
 	return <>
 		<div class={style.input_row}>
-			<InputText placeholder='Usuari' onChange={setInputUser} />
-			<InputText placeholder='Cos' onChange={setInputBody} />
+			<div class={style.input_user}>
+				<InputText placeholder='Usuari' onChange={setInputUser} />
+			</div>
+			<div class={style.input_body}>
+				<InputText placeholder='Cos' onChange={setInputBody} />
+			</div>
 			<div class={style.input_vin}>
 				<InputText placeholder='Matricula / VIN' onChange={setInputVin} />
 			</div>

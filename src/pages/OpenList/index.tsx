@@ -31,10 +31,8 @@ export default function OpenList() {
 	// Rename tab
 	createEffect(() => {
 		if (urgentList() && urgentList().length == 0) {
-			console.log("Rename D")
 			rename(<StaticCheckbox state={"Todo"} />)
 		} else {
-			console.log("Rename Ur")
 			rename(<StaticCheckbox state={"Urgent"} />)
 		}
 	})
