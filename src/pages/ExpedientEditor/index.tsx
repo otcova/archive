@@ -1,11 +1,11 @@
-import { createEffect, createSignal, For, on, onCleanup, Show } from 'solid-js'
+import { createEffect, createSignal, For, on, Show } from 'solid-js'
 import Button from '../../atoms/Button'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
 import { compareUtcDate } from '../../database/date'
 import { deleteExpedient } from '../../database/expedientState'
 import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
-import { ExpedientId, newBlankOrder, Order, refactorExpedientOrders } from '../../database/types'
+import { ExpedientId, newBlankOrder, Order } from '../../database/types'
 import { ConfirmationPanel } from '../../templates/ConfirmationPanel'
 import ExpedientFolderIcons from '../../templates/ExpedientFolderIcons'
 import { OrderEditor } from '../../templates/OrderEditor'
@@ -22,21 +22,19 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	const [showConfirmationPanel, setShowConfirmationPanel] = createSignal(false)
 	const [expedient, setExpedient] = realTimeDatabaseExpedientEditor(expedientId)
 
-	const orders = () => arrangeOrders(expedient().orders)
+	const orders = () => sortOrdersByPriority(expedient().orders)
 
 	// updateTabName
 	createEffect(on(expedient, () => {
 		if (!expedient()) return closeTab()
 
-		const user = expedient().user.split(/\s/)[0]
+		const user = expedient().user.split(/\s/)[0].trim()
 		const orderTitles = orders()
-			.filter(([order]) => order.state != "Done")
-			.filter(([order]) => order.title)
-			.map(([order]) => order.title)
-		const newName = [user.trim(), ...orderTitles].join("  -  ").trim()
+			.filter(([order]) => order.state != "Done" && order.title)
+			.map(([order]) => order.title.trim())
+		const newName = [user, ...orderTitles].join("  -  ")
 
-		if (newName) rename(newName)
-		else rename("Expedient")
+		rename(newName || "Expedient")
 	}, { defer: true }))
 
 	const updateExpedient = (data, ...path: (string | number)[]) => {
@@ -122,7 +120,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	</Show>
 }
 
-function arrangeOrders(orders: Order[]): [Order, number][] {
+function sortOrdersByPriority(orders: Order[]): [Order, number][] {
 	const arrangedOrders: [Order, number][] = []
 
 	const indexedOrders: [Order, number][] = [...orders].map((order, index) => [order, index])
