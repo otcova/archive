@@ -41,7 +41,7 @@ impl Expedient {
 }
 
 impl chunked_database::Item for Expedient {
-    fn date(&self) -> i32 {
+    fn date(&self) -> i64 {
         self.orders
             .iter()
             .map(|order| order.date.date_hash())
@@ -57,19 +57,8 @@ mod test {
 
     #[test]
     fn date_hash() {
-        let date_a = UtcDate {
-            year: 2021,
-            month: 12,
-            day: 23,
-            hour: 9,
-        };
-
-        let date_b = UtcDate {
-            year: 2021,
-            month: 12,
-            day: 23,
-            hour: 9,
-        };
+        let date_a = UtcDate::ymdh(2021, 12, 23, 9);
+        let date_b = UtcDate::ymdh(2021, 12, 23, 9);
 
         let expedient = Expedient {
             description: "".into(),
@@ -91,12 +80,7 @@ mod test {
             ],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 2010,
-                month: 1,
-                day: 3,
-                hour: 23,
-            },
+            date: UtcDate::ymdh(2010, 1, 3, 23),
         };
 
         assert_eq!(date_a.date_hash(), expedient.date());
@@ -111,13 +95,13 @@ mod test {
                 model: "any stuff".into(),
                 orders: vec![
                     Order {
-                        date: UtcDate::utc_ymdh(2022, 10, 2, 0),
+                        date: UtcDate::ymdh(2022, 10, 2, 0),
                         title: "Placa".into(),
                         description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                         state: OrderState::Done,
                     },
                     Order {
-                        date: UtcDate::utc_ymdh(2022, 10, 2, 10),
+                        date: UtcDate::ymdh(2022, 10, 2, 10),
                         title: "Coses Rares".into(),
                         description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                         state: OrderState::Done,
@@ -125,31 +109,21 @@ mod test {
                 ],
                 user: "".into(),
                 vin: "2HGES16503H591599".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23,
-                },
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             },
             Expedient {
                 description: "any stuff".into(),
                 license_plate: "very".into(),
                 model: "any stuff".into(),
                 orders: vec![Order {
-                    date: UtcDate::utc_ymdh(2022, 10, 2, 0),
+                    date: UtcDate::ymdh(2022, 10, 2, 0),
                     title: "Ell".into(),
                     description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                     state: OrderState::Done,
                 }],
                 user: "".into(),
                 vin: "2HGES16503H591599".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23,
-                },
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             },
             Expedient {
                 description: "any stuff".into(),
@@ -158,12 +132,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "2HGES16503H591599".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23,
-                },
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             },
         ];
         let mut unsorted_expedients = vec![

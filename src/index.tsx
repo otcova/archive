@@ -3,7 +3,7 @@ import './globalStyle/index.sass'
 import ErrorPanel from './pages/ErrorPanel'
 import TabSystem from './templates/TabSystem'
 import { databaseError } from './database'
-import WindowButtons from './atoms/WindowButtons'
+import WindowButtons from './templates/WindowButtons'
 import { saveAndCloseApp, saveDatabase } from './database/databaseState'
 
 function App() {

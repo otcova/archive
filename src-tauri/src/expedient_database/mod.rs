@@ -110,12 +110,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 2010,
-                month: 1,
-                day: 3,
-                hour: 23,
-            },
+            date: UtcDate::ymdh(2010, 1, 3, 23),
         };
         let mut db_expedient = None;
 
@@ -139,12 +134,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(1921, 3, 8, 21),
         };
 
         let expedient_b = Expedient {
@@ -154,12 +144,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(1921, 3, 8, 21),
         };
 
         let mut call_count = 0;
@@ -193,12 +178,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(1921, 3, 8, 21),
         };
 
         let expedient_b = Expedient {
@@ -208,12 +188,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(1921, 3, 8, 21),
         };
 
         let mut call_count_a = 0;
@@ -255,12 +230,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(1921, 3, 8, 21),
         };
 
         let expedient_b = Expedient {
@@ -270,12 +240,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(1921, 3, 8, 21),
         };
 
         let mut call_count = 0;
@@ -308,12 +273,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(1921, 3, 8, 21),
         };
 
         let expedient_1 = Expedient {
@@ -323,12 +283,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(1921, 3, 8, 21),
         };
 
         let expedient_2 = Expedient {
@@ -338,12 +293,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 3921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(3921, 3, 8, 21),
         };
 
         let expedient_3 = Expedient {
@@ -353,12 +303,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 1921,
-                month: 3,
-                day: 8,
-                hour: 21,
-            },
+            date: UtcDate::ymdh(1921, 3, 8, 21),
         };
 
         let expedient_filter = Expedient {
@@ -368,12 +313,7 @@ mod test {
             orders: vec![],
             user: "".into(),
             vin: "".into(),
-            date: UtcDate {
-                year: 2921,
-                month: 4,
-                day: 2,
-                hour: 11,
-            },
+            date: UtcDate::ymdh(2921, 4, 2, 11),
         };
 
         let mut hook_has_triggered = false;
@@ -422,12 +362,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "".into(),
-                date: UtcDate {
-                    year: 2921,
-                    month: 4,
-                    day: 2,
-                    hour: 11,
-                },
+                date: UtcDate::ymdh(2921, 4, 3, 11),
             });
             database.save().unwrap();
             sleep_for(1100);

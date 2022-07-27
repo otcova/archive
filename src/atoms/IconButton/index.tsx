@@ -1,7 +1,7 @@
 import { JSXElement, onCleanup, onMount } from "solid-js"
 import style from "./IconButton.module.sass"
 
-type IconType = "folder" | "document" | "image" | "pdf" | "close" | "minimize" | "create"
+export type IconType = "folder" | "document" | "image" | "pdf" | "close" | "minimize" | "create"
 
 type Props = {
 	icon: IconType,

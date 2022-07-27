@@ -1,6 +1,6 @@
 
 import { createEffect, createSignal, Show, untrack } from "solid-js"
-import { jsDateToUtc, UtcDate, utcToJsDate } from "../../database/types"
+import { jsDateToUtc, UtcDate, utcToJsDate } from "../../database/date"
 import Button from "../../atoms/Button"
 import SelectionButtons from "../../atoms/SelectionButtons"
 import style from "./AwaitDateSelectorPanel.module.sass"

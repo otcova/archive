@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::path::PathBuf;
 
 pub trait Item: Serialize + DeserializeOwned + Clone + Sync + Send {
-    fn date(&self) -> i32;
+    fn date(&self) -> i64;
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -53,7 +53,7 @@ impl<T: Item> Chunk<T> {
 
     pub fn pop_oldest(&mut self) -> Option<T> {
         let mut oldest_id = None;
-        let mut oldest_date = i32::MAX;
+        let mut oldest_date = i64::MAX;
 
         for item in self.database.data.items.iter() {
             let item_date = item.data.date();
@@ -106,9 +106,9 @@ mod test {
     use crate::test_utils::*;
 
     #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq)]
-    struct Data(i32);
+    struct Data(i64);
     impl Item for Data {
-        fn date(&self) -> i32 {
+        fn date(&self) -> i64 {
             self.0
         }
     }

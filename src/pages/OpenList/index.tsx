@@ -1,6 +1,6 @@
 import OrderList, { lableByDate } from '../../templates/OrderList'
 import { createHook } from '../../database/expedientHook'
-import { utcDateNow } from '../../database/types'
+import { utcDateFuture } from '../../database/date'
 import { createEffect } from 'solid-js'
 import { useTab } from '../../templates/TabSystem'
 import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
@@ -10,7 +10,7 @@ export default function OpenList() {
 
 	const [urgentList] = createHook("list_orders", {
 		sort_by: "Oldest",
-		from_date: utcDateNow(),
+		from_date: utcDateFuture(),
 		max_list_len: 70,
 		show_done: false,
 		show_todo: false,
@@ -21,7 +21,7 @@ export default function OpenList() {
 
 	const [todoList] = createHook("list_orders", {
 		sort_by: "Oldest",
-		from_date: utcDateNow(),
+		from_date: utcDateFuture(),
 		max_list_len: 70,
 		show_done: false,
 		show_todo: true,

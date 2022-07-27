@@ -153,9 +153,9 @@ mod test {
     use crate::test_utils::*;
 
     #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq)]
-    struct Data(i32);
+    struct Data(i64);
     impl Item for Data {
-        fn date(&self) -> i32 {
+        fn date(&self) -> i64 {
             self.0
         }
     }

@@ -12,6 +12,12 @@
   },
   "tauri": {
     "allowlist": {
+      "fs": {
+        "scope": [
+          "$DOCUMENT/Archive",
+          "$DOCUMENT/Archive/*"
+        ]
+      },
       "all": true
     },
     "bundle": {

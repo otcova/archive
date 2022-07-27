@@ -2,7 +2,7 @@ import { batch, createContext, createSignal, For, JSX, useContext } from 'solid-
 import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
 import IconButton from '../../atoms/IconButton'
 import { createExpedient } from '../../database/expedientState'
-import { expedientUtils } from '../../database/types'
+import { newBlankExpedient } from '../../database/types'
 import DoneList from '../../pages/DoneList'
 import ExpedientEditor from '../../pages/ExpedientEditor'
 import OpenList from '../../pages/OpenList'
@@ -71,7 +71,7 @@ export default function TabSystem() {
 	const createExpedientOnNewTab = async () => {
 		const { createTab } = tabsContext(() => tabs().length - 1)
 		createTab("Nou Expedient", ExpedientEditor, {
-			expedientId: await createExpedient(expedientUtils.newBlank()),
+			expedientId: await createExpedient(newBlankExpedient()),
 		})
 	}
 

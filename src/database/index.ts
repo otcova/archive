@@ -5,4 +5,3 @@ export const [databaseError, setDatabaseError] = createSignal<
 >({ msg: "Obrint Base de Dades" })
 
 import "./databaseState"
-import "./temporal"

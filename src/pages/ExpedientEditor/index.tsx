@@ -4,10 +4,12 @@ import IconButton from '../../atoms/IconButton'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
 import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
-import { compareDate, ExpedientId, Order } from '../../database/types'
+import { ExpedientId, folderOfExpedient, Order } from '../../database/types'
+import { compareUtcDate } from '../../database/date'
 import { OrderEditor } from '../../templates/OrderEditor'
 import { useTab } from '../../templates/TabSystem'
 import style from './ExpedientEditor.module.sass'
+import ExpedientFolderIcons from '../../templates/ExpedientFolderIcons'
 
 type Props = {
 	expedientId: ExpedientId,
@@ -91,12 +93,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 			</div>
 		</div>
 		<div class={style.bottom_bar}>
-			<IconButton icon='folder' />
-			<div class={style.bottom_bar_folder_space}></div>
-			<IconButton icon='image' />
-			<IconButton icon='document' />
-			<IconButton icon='pdf' />
-			<div class={style.bottom_bar_space}></div>
+			<ExpedientFolderIcons expedient={expedient()} />
 			<Button text="Arxivar" action={closeTab} />
 		</div>
 	</Show>
@@ -106,7 +103,7 @@ function arrangeOrders(orders: Order[]): [Order, number][] {
 	const arrangedOrders: [Order, number][] = []
 
 	const indexedOrders: [Order, number][] = [...orders].map((order, index) => [order, index])
-	const sortedOrders = indexedOrders.sort(([a], [b]) => compareDate(a.date, b.date))
+	const sortedOrders = indexedOrders.sort(([a], [b]) => compareUtcDate(a.date, b.date))
 
 	for (const state of ["Urgent", "Todo", "InStore", "Awaiting", "Done"]) {
 		for (const order of sortedOrders) {

@@ -1,6 +1,7 @@
 import { invoke, InvokeArgs } from '@tauri-apps/api/tauri'
 import { Accessor, createEffect, createSignal, onCleanup } from 'solid-js'
-import { Expedient, ExpedientId, UtcDate } from './types'
+import { Expedient, ExpedientId } from './types'
+import { UtcDate } from './date'
 
 declare global {
 	interface Window {

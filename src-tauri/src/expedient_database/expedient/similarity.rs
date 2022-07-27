@@ -129,19 +129,19 @@ mod test {
     fn order() {
         let orders = [
             Order {
-                date: UtcDate::utc_ymdh(2022, 10, 2, 0),
+                date: UtcDate::ymdh(2022, 10, 2, 0),
                 title: "Pastilles Fre".into(),
                 description: "Pastilles de fre XL\n\n34€ en Sasr".into(),
                 state: OrderState::Done,
             },
             Order {
-                date: UtcDate::utc_ymdh(2020, 2, 1, 0),
+                date: UtcDate::ymdh(2020, 2, 1, 0),
                 title: "Frena Ara".into(),
                 description: "frena JA!!!!".into(),
                 state: OrderState::Done,
             },
             Order {
-                date: UtcDate::utc_ymdh(2020, 2, 1, 0),
+                date: UtcDate::ymdh(2020, 2, 1, 0),
                 title: "Fre".into(),
                 description: "Me aburro!!!\nEn Sasr".into(),
                 state: OrderState::Todo,
@@ -170,12 +170,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "2HGES16503H591599".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             }
             .similarity(&Expedient {
                 description: "random".into(),
@@ -184,12 +179,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "2HGES16503H591599".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             })
         );
         // Same vin different license_plate
@@ -202,12 +192,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "2HGES16503H591599".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             }
             .similarity(&Expedient {
                 description: "random".into(),
@@ -216,12 +201,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "2HGES16503H591599".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             })
         );
         // Same license_plate different vin
@@ -234,12 +214,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "1RGEF16503R521594".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             }
             .similarity(&Expedient {
                 description: "random".into(),
@@ -248,12 +223,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "2HGES16503H591599".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             })
         );
         // Same Users (Inclusive Users)
@@ -266,12 +236,7 @@ mod test {
                 orders: vec![],
                 user: "Pepa 923149288".into(),
                 vin: "".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             }
             .similarity(&Expedient {
                 description: "".into(),
@@ -280,12 +245,7 @@ mod test {
                 orders: vec![],
                 user: "Pepa 923149288".into(),
                 vin: "".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             })
         );
         // Same Users (Inclusive Users), Different license plate
@@ -298,12 +258,7 @@ mod test {
                 orders: vec![],
                 user: "Pepa 923149288".into(),
                 vin: "".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             }
             .similarity(&Expedient {
                 description: "".into(),
@@ -312,12 +267,7 @@ mod test {
                 orders: vec![],
                 user: "Pepa 923149288".into(),
                 vin: "".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             })
         );
         // Filter By description
@@ -330,12 +280,7 @@ mod test {
                 orders: vec![],
                 user: "Pepa 923149288".into(),
                 vin: "".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             }
             .similarity(&Expedient {
                 description: "Vermell Audi".into(),
@@ -344,12 +289,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             })
         );
         // Blanck expedients
@@ -362,12 +302,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             }
             .similarity(&Expedient {
                 description: "".into(),
@@ -376,12 +311,7 @@ mod test {
                 orders: vec![],
                 user: "".into(),
                 vin: "".into(),
-                date: UtcDate {
-                    year: 2010,
-                    month: 1,
-                    day: 3,
-                    hour: 23
-                }
+                date: UtcDate::ymdh(2010, 1, 3, 23),
             })
         );
     }

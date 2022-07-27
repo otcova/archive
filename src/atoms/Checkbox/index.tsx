@@ -1,6 +1,7 @@
 import { createEffect, createSignal } from 'solid-js'
 import { updateExpedient } from '../../database/expedientState'
-import { compareDate as compareUtcDate, Expedient, ExpedientId, jsDateToUtc, OrderState, UtcDate, utcDateNow, utcToJsDate } from '../../database/types'
+import { Expedient, ExpedientId, OrderState } from '../../database/types'
+import { compareUtcDate, jsDateToUtc, UtcDate, utcDateNow } from '../../database/date'
 import { AwaitDateSelectorPanel } from '../../templates/AwaitDateSelectorPanel'
 import StaticCheckbox from './StaticCheckbox'
 

@@ -1,14 +1,16 @@
 import { documentDir } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/tauri";
 import { databaseError, setDatabaseError } from ".";
-import { UtcDate } from "./types";
+
+export let databaseDir = ""
+
 
 setTimeout(async () => {
+	databaseDir = await documentDir() + "Archive"
 	await openDatabase()
 	setInterval(saveDatabase, 1000 * 30)
 })
 
-const databaseDir = async () => ({ path: await documentDir() + "Archive" })
 
 const criticalError = (error, msg?) => setDatabaseError({
 	error,
@@ -28,7 +30,7 @@ const requestCreateDatabase = () => setDatabaseError({
 
 async function openDatabase() {
 	try {
-		await invoke('open_database', await databaseDir())
+		await invoke('open_database', { path: databaseDir })
 		setDatabaseError(null)
 	} catch (error) {
 		switch (error) {
@@ -45,13 +47,13 @@ async function openDatabase() {
 
 async function createDatabase() {
 	try {
-		await invoke('create_database', await databaseDir())
+		await invoke('create_database', { path: databaseDir })
 		setDatabaseError(null)
 	} catch (error) {
 		switch (error) {
 			case "AlreadyExists": return criticalError(
 				"Error en crear base de dades",
-				`La carpeta '${(await databaseDir()).path}' no està buida`
+				`La carpeta '${databaseDir}' no està buida`
 			)
 			case "Collision": return lockError()
 		}
@@ -66,7 +68,7 @@ async function loadRollbackInfo() {
 	})
 	try {
 		const info: { newest_instant: string, rollback_instant: string } =
-			await invoke("database_rollback_info", await databaseDir())
+			await invoke("database_rollback_info", { path: databaseDir })
 		setDatabaseError({
 			error: "S'ha trobat informació corrupte a la base de dades",
 			msg: `Dades corruptes:   ${info.newest_instant}\nCopia de seguretat:   ${info.rollback_instant}`,
@@ -86,7 +88,7 @@ async function loadRollbackInfo() {
 
 async function loadRollback() {
 	try {
-		await invoke('rollback_database', await databaseDir())
+		await invoke('rollback_database', { path: databaseDir })
 		setDatabaseError(null)
 	} catch (error) {
 		switch (error) {
