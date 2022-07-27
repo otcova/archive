@@ -1,0 +1,28 @@
+@use '../../globalStyle/layout'
+@use '../../globalStyle/theme'
+
+.container
+	width: 100%
+	height: fit-content
+
+.contextMenu
+	@include layout.column
+	position: absolute
+	outline: theme.$stroke
+	background: #fff
+	border-radius: 1px
+	box-shadow: 0px 0px 5px #0004
+
+.row, .row_red
+	outline: theme.$stroke
+	transition: all 100ms
+	padding: 5px 10px 5px 10px
+	cursor: pointer
+
+.row:hover
+	color: #fff
+	background: theme.$active-color
+
+.row_red:hover
+	color: #fff
+	background: #f44

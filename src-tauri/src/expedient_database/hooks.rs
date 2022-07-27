@@ -123,9 +123,7 @@ impl<'a> ExpedientDatabase<'a> {
                 |context| {
                     let database = context.database.read().unwrap();
                     let expedient = database.read(context.expedient_id);
-                    // process.terminate_if_requested()?;
                     (context.callback.lock().unwrap())(expedient);
-                    // Some(())
                 },
             ),
             true,

@@ -60,9 +60,14 @@ export default function InputText(props: Props) {
 
 	if (props.value) props.onChange?.(props.value)
 
+	const onMouseDown = (event: MouseEvent) => {
+		if (event.button == 2) event.preventDefault()
+	}
+
 	return <input
 		type="text"
 		ref={props.ref}
+		onMouseDown={onMouseDown}
 		value={props.value ?? ""}
 		onInput={onInput}
 		onFocus={onFocus}

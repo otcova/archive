@@ -1,10 +1,12 @@
-import { createEffect, For, Show } from 'solid-js'
+import { createEffect, createSignal, For, on, onCleanup, Show } from 'solid-js'
 import Button from '../../atoms/Button'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
 import { compareUtcDate } from '../../database/date'
+import { deleteExpedient } from '../../database/expedientState'
 import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
-import { ExpedientId, Order } from '../../database/types'
+import { ExpedientId, newBlankOrder, Order, refactorExpedientOrders } from '../../database/types'
+import { ConfirmationPanel } from '../../templates/ConfirmationPanel'
 import ExpedientFolderIcons from '../../templates/ExpedientFolderIcons'
 import { OrderEditor } from '../../templates/OrderEditor'
 import { useTab } from '../../templates/TabSystem'
@@ -17,13 +19,15 @@ type Props = {
 export default function ExpedientEditor({ expedientId }: Props) {
 	const { closeTab, rename } = useTab()
 
+	const [showConfirmationPanel, setShowConfirmationPanel] = createSignal(false)
 	const [expedient, setExpedient] = realTimeDatabaseExpedientEditor(expedientId)
 
 	const orders = () => arrangeOrders(expedient().orders)
 
 	// updateTabName
-	createEffect(() => {
-		if (!expedient()) return
+	createEffect(on(expedient, () => {
+		if (!expedient()) return closeTab()
+
 		const user = expedient().user.split(/\s/)[0]
 		const orderTitles = orders()
 			.filter(([order]) => order.state != "Done")
@@ -33,7 +37,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 
 		if (newName) rename(newName)
 		else rename("Expedient")
-	})
+	}, { defer: true }))
 
 	const updateExpedient = (data, ...path: (string | number)[]) => {
 		const exp = expedient()
@@ -43,6 +47,18 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		setExpedient(newExpedient)
 	}
 
+	const newOrder = () => {
+		const exp = expedient()
+		exp.orders.push(newBlankOrder())
+		setExpedient({ ...exp })
+	}
+
+	const deleteExpedientResponse = (confirmedAction) => {
+		setShowConfirmationPanel(false)
+		if (confirmedAction) {
+			deleteExpedient(expedientId)
+		}
+	}
 
 	return <Show when={expedient()}>
 		<div class={style.expedient_container}>
@@ -93,8 +109,16 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		</div>
 		<div class={style.bottom_bar}>
 			<ExpedientFolderIcons expedient={expedient()} />
-			<Button text="Arxivar" action={closeTab} />
+			<div class={style.bottom_bar_buttons}>
+				<Button text="Eliminar" red action={() => setShowConfirmationPanel(true)} />
+				<Button text="Nova Comanda" action={newOrder} />
+				<Button text="Arxivar" action={closeTab} />
+			</div>
 		</div>
+		<ConfirmationPanel text="Eliminar Expedient"
+			show={showConfirmationPanel()}
+			response={deleteExpedientResponse}
+		/>
 	</Show>
 }
 
@@ -102,7 +126,7 @@ function arrangeOrders(orders: Order[]): [Order, number][] {
 	const arrangedOrders: [Order, number][] = []
 
 	const indexedOrders: [Order, number][] = [...orders].map((order, index) => [order, index])
-	const sortedOrders = indexedOrders.sort(([a], [b]) => compareUtcDate(a.date, b.date))
+	const sortedOrders = indexedOrders.sort(([a], [b]) => -compareUtcDate(a.date, b.date))
 
 	for (const state of ["Urgent", "Todo", "InStore", "Awaiting", "Done"]) {
 		for (const order of sortedOrders) {

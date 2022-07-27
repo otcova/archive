@@ -1,0 +1,36 @@
+@use '../../globalStyle/layout'
+@use '../../globalStyle/theme'
+
+.container
+	@include layout.column
+	position: absolute
+	top: 0px
+	bottom: 0px
+	left: 0px
+	right: 0px
+	z-index: 10000
+	background: #0005
+
+.panel
+	@include layout.column
+	// gap: 20px
+	border-radius: 1px
+	width: 300px
+	height: 140px
+	outline: theme.$stroke
+	background: theme.$background
+
+.text
+	@include layout.column
+	@include layout.grow
+	background: #fff
+	border-radius: 1px
+	outline: theme.$stroke
+	width: 100%
+
+.buttons_row
+	@include layout.row
+	flex-shrink: 0
+	width: 100%
+	padding: 10px
+	justify-content: space-around

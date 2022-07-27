@@ -10,5 +10,5 @@ export async function updateExpedient(id: ExpedientId, expedient: Expedient) {
 }
 
 export async function deleteExpedient(id: ExpedientId) {
-	return await invoke("update_expedient", { id }) as ExpedientId
+	return await invoke("delete_expedient", { id }) as ExpedientId
 }

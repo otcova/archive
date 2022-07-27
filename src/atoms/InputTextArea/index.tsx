@@ -42,6 +42,10 @@ export default function InputTextArea(props: Props) {
 		})
 	}
 
+	const onMouseDown = (event: MouseEvent) => {
+		if (event.button == 2) event.preventDefault()
+	}
+
 	return <div class={props.noStyle ? style.container_minimal : style.container}>
 		<div
 			class={style.editor + (props.noStyle ? " " + style.editor_minimal : "")}
@@ -49,6 +53,7 @@ export default function InputTextArea(props: Props) {
 			spellcheck={false}
 			data-placeholder={props.placeholder}
 			ref={onEditorLoad}
+			onMouseDown={onMouseDown}
 		>
 			{pastValue}
 		</div>

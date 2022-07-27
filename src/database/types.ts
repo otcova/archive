@@ -31,12 +31,7 @@ export function newBlankExpedient(): Expedient {
 		description: "",
 		license_plate: "",
 		model: "",
-		orders: [{
-			title: "",
-			description: "",
-			state: "Todo",
-			date: utcDateNow(),
-		}],
+		orders: [newBlankOrder()],
 		user: "",
 		vin: "",
 	}
@@ -45,4 +40,25 @@ export function newBlankExpedient(): Expedient {
 export function folderOfExpedient(expedient: Expedient) {
 	const expedientHash = expedient.date.timespan.toString(36).toUpperCase()
 	return databaseDir + "\\Expedients Folder\\" + expedientHash
+}
+
+export function newBlankOrder(): Order {
+	return {
+		title: "",
+		description: "",
+		state: "Todo",
+		date: utcDateNow(),
+	}
+}
+
+export function refactorExpedientOrders(expedient: Expedient): Expedient {
+	// Delete blank orders
+	// const orders = expedient.orders.filter(order =>
+	// 	order.title != "" || order.description != ""
+	// )
+	// Give ony one blank order if any are present
+	if (expedient.orders.length == 0)
+		expedient.orders.push(newBlankOrder())
+
+	return { ...expedient }
 }

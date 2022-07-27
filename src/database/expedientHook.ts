@@ -1,7 +1,7 @@
-import { invoke, InvokeArgs } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/tauri'
 import { Accessor, createEffect, createSignal, onCleanup } from 'solid-js'
-import { Expedient, ExpedientId } from './types'
 import { UtcDate } from './date'
+import { Expedient, ExpedientId } from './types'
 
 declare global {
 	interface Window {
@@ -12,7 +12,7 @@ declare global {
 window.callbacks = new Map()
 window.callHook = (callbackId, data) => {
 	if (window.callbacks.has(callbackId)) setTimeout(() => window.callbacks.get(callbackId)(data))
-	else console.error("RUST CALL TO NON EXISTING CALLBACK ID")
+	else setTimeout(() => console.error("RUST CALL TO NON EXISTING CALLBACK ID"))
 }
 
 let nextCallbackId = 0
@@ -46,11 +46,6 @@ export function createHook(hook_name: string, options: object) {
 
 	const jsCallback = createCallback(setHookData)
 
-	let needsCleanup = false
-	const tryCleanup = (hookId) => {
-		if (needsCleanup && Number.isInteger(hookId)) releaseHook({ jsCallback, hookId })
-	}
-
 	createEffect(async () => {
 		let params
 		if (hook_name == "expedient") params = { jsCallback, expedientId: hookOptions() }
@@ -62,14 +57,10 @@ export function createHook(hook_name: string, options: object) {
 			if (pastHookId) invoke("release_hook", { hookId: pastHookId })
 			return hookId
 		})
-		tryCleanup(hookId)
 	})
 
 
-	onCleanup(() => {
-		needsCleanup = true
-		tryCleanup(hookId())
-	})
+	onCleanup(() => releaseHook({ jsCallback, hookId: hookId() }))
 
 	return [hookData, setHookOptions]
 }

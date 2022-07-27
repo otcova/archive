@@ -8,9 +8,17 @@ export function realTimeDatabaseExpedientEditor(
 ): [Accessor<Expedient | null>, Setter<Expedient>] {
 
 	const [editorValue, updateEditor] = createSignal<Expedient | null>(null)
+	const [expedient] = createHook("expedient", expedientId)
+
+	createEffect(on(expedient, () => {
+		if (!expedient()) {
+			// Expedient no longer exists
+			updateEditor(null)
+		}
+	}, { defer: true }))
 
 	realTimeDatabaseEditor<Expedient>(
-		createHook("expedient", expedientId)[0],
+		expedient,
 		(expedient) => updateExpedient(expedientId, expedient),
 		editorValue,
 		updateEditor,
