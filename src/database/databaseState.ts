@@ -16,7 +16,7 @@ const criticalError = (error, msg?) => setDatabaseError({
 	error,
 	msg,
 	button: "Tancar",
-	action: () => { console.log("CLOSE", window.close()) },
+	action: () => window.close(),
 })
 
 const unclassifiedError = (error) => criticalError("Error", error)

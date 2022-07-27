@@ -5,7 +5,7 @@ type Props = {
 	ref?: HTMLInputElement | ((el: HTMLInputElement) => void),
 	value?: string,
 	onChange?: (data: string) => void,
-	autoFormat?: ("firstCapital" | "allCapital" | "spaceAfterNumber")[]
+	autoFormat?: ("startWordCapital" | "firstCapital" | "allCapital" | "spaceAfterNumber")[]
 	charRegex?: RegExp,
 	maxLen?: number,
 	noStyle?: boolean,
@@ -34,7 +34,9 @@ export default function InputText(props: Props) {
 				const initialValueLength = input.value.length
 				input.value = input.value.trimStart().replace(/\s+/g, " ")
 
-				if (props.autoFormat.includes("firstCapital")) {
+				if (props.autoFormat.includes("startWordCapital")) {
+					input.value = capitalizeFirstLetterOfWord(input.value)
+				} if (props.autoFormat.includes("firstCapital")) {
 					input.value = capitalizeFirstLetter(input.value)
 				} if (props.autoFormat.includes("allCapital")) {
 					input.value = input.value.toUpperCase()
@@ -73,6 +75,12 @@ export default function InputText(props: Props) {
 
 function capitalizeFirstLetter(string) {
 	return string.charAt(0).toUpperCase() + string.slice(1)
+}
+
+function capitalizeFirstLetterOfWord(string) {
+	return string.split(/(?<=\s+)(?=\w)/g).map(
+		word => capitalizeFirstLetter(word)
+	).join("")
 }
 
 function maintainCursorPosition(element: HTMLInputElement, callback: (cursorPos: number) => number | void) {

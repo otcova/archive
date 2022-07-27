@@ -19,7 +19,6 @@ export default function InputTextArea(props: Props) {
 			const innerText = readInnerText(editableDiv)
 			if (props.onChange && pastValue != innerText) {
 				pastValue = innerText
-				console.log(pastValue)
 				props.onChange(innerText)
 			}
 		}

@@ -1,15 +1,14 @@
-import { createEffect, createMemo, For, Show } from 'solid-js'
+import { createEffect, For, Show } from 'solid-js'
 import Button from '../../atoms/Button'
-import IconButton from '../../atoms/IconButton'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
-import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
-import { ExpedientId, folderOfExpedient, Order } from '../../database/types'
 import { compareUtcDate } from '../../database/date'
+import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
+import { ExpedientId, Order } from '../../database/types'
+import ExpedientFolderIcons from '../../templates/ExpedientFolderIcons'
 import { OrderEditor } from '../../templates/OrderEditor'
 import { useTab } from '../../templates/TabSystem'
 import style from './ExpedientEditor.module.sass'
-import ExpedientFolderIcons from '../../templates/ExpedientFolderIcons'
 
 type Props = {
 	expedientId: ExpedientId,
@@ -52,7 +51,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 					placeholder='Usuari'
 					value={expedient().user}
 					onChange={data => updateExpedient(data, "user")}
-					autoFormat={['firstCapital']}
+					autoFormat={['startWordCapital']}
 				/>
 				<InputText
 					placeholder='Model'
