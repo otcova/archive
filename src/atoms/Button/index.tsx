@@ -1,27 +1,16 @@
-import { onCleanup, onMount } from "solid-js"
+import { bindKey, KeyMap } from "../../utils/bindKey"
 import style from "./Button.module.sass"
 
 type Props = {
 	text: string,
 	red?: boolean,
-	shortCut?: string, // examples: ctrl a, alt r, ctrl alt n
+	keyMap?: KeyMap,
 	style?: number,
 	action?: () => any,
 }
 
 export default function Button(props: Props) {
-
-	const onKeydown = event => {
-		if (!props.shortCut) return
-		let cmd = props.shortCut.toLocaleUpperCase().trim()
-		let cmdKey = cmd.split(/ +/g).pop();
-		if (cmd.includes("CTRL") && !event.ctrlKey) return
-		if (cmd.includes("ALT") && !event.altKey) return
-		if (event.code == "Key" + cmdKey) props.action()
-	}
-
-	onMount(() => addEventListener("keydown", onKeydown))
-	onCleanup(() => removeEventListener("keydown", onKeydown))
+	if (props.keyMap) bindKey(document, props.keyMap, props.action)
 
 	return <div class={props.red ? style.button_red : style.button} onMouseUp={props.action}>
 		{props.text}

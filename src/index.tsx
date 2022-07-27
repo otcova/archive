@@ -38,6 +38,7 @@ if (!document.getElementById("dummy")) {
     draw()
 }
 
+// Save on reload
 addEventListener("keydown", event => {
     if (event.ctrlKey && event.key.toLowerCase() == "r")
         saveDatabase()
