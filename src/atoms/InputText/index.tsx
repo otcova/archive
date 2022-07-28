@@ -64,18 +64,21 @@ export default function InputText(props: Props) {
 		if (event.button == 2) event.preventDefault()
 	}
 
-	return <input
-		type="text"
-		ref={props.ref}
-		onMouseDown={onMouseDown}
-		value={props.value ?? ""}
-		onInput={onInput}
-		onFocus={onFocus}
-		onBeforeInput={forcePattern}
-		class={props.noStyle ? style.input_minimal : style.input}
-		placeholder={props.placeholder}
-		spellcheck={false}
-	/>
+	// Input have to be inside a div to be detected when window.getSelection() on ctrl+z
+	return <div class={style.container}>
+		<input
+			type="text"
+			ref={props.ref}
+			onMouseDown={onMouseDown}
+			value={props.value ?? ""}
+			onInput={onInput}
+			onFocus={onFocus}
+			onBeforeInput={forcePattern}
+			class={props.noStyle ? style.input_minimal : style.input}
+			placeholder={props.placeholder}
+			spellcheck={false}
+		/>
+	</div>
 }
 
 function capitalizeFirstLetter(string) {

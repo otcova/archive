@@ -1,9 +1,9 @@
-import OrderList, { lableByDate } from '../../templates/OrderList'
-import { createHook } from '../../database/expedientHook'
-import style from "./DoneList.module.sass"
-import InputText from '../../atoms/InputText'
 import { createEffect, createSignal } from 'solid-js'
+import InputText from '../../atoms/InputText'
 import { utcDateFuture } from '../../database/date'
+import { createHook } from '../../database/expedientHook'
+import OrderList, { lableOrderListByDate } from '../../templates/OrderList'
+import style from "./DoneList.module.sass"
 
 export default function DoneList() {
 
@@ -54,6 +54,6 @@ export default function DoneList() {
 				<InputText placeholder='Matricula / VIN' onChange={setInputVin} />
 			</div>
 		</div>
-		<OrderList orderList={() => [...lableByDate(orderList())]} />
+		<OrderList orderList={() => [...lableOrderListByDate(orderList())]} />
 	</>
 }

@@ -31,3 +31,12 @@ pub async fn update_expedient(
     }
     Ok(())
 }
+
+#[tauri::command]
+pub fn read_expedient(state: tauri::State<ApiState>, id: Uid) -> Option<Expedient> {
+    if let Some(database) = state.database_mutex.lock().unwrap().as_mut() {
+        database.read_expedient(id)
+    } else {
+        None
+    }
+}

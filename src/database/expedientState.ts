@@ -6,9 +6,14 @@ export async function createExpedient(expedient: Expedient) {
 }
 
 export async function updateExpedient(id: ExpedientId, expedient: Expedient) {
-	return await invoke("update_expedient", { id, expedient }) as ExpedientId
+	console.log("    u", id, expedient)
+	return await invoke("update_expedient", { id, expedient })
 }
 
 export async function deleteExpedient(id: ExpedientId) {
 	return await invoke("delete_expedient", { id }) as ExpedientId
+}
+
+export async function readExpedient(id: ExpedientId): Promise<Expedient | undefined> {
+	return await invoke("read_expedient", { id }) as Expedient | undefined
 }

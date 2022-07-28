@@ -1,6 +1,5 @@
-import { dataDir } from "@tauri-apps/api/path"
 import { databaseDir } from "./databaseState"
-import { UtcDate, utcDateNow } from "./date"
+import { compareUtcDate, UtcDate, utcDateNow } from "./date"
 
 export type ExpedientId = { DYNAMIC: number } | { ANCIENT: number }
 
@@ -51,14 +50,18 @@ export function newBlankOrder(): Order {
 	}
 }
 
-export function refactorExpedientOrders(expedient: Expedient): Expedient {
-	// Delete blank orders
-	// const orders = expedient.orders.filter(order =>
-	// 	order.title != "" || order.description != ""
-	// )
-	// Give ony one blank order if any are present
-	if (expedient.orders.length == 0)
-		expedient.orders.push(newBlankOrder())
+export function sortOrdersByPriority(orders: Order[]): [Order, number][] {
+	const arrangedOrders: [Order, number][] = []
 
-	return { ...expedient }
+	const indexedOrders: [Order, number][] = [...orders].map((order, index) => [order, index])
+	const sortedOrders = indexedOrders.sort(([a], [b]) => -compareUtcDate(a.date, b.date))
+
+	for (const state of ["Urgent", "Todo", "InStore", "Awaiting", "Done"]) {
+		for (const order of sortedOrders) {
+			if (order[0].state == state)
+				arrangedOrders.push(order)
+		}
+	}
+
+	return arrangedOrders
 }

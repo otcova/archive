@@ -2,14 +2,14 @@ import { createEffect, createSignal, For, on, Show } from 'solid-js'
 import Button from '../../atoms/Button'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
-import { compareUtcDate } from '../../database/date'
 import { deleteExpedient } from '../../database/expedientState'
 import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
-import { ExpedientId, newBlankOrder, Order } from '../../database/types'
+import { Expedient, ExpedientId, newBlankOrder, Order, sortOrdersByPriority } from '../../database/types'
 import { ConfirmationPanel } from '../../templates/ConfirmationPanel'
 import ExpedientFolderIcons from '../../templates/ExpedientFolderIcons'
 import { OrderEditor } from '../../templates/OrderEditor'
 import { useTab } from '../../templates/TabSystem'
+import { undoSignal } from '../../utils/undo'
 import style from './ExpedientEditor.module.sass'
 
 type Props = {
@@ -24,8 +24,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 
 	const orders = () => sortOrdersByPriority(expedient().orders)
 
-	// updateTabName
-	createEffect(on(expedient, () => {
+	const updateTabName = () => {
 		if (!expedient()) return closeTab()
 
 		const user = expedient().user.split(/\s/)[0].trim()
@@ -35,20 +34,26 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		const newName = [user, ...orderTitles].join("  -  ")
 
 		rename(newName || "Expedient")
-	}, { defer: true }))
-
-	const updateExpedient = (data, ...path: (string | number)[]) => {
-		const exp = expedient()
-		if (readDeepPath(exp, path) == data) return
-		const newExpedient = { ...exp }
-		setDeepPath(newExpedient, path, data)
-		setExpedient(newExpedient)
 	}
 
-	const newOrder = () => {
-		const exp = expedient()
+	const updateExpedient = (data, path: keyof Expedient) => {
+		const exp: Expedient = JSON.parse(JSON.stringify(expedient()))
+		if (exp[path] == data) return
+		exp[path] = data
+		setExpedient(exp)
+	}
+
+	const updateOrder = (data, index: number, path: keyof Order) => {
+		const exp: Expedient = JSON.parse(JSON.stringify(expedient()))
+		if (exp.orders[index][path] == data) return
+		exp.orders[index][path] = data
+		setExpedient(exp)
+	}
+
+	const createOrder = () => {
+		const exp: Expedient = JSON.parse(JSON.stringify(expedient()))
 		exp.orders.push(newBlankOrder())
-		setExpedient({ ...exp })
+		setExpedient(exp)
 	}
 
 	const deleteExpedientResponse = (confirmedAction) => {
@@ -58,91 +63,70 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		}
 	}
 
-	return <Show when={expedient()}>
-		<div class={style.expedient_container}>
-			<div class={style.expedient_column_left}>
-				<InputText
-					placeholder='Usuari'
-					value={expedient().user}
-					onChange={data => updateExpedient(data, "user")}
-					autoFormat={['startWordCapital']}
-				/>
-				<InputText
-					placeholder='Model'
-					value={expedient().model}
-					onChange={data => updateExpedient(data, "model")}
-				/>
-				<div class={style.input_row}>
+	const setupUndo = (container) => undoSignal(expedient, setExpedient, container)
+	createEffect(on(expedient, updateTabName, { defer: true }))
+
+
+	return <div class={style.container} ref={setupUndo}>
+		<Show when={expedient()}>
+			<div class={style.expedient_container}>
+				<div class={style.expedient_column_left}>
 					<InputText
-						autoFormat={['allCapital', 'spaceAfterNumber']}
-						placeholder='Matricula'
-						value={expedient().license_plate}
-						onChange={data => updateExpedient(data, "license_plate")}
+						placeholder='Usuari'
+						value={expedient().user}
+						onChange={data => updateExpedient(data, "user")}
+						autoFormat={['startWordCapital']}
 					/>
-					<div class={style.vin_expand_more}>
+					<InputText
+						placeholder='Model'
+						value={expedient().model}
+						onChange={data => updateExpedient(data, "model")}
+					/>
+					<div class={style.input_row}>
 						<InputText
-							autoFormat={['allCapital']}
-							placeholder='VIN'
-							value={expedient().vin}
-							onChange={data => updateExpedient(data, "vin")}
+							autoFormat={['allCapital', 'spaceAfterNumber']}
+							placeholder='Matricula'
+							value={expedient().license_plate}
+							onChange={data => updateExpedient(data, "license_plate")}
 						/>
+						<div class={style.vin_expand_more}>
+							<InputText
+								autoFormat={['allCapital']}
+								placeholder='VIN'
+								value={expedient().vin}
+								onChange={data => updateExpedient(data, "vin")}
+							/>
+						</div>
 					</div>
-				</div>
-				<InputTextArea
-					placeholder='Descripció'
-					value={expedient().description}
-					onChange={data => updateExpedient(data, "description")}
-				/>
-			</div>
-			<div class={style.expedient_column_right}>
-				<For each={orders().map(([_, orderIndex]) => orderIndex)}>{(orderIndex) => {
-					return <OrderEditor
-						expedient={expedient}
-						expedientId={expedientId}
-						setOrder={(order, path) => updateExpedient(order, "orders", orderIndex, path)}
-						orderIndex={orderIndex}
+					<InputTextArea
+						placeholder='Descripció'
+						value={expedient().description}
+						onChange={data => updateExpedient(data, "description")}
 					/>
-				}}</For>
+				</div>
+				<div class={style.expedient_column_right}>
+					<For each={orders().map(([_, orderIndex]) => orderIndex)}>{(orderIndex) => {
+						return <OrderEditor
+							expedient={expedient}
+							expedientId={expedientId}
+							setOrder={(data, path) => updateOrder(data, orderIndex, path)}
+							orderIndex={orderIndex}
+						/>
+					}}</For>
+				</div>
 			</div>
-		</div>
-		<div class={style.bottom_bar}>
-			<ExpedientFolderIcons expedient={expedient()} />
-			<div class={style.bottom_bar_buttons}>
-				<Button text="Eliminar" red action={() => setShowConfirmationPanel(true)} />
-				<Button text="Nova Comanda" action={newOrder} />
-				<Button text="Arxivar" action={closeTab} />
+			<div class={style.bottom_bar}>
+				<ExpedientFolderIcons expedient={expedient()} />
+				<div class={style.bottom_bar_buttons}>
+					<Button text="Eliminar" red action={() => setShowConfirmationPanel(true)} />
+					<Button text="Nova Comanda" action={createOrder} />
+					<Button text="Arxivar" action={closeTab} />
+				</div>
 			</div>
-		</div>
-		<ConfirmationPanel text="Eliminar Expedient"
-			show={showConfirmationPanel()}
-			response={deleteExpedientResponse}
-		/>
-	</Show>
-}
-
-function sortOrdersByPriority(orders: Order[]): [Order, number][] {
-	const arrangedOrders: [Order, number][] = []
-
-	const indexedOrders: [Order, number][] = [...orders].map((order, index) => [order, index])
-	const sortedOrders = indexedOrders.sort(([a], [b]) => -compareUtcDate(a.date, b.date))
-
-	for (const state of ["Urgent", "Todo", "InStore", "Awaiting", "Done"]) {
-		for (const order of sortedOrders) {
-			if (order[0].state == state)
-				arrangedOrders.push(order)
-		}
-	}
-
-	return arrangedOrders
-}
-
-function readDeepPath(obj: object, path: (string | number)[], _index = 0) {
-	const child = obj[path[_index]]
-	if (path.length - _index == 1) return child
-	return readDeepPath(child, path, _index + 1);
-}
-
-function setDeepPath(obj: object, path: (string | number)[], value: any, _index = 0) {
-	if (path.length - 1 == _index) obj[path[_index]] = value
-	else setDeepPath(obj[path[_index]], path, value, _index + 1);
+			<ConfirmationPanel text="Eliminar Expedient"
+				show={showConfirmationPanel()}
+				response={deleteExpedientResponse}
+			/>
+		</Show >
+	</div>
 }

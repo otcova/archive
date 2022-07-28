@@ -1,17 +1,17 @@
-import { Accessor, createSignal } from 'solid-js'
+import { Accessor } from 'solid-js'
 import Checkbox from '../../atoms/Checkbox'
+import { ContextMenu } from '../../atoms/ContextMenu'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
-import { Expedient, ExpedientId, refactorExpedientOrders } from '../../database/types'
 import { utcDateToString } from '../../database/date'
-import style from './OrderEditor.module.sass'
-import { ContextMenu } from '../../atoms/ContextMenu'
 import { updateExpedient } from '../../database/expedientState'
+import { Expedient, ExpedientId, newBlankOrder, Order } from '../../database/types'
+import style from './OrderEditor.module.sass'
 
 type Props = {
 	expedient: Accessor<Expedient>,
 	expedientId: ExpedientId,
-	setOrder: (Order, path: string) => void,
+	setOrder: (data, path: keyof Order) => void,
 	orderIndex: number,
 }
 
@@ -19,17 +19,16 @@ export function OrderEditor(props: Props) {
 
 	const order = () => props.expedient().orders[props.orderIndex]
 
-	const onContextMenuClick = () => {
-		const expedient = refactorExpedientOrders({
-			...props.expedient(),
-			orders: props.expedient().orders.filter((_, index) => index != props.orderIndex)
-		})
-		updateExpedient(props.expedientId, expedient)
+	const deleteOrder = () => {
+		const expedient = props.expedient()
+		expedient.orders.splice(props.orderIndex, 1)
+		if (expedient.orders.length == 0) expedient.orders.push(newBlankOrder())
+		updateExpedient(props.expedientId, { ...expedient })
 	}
 
 	return <ContextMenu
 		buttons={[{ text: "Eliminar Commanda", red: true }]}
-		onClick={onContextMenuClick}
+		onClick={deleteOrder}
 	>
 		<div class={style.container}>
 			<div class={style.title_bar}>

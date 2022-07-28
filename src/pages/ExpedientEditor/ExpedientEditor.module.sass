@@ -1,6 +1,11 @@
 @use '../../globalStyle/theme'
 @use '../../globalStyle/layout'
 
+.container
+	@include layout.column
+	@include layout.grow
+	width: 100%
+
 .expedient_container
 	@include layout.row
 	@include layout.grow

@@ -1,9 +1,9 @@
-import OrderList, { lableByDate } from '../../templates/OrderList'
-import { createHook } from '../../database/expedientHook'
-import { utcDateFuture } from '../../database/date'
 import { createEffect } from 'solid-js'
-import { useTab } from '../../templates/TabSystem'
 import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
+import { utcDateFuture } from '../../database/date'
+import { createHook } from '../../database/expedientHook'
+import OrderList, { lableOrderListByDate } from '../../templates/OrderList'
+import { useTab } from '../../templates/TabSystem'
 
 export default function OpenList() {
 	const { rename } = useTab()
@@ -42,6 +42,6 @@ export default function OpenList() {
 	})
 
 	return <OrderList orderList={() =>
-		[...lableByDate(urgentList()), ...lableByDate(todoList())]
+		[...lableOrderListByDate(urgentList()), ...lableOrderListByDate(todoList())]
 	} />
 }

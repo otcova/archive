@@ -46,6 +46,7 @@ fn main() {
             api::create_expedient,
             api::update_expedient,
             api::delete_expedient,
+            api::read_expedient,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
