@@ -4,16 +4,7 @@
 
 When typeing on User, Vin or License plate TextInput,
 the best match will be shown in gray as a suggestion.
-- Example:
-<span style="white-space: normal">
-	<span style="background: #333; padding: 4px 8px 4px 8px; color: #fff">
-		Maria J|<span style="color: #999">uana</span>
-	</span>
-	-- enter key -->
-	<span style="background: #333; padding: 4px 8px 4px 8px; color: #fff">
-		Maria Juana|
-	</span>
-</span>
+- Example: **[ Maria J|** uana **]** — enter key —> **[ Maria Juana| ]**
 
 When writeing the User,
 Vin(if it is complete) or License plate(if it is complete),
