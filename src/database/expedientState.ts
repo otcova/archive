@@ -6,7 +6,6 @@ export async function createExpedient(expedient: Expedient) {
 }
 
 export async function updateExpedient(id: ExpedientId, expedient: Expedient) {
-	console.log("    u", id, expedient)
 	return await invoke("update_expedient", { id, expedient })
 }
 

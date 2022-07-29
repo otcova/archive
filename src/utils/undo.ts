@@ -69,14 +69,14 @@ function getCurrentCursorPosition(relativeToContainer: HTMLElement): CursorPosit
 		element = input
 	}
 
-	while (element && !relativeToContainer.isSameNode(element)) {
+	while (element && element.parentNode && !relativeToContainer.isSameNode(element)) {
 		let index = Array.from(element.parentNode.childNodes)
 			.findIndex(node => node.isSameNode(element))
 
 		elementPath.unshift(index)
 		element = element.parentNode
 	}
-	if (!element) return null
+	if (!relativeToContainer.isSameNode(element)) return null
 	return { elementPath, start, end }
 }
 

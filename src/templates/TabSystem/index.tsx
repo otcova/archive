@@ -7,6 +7,7 @@ import DoneList from '../../pages/DoneList'
 import ExpedientEditor from '../../pages/ExpedientEditor'
 import OpenList from '../../pages/OpenList'
 import PendingList from '../../pages/PendingList'
+import { bindKey } from '../../utils/bindKey'
 import style from './TabSystem.module.sass'
 
 type Tab = {
@@ -68,12 +69,17 @@ export default function TabSystem() {
 		}
 	})
 
+	const closeActiveTab = () => tabsContext(activeTab).closeTab()
+
 	const createExpedientOnNewTab = async () => {
 		const { createTab } = tabsContext(() => tabs().length - 1)
 		createTab("Nou Expedient", ExpedientEditor, {
 			expedientId: await createExpedient(newBlankExpedient()),
 		})
 	}
+
+	bindKey(document, "CTRL W", closeActiveTab)
+	bindKey(document, "CTRL T", createExpedientOnNewTab)
 
 	return (
 		<>
