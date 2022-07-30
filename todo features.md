@@ -5,6 +5,7 @@
 When typeing on User, Vin or License plate TextInput,
 the best match will be shown in gray as a suggestion.
 - Example: **[ Maria J|** uana **]** — enter key —> **[ Maria Juana| ]**
+- Example: **[ Maria J|** uana **]** — enter key —> **[ J|** uana **Maria ]**
 
 When writeing the User,
 Vin(if it is complete) or License plate(if it is complete),
@@ -37,13 +38,14 @@ It will be posible to merge the expedient of the list.
 
 ## Keywords for match
 
-| Filter      | Matches                             |
-| ----------- | ----------------------------------- |
-| Maria Rosa  | Maria; Rosa; Maria Rosa; Rosa Maria |
-| Maria_Rosa  | Maria Rosa                          |
-| Maria +Rosa | Rosa; Maria Rosa; Rosa Maria        |
-| +Maria Rosa | Maria Rosa; Rosa Maria              |
+Text to match: A, B, C, A B, B A C
 
+| Filter | Matches          |
+| ------ | ---------------- |
+| A B    | A; B; A B; B A C |
+| A_B    | A B              |
+| A B +C | B A C            |
+| +A B   | A B; B A C       |
 
 ---
 # Additional
@@ -52,3 +54,7 @@ It will be posible to merge the expedient of the list.
 - Store backups on a diferent drive
 - User panel/tab to change user on multiple expedients at once
 - Similar panel with merge option
+
+
+
+
