@@ -1,3 +1,4 @@
+use super::filter::Filter;
 use super::*;
 use crate::{chunked_database::*, observable::*};
 use std::sync::{Arc, Mutex, RwLock};
@@ -141,16 +142,11 @@ impl<'a> ExpedientDatabase<'a> {
         let mut filtered_expedients: Box<dyn Iterator<Item = _>> = Box::new(expedients);
 
         if let Some(ref filter) = options.filter {
+            let car_code_filter = Filter::new(&filter.car_code);
+
             if filter.car_code != "" {
-                filtered_expedients = Box::new(filtered_expedients.filter(|(_, exp)| {
-                    filter
-                        .car_code
-                        .split_whitespace()
-                        .find(|keyword| {
-                            exp.license_plate.to_lowercase().contains(keyword)
-                                || exp.vin.to_lowercase().contains(keyword)
-                        })
-                        .is_some()
+                filtered_expedients = Box::new(filtered_expedients.filter(move |(_, exp)| {
+                    car_code_filter.test(&exp.license_plate) || car_code_filter.test(&exp.vin)
                 }))
             }
         }
@@ -158,14 +154,12 @@ impl<'a> ExpedientDatabase<'a> {
         process.terminate_if_requested()?;
 
         if let Some(ref filter) = options.filter {
+            let user_filter = Filter::new(&filter.user);
+
             if filter.user != "" {
-                filtered_expedients = Box::new(filtered_expedients.filter(|(_, exp)| {
-                    filter
-                        .user
-                        .split_whitespace()
-                        .find(|keyword| exp.user.to_lowercase().contains(keyword))
-                        .is_some()
-                }))
+                filtered_expedients = Box::new(
+                    filtered_expedients.filter(move |(_, exp)| user_filter.test(&exp.user)),
+                )
             }
         }
 
@@ -190,23 +184,12 @@ impl<'a> ExpedientDatabase<'a> {
         process.terminate_if_requested()?;
 
         if let Some(ref filter) = options.filter {
+            let body_filter = Filter::new(&filter.body);
+
             if filter.body != "" {
-                orders = Box::new(orders.filter(|(_, index, expedient)| {
-                    filter
-                        .body
-                        .split_whitespace()
-                        .find(|keyword| {
-                            expedient.description.to_lowercase().contains(keyword)
-                                || expedient.orders[*index]
-                                    .title
-                                    .to_lowercase()
-                                    .contains(keyword)
-                                || expedient.orders[*index]
-                                    .description
-                                    .to_lowercase()
-                                    .contains(keyword)
-                        })
-                        .is_some()
+                orders = Box::new(orders.filter(move |(_, index, expedient)| {
+                    body_filter.test(&expedient.orders[*index].title)
+                        || body_filter.test(&expedient.orders[*index].description)
                 }))
             }
         }
