@@ -33,7 +33,7 @@ export default function DoneList() {
 			setHookOptions(options => {
 				return {
 					...options, filter: {
-						car_code: inputVIN(),
+						car_code: inputVIN().replaceAll(" ", "_"),
 						user: inputUser(),
 						body: inputBody(),
 					}
@@ -51,7 +51,11 @@ export default function DoneList() {
 				<InputText placeholder='Cos' onChange={setInputBody} />
 			</div>
 			<div class={style.input_vin}>
-				<InputText placeholder='Matricula / VIN' onChange={setInputVin} />
+				<InputText
+					placeholder='Matricula / VIN'
+					autoFormat={['spaceAfterNumber', 'allCapital']}
+					onChange={setInputVin}
+				/>
 			</div>
 		</div>
 		<OrderList orderList={() => [...lableOrderListByDate(orderList())]} />

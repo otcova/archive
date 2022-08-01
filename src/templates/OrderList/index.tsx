@@ -93,7 +93,7 @@ function trackStateChanges(list: () => ([ExpedientId, number, Expedient] | strin
 		}, 2000)
 	})
 
-	bindKey(document, "CTRL Z", async () => {
+	bindKey(document, "Ctrl Z", async () => {
 		if (!isActive()) return
 
 		const state = JSON.parse(JSON.stringify(pastState)) ?? []

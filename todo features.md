@@ -23,9 +23,9 @@ It will be posible to merge the expedient of the list.
 
 - [x] New Tab: `Ctrl T`
 - [x] Close Tab: `Ctrl W`
-- [ ] Focus Tab: `Ctrl number`
-- [ ] Focus Next Tab: `Ctrl Tab`
-- [ ] Focus Previous Tab: `Ctrl Shift Tab`  
+- [x] Focus Tab: `Ctrl number`
+- [x] Focus Next Tab: `Ctrl Tab`
+- [x] Focus Previous Tab: `Ctrl Shift Tab`  
 - [ ] Exit / Confirm: `F2`
 - [ ] Exit / Cancel (reverting changes): `Esc`
 - [x] Copy: `Ctrl C`
@@ -34,18 +34,6 @@ It will be posible to merge the expedient of the list.
 - [x] Focus Next InputText: `Tab`
 - [x] Focus Previous InputText: `Shift Tab`
 - [ ] Accept Autocomplete: `Enter`
-
-
-## Keywords for match
-
-Text to match: A, B, C, A B, B A C
-
-| Filter | Matches          |
-| ------ | ---------------- |
-| A B    | A; B; A B; B A C |
-| A_B    | A B              |
-| A B +C | B A C            |
-| +A B   | A B; B A C       |
 
 ---
 # Additional

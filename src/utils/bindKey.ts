@@ -1,9 +1,12 @@
 import { onCleanup, onMount } from "solid-js"
 
-type Letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
-	| "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
-export type KeyMap = Letter | `CTRL ${Letter}` | `ALT ${Letter}` | `SHIFT ${Letter}`
-	| `CTRL ALT ${Letter}` | `CTRL SHIFT ${Letter}`
+export type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+export type Letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L"
+	| "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+export type Key = "Tab" | Letter | Digit
+
+export type KeyMap = Key | `Ctrl ${Key}` | `Alt ${Key}` | `Shift ${Key}`
+	| `Ctrl Alt ${Key}` | `Ctrl Shift ${Key}`
 
 type Listener = {
 	addEventListener: (type: "keydown", listener: (event: KeyboardEvent) => void) => void,
@@ -12,10 +15,12 @@ type Listener = {
 
 export function bindKey(element: Listener, keymap: KeyMap, listener: () => void) {
 	const onKeyDown = (event: KeyboardEvent) => {
-		if (keymap.includes("CTRL") != event.ctrlKey) return
-		if (keymap.includes("SHIFT") != event.shiftKey) return
-		if (keymap.includes("ALT") != event.altKey) return
-		if (event.code == "Key" + keymap.split(" ").pop()) {
+		if (keymap.includes("Ctrl") != event.ctrlKey) return
+		if (keymap.includes("Shift") != event.shiftKey) return
+		if (keymap.includes("Alt") != event.altKey) return
+		const key = keymap.split(" ").pop()
+		if (event.code == key || event.code == "Key" + key || event.code == "Digit" + key) {
+			console.log("   > ok")
 			listener()
 			event.stopPropagation()
 			event.preventDefault()

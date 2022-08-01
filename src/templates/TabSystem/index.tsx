@@ -7,7 +7,7 @@ import DoneList from '../../pages/DoneList'
 import ExpedientEditor from '../../pages/ExpedientEditor'
 import OpenList from '../../pages/OpenList'
 import PendingList from '../../pages/PendingList'
-import { bindKey } from '../../utils/bindKey'
+import { bindKey, Key } from '../../utils/bindKey'
 import style from './TabSystem.module.sass'
 
 type Tab = {
@@ -37,6 +37,12 @@ export default function TabSystem() {
 
 	const [tabs, setTabs] = createSignal<Tab[]>([...staticTabs])
 	const [activeTab, setActiveTab] = createSignal(0)
+
+	const setActiveTabChecked = (index: number, alternative?: number) => {
+		if (index < 0) setActiveTab(alternative ?? 0)
+		else if (index >= tabs().length) setActiveTab(alternative ?? tabs().length - 1)
+		else setActiveTab(index)
+	}
 
 	const tabsContext = tabIndex => ({
 		focusTab: () => setActiveTab(tabIndex()),
@@ -78,8 +84,17 @@ export default function TabSystem() {
 		})
 	}
 
-	bindKey(document, "CTRL W", closeActiveTab)
-	bindKey(document, "CTRL T", createExpedientOnNewTab)
+	bindKey(document, "Ctrl W", closeActiveTab)
+	bindKey(document, "Ctrl T", createExpedientOnNewTab)
+	bindKey(document, "Ctrl Tab",
+		() => setActiveTabChecked(activeTab() + 1, 0)
+	)
+	bindKey(document, "Ctrl Shift Tab",
+		() => setActiveTabChecked(activeTab() - 1, tabs().length - 1)
+	)
+	for (const i of "12345678")
+		bindKey(document, `Ctrl ${i as Key}`, () => setActiveTabChecked(Number(i) - 1))
+	bindKey(document, "Ctrl 9", () => setActiveTabChecked(1e10))
 
 	return (
 		<>
@@ -90,7 +105,7 @@ export default function TabSystem() {
 					</TabContext.Provider>
 				}</For>
 				<IconButton icon='create' action={createExpedientOnNewTab} />
-			</div >
+			</div>
 			<div class={style.tab_content}>
 				<For each={tabs()}>{(_, index) =>
 					<TabContext.Provider value={tabsContext(index)}>

@@ -48,9 +48,9 @@ export function undoSignal<T>(signal: Accessor<T>, setSignal: (T) => void, conta
 		}
 	}
 
-	bindKey(document, "CTRL Z", undo)
-	bindKey(document, "CTRL SHIFT Z", redu)
-	bindKey(document, "CTRL Y", redu)
+	bindKey(document, "Ctrl Z", undo)
+	bindKey(document, "Ctrl Shift Z", redu)
+	bindKey(document, "Ctrl Y", redu)
 }
 
 function getCurrentCursorPosition(relativeToContainer: HTMLElement): CursorPosition | null {
