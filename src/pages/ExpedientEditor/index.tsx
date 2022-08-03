@@ -2,6 +2,7 @@ import { createEffect, createSignal, For, on, Show } from 'solid-js'
 import Button from '../../atoms/Button'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
+import { createHook } from '../../database/expedientHook'
 import { deleteExpedient } from '../../database/expedientState'
 import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
 import { Expedient, ExpedientId, newBlankOrder, Order, sortOrdersByPriority } from '../../database/types'
@@ -24,6 +25,8 @@ export default function ExpedientEditor({ expedientId }: Props) {
 
 	const orders = () => sortOrdersByPriority(expedient().orders)
 
+	const setupUndo = (container) => undoSignal(expedient, setExpedient, container)
+
 	const updateTabName = () => {
 		if (!expedient()) return closeTab()
 
@@ -35,6 +38,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 
 		rename(newName || "Expedient")
 	}
+	createEffect(on(expedient, updateTabName, { defer: true }))
 
 	const updateExpedient = (data, path: keyof Expedient) => {
 		const exp: Expedient = JSON.parse(JSON.stringify(expedient()))
@@ -63,9 +67,22 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		}
 	}
 
-	const setupUndo = (container) => undoSignal(expedient, setExpedient, container)
-	createEffect(on(expedient, updateTabName, { defer: true }))
+	// const [similarsList, setSimilarsHookOptions] = createHook("list_expedients", {
+	// 	filter: expedient(),
+	// 	max_list_len: 10,
+	// }, { defer: true })
+	// createEffect(on(expedient, () => setSimilarsHookOptions(options => (
+	// 	{ ...options, filter: expedient() }
+	// )), { defer: true }))
 
+	// createEffect(on(similarsList, () => {
+	// 	console.log(similarsList())
+	// }, { defer: true }))
+
+	const [userSuggestions, setUserFilter] = createHook("list_users", "")
+	createEffect(() => {
+		if (expedient()?.user) setUserFilter(expedient().user)
+	})
 
 	return <div class={style.container} ref={setupUndo}>
 		<Show when={expedient()}>
@@ -74,6 +91,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 					<InputText
 						placeholder='Usuari'
 						value={expedient().user}
+						suggestions={userSuggestions()}
 						onChange={data => updateExpedient(data, "user")}
 						autoFormat={['startWordCapital']}
 					/>

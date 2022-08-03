@@ -56,14 +56,64 @@ pub fn hook_list_orders(
     js_callback: JsCallback,
 ) -> Option<HookId> {
     let mut database = state.database_mutex.lock().unwrap();
-    let v = Some(
+
+    Some(
         database
             .as_mut()?
             .hook_list_orders(options, move |expedients| {
                 js_callback.call(&window, expedients)
             }),
-    );
-    v
+    )
+}
+
+#[tauri::command]
+pub fn hook_list_users(
+    state: tauri::State<ApiState>,
+    window: tauri::Window,
+    filter: String,
+    js_callback: JsCallback,
+) -> Option<HookId> {
+    let mut database = state.database_mutex.lock().unwrap();
+
+    Some(
+        database
+            .as_mut()?
+            .hook_list_users(filter, move |expedients| {
+                js_callback.call(&window, expedients)
+            }),
+    )
+}
+
+#[tauri::command]
+pub fn hook_list_vin(
+    state: tauri::State<ApiState>,
+    window: tauri::Window,
+    filter: String,
+    js_callback: JsCallback,
+) -> Option<HookId> {
+    let mut database = state.database_mutex.lock().unwrap();
+
+    Some(database.as_mut()?.hook_list_vin(filter, move |expedients| {
+        js_callback.call(&window, expedients)
+    }))
+}
+
+#[tauri::command]
+pub fn hook_list_license_plate(
+    state: tauri::State<ApiState>,
+    window: tauri::Window,
+    filter: String,
+    js_callback: JsCallback,
+) -> Option<HookId> {
+    let mut database = state.database_mutex.lock().unwrap();
+
+    Some(
+        database
+            .as_mut()?
+            .hook_list_license_plate(filter, move |expedients| {
+                js_callback.call(&window, expedients)
+            }),
+    )
 }
 
 #[tauri::command]

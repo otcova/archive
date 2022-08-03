@@ -8,6 +8,7 @@ pub struct HookPool<'a> {
     observable: Observable<HookContext<'a>>,
     list_observable: AsyncObservable<'a, ListExpedientsHookContext<'a>>,
     list_orders_observable: AsyncObservable<'a, ListOrdersHookContext<'a>>,
+    list_filter: AsyncObservable<'a, ListFilterHookContext<'a>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -15,6 +16,7 @@ pub enum HookId {
     Expedient(Id),
     ListExpedients(Id),
     ListExpedientOrders(Id),
+    ListFilter(Id),
 }
 
 // Expedient Hook
@@ -86,6 +88,13 @@ pub enum ListOrdersHookOptionsSortBy {
     Newest,
 }
 
+#[derive(Clone)]
+struct ListFilterHookContext<'a> {
+    pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
+    pub callback: Arc<Mutex<Box<dyn for<'r> FnMut(&Vec<&String>) + Send + Sync + 'a>>>,
+    pub filter: String,
+}
+
 impl<'a> ExpedientDatabase<'a> {
     pub fn release_hook(&mut self, hook_id: HookId) {
         match hook_id {
@@ -94,6 +103,7 @@ impl<'a> ExpedientDatabase<'a> {
             HookId::ListExpedientOrders(id) => {
                 self.hook_pool.list_orders_observable.unsubscrive(id)
             }
+            HookId::ListFilter(id) => self.hook_pool.list_filter.unsubscrive(id),
         }
     }
     pub fn release_all_hooks(&mut self) {
@@ -304,6 +314,176 @@ impl<'a> ExpedientDatabase<'a> {
                     (context.callback.lock().unwrap())(&list);
 
                     // TODO: check on ancient database
+
+                    Some(())
+                },
+            ),
+            true,
+        ))
+    }
+
+    fn list_filter<'b>(
+        filter: &Filter,
+        expedients: impl Iterator<Item = (&'b String, UtcDate)>,
+        concat_with: &mut Vec<(&'b String, UtcDate)>,
+        process: &AsyncCallbackProcess,
+    ) -> Option<Vec<(&'b String, UtcDate)>> {
+        const MAX_LIST_LEN: usize = 5;
+
+        process.terminate_if_requested()?;
+
+        let mut list: Vec<_> = expedients
+            .filter(|(data, _)| data.len() > 0)
+            .filter_map(|(data, date)| filter.test(data).then_some((data, date)))
+            .collect();
+
+        process.terminate_if_requested()?;
+
+        list.append(concat_with);
+
+        process.terminate_if_requested()?;
+
+        list.sort_unstable_by_key(|(_, date)| -date.date_hash());
+        list.truncate(MAX_LIST_LEN);
+
+        process.terminate_if_requested()?;
+
+        Some(list)
+    }
+
+    pub fn hook_list_users(
+        &mut self,
+        filter: String,
+        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+    ) -> HookId {
+        HookId::ListFilter(self.hook_pool.list_filter.subscrive(
+            AsyncCallback::new(
+                ListFilterHookContext {
+                    database: self.database.clone(),
+                    filter,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+                |context, process| {
+                    let user_filter = Filter::new(&context.filter);
+                    let database = context.database.read().unwrap();
+
+                    let mut dynamic_list = Self::list_filter(
+                        &user_filter,
+                        database
+                            .iter()
+                            .map(|(_, expedient)| (&expedient.user, expedient.date)),
+                        &mut vec![],
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &dynamic_list.iter().map(|(data, _)| *data).collect(),
+                    );
+
+                    let full_list = Self::list_filter(
+                        &user_filter,
+                        database
+                            .iter_ancient()
+                            .map(|(_, expedient)| (&expedient.user, expedient.date)),
+                        &mut dynamic_list,
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &full_list.iter().map(|(data, _)| *data).collect(),
+                    );
+
+                    Some(())
+                },
+            ),
+            true,
+        ))
+    }
+
+    pub fn hook_list_license_plate(
+        &mut self,
+        filter: String,
+        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+    ) -> HookId {
+        HookId::ListFilter(self.hook_pool.list_filter.subscrive(
+            AsyncCallback::new(
+                ListFilterHookContext {
+                    database: self.database.clone(),
+                    filter,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+                |context, process| {
+                    let user_filter = Filter::new(&context.filter);
+                    let database = context.database.read().unwrap();
+
+                    let mut dynamic_list = Self::list_filter(
+                        &user_filter,
+                        database
+                            .iter()
+                            .map(|(_, expedient)| (&expedient.license_plate, expedient.date)),
+                        &mut vec![],
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &dynamic_list.iter().map(|(data, _)| *data).collect(),
+                    );
+
+                    let full_list = Self::list_filter(
+                        &user_filter,
+                        database
+                            .iter_ancient()
+                            .map(|(_, expedient)| (&expedient.license_plate, expedient.date)),
+                        &mut dynamic_list,
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &full_list.iter().map(|(data, _)| *data).collect(),
+                    );
+
+                    Some(())
+                },
+            ),
+            true,
+        ))
+    }
+
+    pub fn hook_list_vin(
+        &mut self,
+        filter: String,
+        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+    ) -> HookId {
+        HookId::ListFilter(self.hook_pool.list_filter.subscrive(
+            AsyncCallback::new(
+                ListFilterHookContext {
+                    database: self.database.clone(),
+                    filter,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+                |context, process| {
+                    let user_filter = Filter::new(&context.filter);
+                    let database = context.database.read().unwrap();
+
+                    let mut dynamic_list = Self::list_filter(
+                        &user_filter,
+                        database
+                            .iter()
+                            .map(|(_, expedient)| (&expedient.vin, expedient.date)),
+                        &mut vec![],
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &dynamic_list.iter().map(|(data, _)| *data).collect(),
+                    );
+
+                    let full_list = Self::list_filter(
+                        &user_filter,
+                        database
+                            .iter_ancient()
+                            .map(|(_, expedient)| (&expedient.vin, expedient.date)),
+                        &mut dynamic_list,
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &full_list.iter().map(|(data, _)| *data).collect(),
+                    );
 
                     Some(())
                 },

@@ -1,4 +1,5 @@
-import { createSignal, For, Show } from "solid-js"
+import { createSignal, For } from "solid-js"
+import { FadeoutShow } from "../FadeoutShow"
 import style from "./InputText.module.sass"
 
 type Props = {
@@ -53,10 +54,11 @@ export default function InputText(props: Props) {
 			})
 		}
 		props.onChange?.(input.value)
+		requestAnimationFrame(() => setShowSuggestions(input.value.length > 0))
 	}
 
 	const onFocus = event => {
-		setShowSuggestions(true)
+		requestAnimationFrame(() => setShowSuggestions(input.value.length > 0))
 		if (props.selectOnFocus) event.target.select()
 	}
 
@@ -65,6 +67,10 @@ export default function InputText(props: Props) {
 	const onMouseDown = (event: MouseEvent) => {
 		if (event.button == 2) event.preventDefault()
 	}
+
+	const suggestions = () =>
+		(props.suggestions ?? []).filter(user => input.value != user)
+
 
 	// Input have to be inside a div to be detected when window.getSelection() on ctrl+z
 	return <div class={style.container}>
@@ -81,18 +87,20 @@ export default function InputText(props: Props) {
 			placeholder={props.placeholder}
 			spellcheck={false}
 		/>
-		<Show when={showSuggestions() && props.suggestions && props.suggestions.length}>
-			<div class={style.dropbox}>
-				<For each={props.suggestions}>{(suggestion) =>
-					<div class={style.row}
-						onMouseDown={event => event.preventDefault()}
-						onMouseUp={() => {
-							input.value = suggestion
-							onInput()
-						}}>{suggestion}</div>
-				}</For>
+		<FadeoutShow when={showSuggestions() && suggestions().length} >
+			<div class={style.dropbox_container}>
+				<div class={style.dropbox}>
+					<For each={suggestions()}>{(suggestion) =>
+						<div class={style.row}
+							onMouseDown={event => event.preventDefault()}
+							onMouseUp={() => {
+								input.value = suggestion
+								onInput()
+							}}>{suggestion}</div>
+					}</For>
+				</div>
 			</div>
-		</Show>
+		</FadeoutShow>
 	</div>
 }
 

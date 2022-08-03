@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri'
-import { Accessor, createEffect, createSignal, onCleanup } from 'solid-js'
+import { Accessor, createEffect, createSignal, on, onCleanup, Setter } from 'solid-js'
 import { UtcDate } from './date'
 import { Expedient, ExpedientId } from './types'
 
@@ -37,18 +37,28 @@ export type ListOrdersHookOptionsSortBy = {
 }
 
 export function createHook(hook_name: "expedient", id: ExpedientId): [Accessor<Expedient | null>];
-export function createHook(hook_name: "list_expedients", options: ListExpedientsHookOptions);
+export function createHook(
+	hook_name: "list_users",
+	filter: string,
+	deferOptions?: { defer: true }
+): [Accessor<string[] | null>, Setter<string>];
+export function createHook(
+	hook_name: "list_expedients",
+	options: ListExpedientsHookOptions,
+	deferOptions?: { defer: true }
+);
 export function createHook(hook_name: "list_orders", options: ListOrdersHookOptionsSortBy);
-export function createHook(hook_name: string, options: object) {
+export function createHook(hook_name: string, options: {}, deferOptions?: { defer: true }) {
 	const [hookData, setHookData] = createSignal(null)
 	const [hookOptions, setHookOptions] = createSignal(options)
 	const [hookId, setHookId] = createSignal(null)
 
 	const jsCallback = createCallback(setHookData)
 
-	createEffect(async () => {
+	createEffect(on(hookOptions, async () => {
 		let params
 		if (hook_name == "expedient") params = { jsCallback, expedientId: hookOptions() }
+		else if (hook_name == "list_users") params = { jsCallback, filter: hookOptions() }
 		else params = { jsCallback, options: hookOptions() }
 
 		const hookId = await invoke("hook_" + hook_name, params)
@@ -57,7 +67,7 @@ export function createHook(hook_name: string, options: object) {
 			if (pastHookId) invoke("release_hook", { hookId: pastHookId })
 			return hookId
 		})
-	})
+	}, deferOptions))
 
 
 	onCleanup(() => releaseHook({ jsCallback, hookId: hookId() }))
