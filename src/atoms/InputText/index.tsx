@@ -1,8 +1,8 @@
+import { createSignal, For, Show } from "solid-js"
 import style from "./InputText.module.sass"
 
 type Props = {
 	placeholder?: string,
-	ref?: HTMLInputElement | ((el: HTMLInputElement) => void),
 	value?: string,
 	onChange?: (data: string) => void,
 	autoFormat?: ("startWordCapital" | "firstCapital" | "allCapital" | "spaceAfterNumber")[]
@@ -10,9 +10,11 @@ type Props = {
 	maxLen?: number,
 	noStyle?: boolean,
 	selectOnFocus?: boolean,
+	suggestions?: string[]
 }
 
 export default function InputText(props: Props) {
+	const [showSuggestions, setShowSuggestions] = createSignal(false)
 
 	const forcePattern = event => {
 		if (!event.data) return
@@ -20,9 +22,8 @@ export default function InputText(props: Props) {
 			event.preventDefault()
 	}
 
-	const onInput = event => {
-		const input = event.target as HTMLInputElement
-
+	let input: HTMLInputElement
+	const onInput = () => {
 		if (props.maxLen) {
 			maintainCursorPosition(input, () => {
 				input.value = input.value.slice(0, props.maxLen)
@@ -55,6 +56,7 @@ export default function InputText(props: Props) {
 	}
 
 	const onFocus = event => {
+		setShowSuggestions(true)
 		if (props.selectOnFocus) event.target.select()
 	}
 
@@ -68,16 +70,29 @@ export default function InputText(props: Props) {
 	return <div class={style.container}>
 		<input
 			type="text"
-			ref={props.ref}
+			ref={input}
 			onMouseDown={onMouseDown}
 			value={props.value ?? ""}
 			onInput={onInput}
 			onFocus={onFocus}
+			onBlur={() => setShowSuggestions(false)}
 			onBeforeInput={forcePattern}
 			class={props.noStyle ? style.input_minimal : style.input}
 			placeholder={props.placeholder}
 			spellcheck={false}
 		/>
+		<Show when={showSuggestions() && props.suggestions && props.suggestions.length}>
+			<div class={style.dropbox}>
+				<For each={props.suggestions}>{(suggestion) =>
+					<div class={style.row}
+						onMouseDown={event => event.preventDefault()}
+						onMouseUp={() => {
+							input.value = suggestion
+							onInput()
+						}}>{suggestion}</div>
+				}</For>
+			</div>
+		</Show>
 	</div>
 }
 
