@@ -1,10 +1,10 @@
 import { render } from 'solid-js/web'
+import { databaseError } from './database'
+import { saveDatabase } from './database/databaseState'
 import './globalStyle/index.sass'
 import ErrorPanel from './pages/ErrorPanel'
 import TabSystem from './templates/TabSystem'
-import { databaseError } from './database'
 import WindowButtons from './templates/WindowButtons'
-import { saveAndCloseApp, saveDatabase } from './database/databaseState'
 
 function App() {
     return <>
@@ -38,8 +38,12 @@ if (!document.getElementById("dummy")) {
     draw()
 }
 
-// Save on reload
 addEventListener("keydown", event => {
-    if (event.ctrlKey && event.key.toLowerCase() == "r")
+    // Save on reload
+    if (event.ctrlKey && event.code == "KeyR")
         saveDatabase()
+
+    // Blur (unfocus) all when Esc
+    if (event.code == "Escape")
+        document.activeElement["blur"]?.()
 })
