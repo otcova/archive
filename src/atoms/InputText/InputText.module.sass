@@ -4,6 +4,7 @@
 .container
 	width: 100%
 	flex-shrink: 1
+	position: relative
 
 .input_minimal, .input
 	box-sizing: border-box
@@ -24,3 +25,34 @@
 
 .input_minimal::placeholder, .input::placeholder
 	@include theme.placeholder
+
+.dropbox
+	z-index: 2
+	position: absolute
+	background: adjust-color(theme.$background, $lightness: +2%)
+	box-shadow: 10px 8px 10px #0000001A, -10px 8px 10px #0000001A
+	outline: theme.$light-stroke
+	width: 100%
+
+.row
+	z-index: 2
+	@include layout.row-left
+	position: relative
+	width: 100%
+	padding: 10px 20px 10px 20px
+	cursor: pointer
+
+.row:hover
+	z-index: 2
+	background: #fff
+	outline: theme.$light-stroke
+
+.row:hover::before
+	z-index: 2
+	position: absolute
+	top: 0px
+	bottom: 0px
+	left: 0px
+	right: 0px
+	content: ""
+	outline: theme.$stroke
