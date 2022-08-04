@@ -198,7 +198,9 @@ impl<'a> ExpedientDatabase<'a> {
 
             if filter.body != "" {
                 orders = Box::new(orders.filter(move |(_, index, expedient)| {
-                    body_filter.test(&expedient.orders[*index].title)
+                    body_filter.test(&expedient.model)
+                        || body_filter.test(&expedient.description)
+                        || body_filter.test(&expedient.orders[*index].title)
                         || body_filter.test(&expedient.orders[*index].description)
                 }))
             }
@@ -340,6 +342,12 @@ impl<'a> ExpedientDatabase<'a> {
         process.terminate_if_requested()?;
 
         list.append(concat_with);
+
+        process.terminate_if_requested()?;
+
+        // Eliminate duplicates
+        list.sort_unstable_by_key(|(text, _)| *text);
+        list.dedup_by_key(|(text, _)| *text);
 
         process.terminate_if_requested()?;
 
