@@ -79,10 +79,18 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	// 	console.log(similarsList())
 	// }, { defer: true }))
 
-	const [userSuggestions, setUserFilter] = createHook("list_users", "")
-	createEffect(() => {
-		if (expedient()?.user) setUserFilter(expedient().user)
-	})
+
+	const [userSuggestions, setUserFilter] = createHook("list_users", "", { defer: true })
+	createEffect(() => setUserFilter(expedient()?.user ?? ""))
+
+	const [modelSuggestions, setModelFilter] = createHook("list_models", "", { defer: true })
+	createEffect(() => setModelFilter(expedient()?.model ?? ""))
+
+	const [licenseSuggestions, setLicenseFilter] = createHook("list_license_plates", "", { defer: true })
+	createEffect(() => setLicenseFilter(expedient()?.license_plate.replaceAll(" ", "_") ?? ""))
+
+	const [vinSuggestions, setvinFilter] = createHook("list_vins", "", { defer: true })
+	createEffect(() => setvinFilter(expedient()?.vin ?? ""))
 
 	return <div class={style.container} ref={setupUndo}>
 		<Show when={expedient()}>
@@ -97,12 +105,14 @@ export default function ExpedientEditor({ expedientId }: Props) {
 					/>
 					<InputText
 						placeholder='Model'
+						suggestions={modelSuggestions()}
 						value={expedient().model}
 						onChange={data => updateExpedient(data, "model")}
 					/>
 					<div class={style.input_row}>
 						<InputText
 							autoFormat={['allCapital', 'spaceAfterNumber']}
+							suggestions={licenseSuggestions()}
 							placeholder='Matricula'
 							value={expedient().license_plate}
 							onChange={data => updateExpedient(data, "license_plate")}
@@ -110,6 +120,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 						<div class={style.vin_expand_more}>
 							<InputText
 								autoFormat={['allCapital']}
+								suggestions={vinSuggestions()}
 								placeholder='VIN'
 								value={expedient().vin}
 								onChange={data => updateExpedient(data, "vin")}

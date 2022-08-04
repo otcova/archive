@@ -371,7 +371,7 @@ impl<'a> ExpedientDatabase<'a> {
                         &user_filter,
                         database
                             .iter()
-                            .map(|(_, expedient)| (&expedient.user, expedient.date)),
+                            .map(|(_, expedient)| (&expedient.user, expedient.newest_date())),
                         &mut vec![],
                         &process,
                     )?;
@@ -383,7 +383,7 @@ impl<'a> ExpedientDatabase<'a> {
                         &user_filter,
                         database
                             .iter_ancient()
-                            .map(|(_, expedient)| (&expedient.user, expedient.date)),
+                            .map(|(_, expedient)| (&expedient.user, expedient.newest_date())),
                         &mut dynamic_list,
                         &process,
                     )?;
@@ -398,7 +398,7 @@ impl<'a> ExpedientDatabase<'a> {
         ))
     }
 
-    pub fn hook_list_license_plate(
+    pub fn hook_list_models(
         &mut self,
         filter: String,
         callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
@@ -411,14 +411,14 @@ impl<'a> ExpedientDatabase<'a> {
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
                 |context, process| {
-                    let user_filter = Filter::new(&context.filter);
+                    let model_filter = Filter::new(&context.filter);
                     let database = context.database.read().unwrap();
 
                     let mut dynamic_list = Self::list_filter(
-                        &user_filter,
+                        &model_filter,
                         database
                             .iter()
-                            .map(|(_, expedient)| (&expedient.license_plate, expedient.date)),
+                            .map(|(_, expedient)| (&expedient.model, expedient.newest_date())),
                         &mut vec![],
                         &process,
                     )?;
@@ -427,10 +427,10 @@ impl<'a> ExpedientDatabase<'a> {
                     );
 
                     let full_list = Self::list_filter(
-                        &user_filter,
+                        &model_filter,
                         database
                             .iter_ancient()
-                            .map(|(_, expedient)| (&expedient.license_plate, expedient.date)),
+                            .map(|(_, expedient)| (&expedient.model, expedient.newest_date())),
                         &mut dynamic_list,
                         &process,
                     )?;
@@ -445,7 +445,7 @@ impl<'a> ExpedientDatabase<'a> {
         ))
     }
 
-    pub fn hook_list_vin(
+    pub fn hook_list_license_plates(
         &mut self,
         filter: String,
         callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
@@ -458,14 +458,14 @@ impl<'a> ExpedientDatabase<'a> {
                     callback: Arc::new(Mutex::new(Box::new(callback))),
                 },
                 |context, process| {
-                    let user_filter = Filter::new(&context.filter);
+                    let license_plate_filter = Filter::new(&context.filter);
                     let database = context.database.read().unwrap();
 
                     let mut dynamic_list = Self::list_filter(
-                        &user_filter,
-                        database
-                            .iter()
-                            .map(|(_, expedient)| (&expedient.vin, expedient.date)),
+                        &license_plate_filter,
+                        database.iter().map(|(_, expedient)| {
+                            (&expedient.license_plate, expedient.newest_date())
+                        }),
                         &mut vec![],
                         &process,
                     )?;
@@ -474,10 +474,104 @@ impl<'a> ExpedientDatabase<'a> {
                     );
 
                     let full_list = Self::list_filter(
-                        &user_filter,
+                        &license_plate_filter,
+                        database.iter_ancient().map(|(_, expedient)| {
+                            (&expedient.license_plate, expedient.newest_date())
+                        }),
+                        &mut dynamic_list,
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &full_list.iter().map(|(data, _)| *data).collect(),
+                    );
+
+                    Some(())
+                },
+            ),
+            true,
+        ))
+    }
+
+    pub fn hook_list_vins(
+        &mut self,
+        filter: String,
+        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+    ) -> HookId {
+        HookId::ListFilter(self.hook_pool.list_filter.subscrive(
+            AsyncCallback::new(
+                ListFilterHookContext {
+                    database: self.database.clone(),
+                    filter,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+                |context, process| {
+                    let vin_filter = Filter::new(&context.filter);
+                    let database = context.database.read().unwrap();
+
+                    let mut dynamic_list = Self::list_filter(
+                        &vin_filter,
+                        database
+                            .iter()
+                            .map(|(_, expedient)| (&expedient.vin, expedient.newest_date())),
+                        &mut vec![],
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &dynamic_list.iter().map(|(data, _)| *data).collect(),
+                    );
+
+                    let full_list = Self::list_filter(
+                        &vin_filter,
                         database
                             .iter_ancient()
-                            .map(|(_, expedient)| (&expedient.vin, expedient.date)),
+                            .map(|(_, expedient)| (&expedient.vin, expedient.newest_date())),
+                        &mut dynamic_list,
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &full_list.iter().map(|(data, _)| *data).collect(),
+                    );
+
+                    Some(())
+                },
+            ),
+            true,
+        ))
+    }
+
+    pub fn hook_list_order_titles(
+        &mut self,
+        filter: String,
+        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+    ) -> HookId {
+        HookId::ListFilter(self.hook_pool.list_filter.subscrive(
+            AsyncCallback::new(
+                ListFilterHookContext {
+                    database: self.database.clone(),
+                    filter,
+                    callback: Arc::new(Mutex::new(Box::new(callback))),
+                },
+                |context, process| {
+                    let order_title_filter = Filter::new(&context.filter);
+                    let database = context.database.read().unwrap();
+
+                    let mut dynamic_list = Self::list_filter(
+                        &order_title_filter,
+                        database.iter().flat_map(|(_, exp)| {
+                            exp.orders.iter().map(|order| (&order.title, order.date))
+                        }),
+                        &mut vec![],
+                        &process,
+                    )?;
+                    (context.callback.lock().unwrap())(
+                        &dynamic_list.iter().map(|(data, _)| *data).collect(),
+                    );
+
+                    let full_list = Self::list_filter(
+                        &order_title_filter,
+                        database.iter_ancient().flat_map(|(_, exp)| {
+                            exp.orders.iter().map(|order| (&order.title, order.date))
+                        }),
                         &mut dynamic_list,
                         &process,
                     )?;

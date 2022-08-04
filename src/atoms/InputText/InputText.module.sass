@@ -25,14 +25,21 @@
 .input_minimal::placeholder, .input::placeholder
 	@include theme.placeholder
 
-.dropbox_container
-	width: 100%
+.dropbox_container, .dropbox_container_minimal
+	@include theme.font-normal
+	margin-left: 10px
+	margin-right: 10px
+	width: calc(100% - 20px)
 	height: 0px
+
+.dropbox_container_minimal
+	width: calc(100% + 10px)
+	margin-left: -10px
 
 .dropbox
 	position: relative
 	height: fit-content
-	box-shadow: 10px 8px 10px #0000001A, -10px 8px 10px #0000001A
+	box-shadow: 8px 8px 8px #0000001A, -8px 8px 8px #0000001A
 	background: adjust-color(theme.$background, $lightness: +2%)
 	outline: theme.$light-stroke
 	width: 100%
@@ -41,7 +48,7 @@
 	@include layout.row-left
 	position: relative
 	width: 100%
-	padding: 10px 20px 10px 20px
+	padding: 10px 10px 10px 10px
 	cursor: pointer
 
 .row:hover

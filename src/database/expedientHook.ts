@@ -38,7 +38,7 @@ export type ListOrdersHookOptionsSortBy = {
 
 export function createHook(hook_name: "expedient", id: ExpedientId): [Accessor<Expedient | null>];
 export function createHook(
-	hook_name: "list_users",
+	hook_name: "list_users" | "list_models" | "list_license_plates" | "list_vins" | "list_order_titles",
 	filter: string,
 	deferOptions?: { defer: true }
 ): [Accessor<string[] | null>, Setter<string>];
@@ -58,7 +58,7 @@ export function createHook(hook_name: string, options: {}, deferOptions?: { defe
 	createEffect(on(hookOptions, async () => {
 		let params
 		if (hook_name == "expedient") params = { jsCallback, expedientId: hookOptions() }
-		else if (hook_name == "list_users") params = { jsCallback, filter: hookOptions() }
+		else if (typeof hookOptions() == "string") params = { jsCallback, filter: hookOptions() }
 		else params = { jsCallback, options: hookOptions() }
 
 		const hookId = await invoke("hook_" + hook_name, params)

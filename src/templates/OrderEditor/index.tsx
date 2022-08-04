@@ -1,9 +1,10 @@
-import { Accessor } from 'solid-js'
+import { Accessor, createEffect } from 'solid-js'
 import Checkbox from '../../atoms/Checkbox'
 import { ContextMenu } from '../../atoms/ContextMenu'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
 import { utcDateToString } from '../../database/date'
+import { createHook } from '../../database/expedientHook'
 import { updateExpedient } from '../../database/expedientState'
 import { Expedient, ExpedientId, newBlankOrder, Order } from '../../database/types'
 import style from './OrderEditor.module.sass'
@@ -26,6 +27,9 @@ export function OrderEditor(props: Props) {
 		updateExpedient(props.expedientId, { ...expedient })
 	}
 
+	const [titleSuggestions, setTitleFilter] = createHook("list_order_titles", "", { defer: true })
+	createEffect(() => setTitleFilter(order()?.title ?? ""))
+
 	return <ContextMenu
 		buttons={[{ text: "Eliminar Commanda", red: true }]}
 		onClick={deleteOrder}
@@ -34,6 +38,7 @@ export function OrderEditor(props: Props) {
 			<div class={style.title_bar}>
 				<InputText noStyle
 					placeholder='Títol'
+					suggestions={titleSuggestions()}
 					autoFormat={['firstCapital']}
 					value={order().title}
 					onChange={data => props.setOrder(data, "title")}

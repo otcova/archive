@@ -19,6 +19,10 @@ impl UtcDate {
     pub fn date_hash(&self) -> i64 {
         self.timespan
     }
+
+    pub fn from_hash(hash: i64) -> Self {
+        Self { timespan: hash }
+    }
 }
 
 #[cfg(test)]

@@ -41,8 +41,10 @@ fn main() {
             api::hook_list_expedients,
             api::hook_list_orders,
             api::hook_list_users,
-            api::hook_list_license_plate,
-            api::hook_list_vin,
+            api::hook_list_models,
+            api::hook_list_license_plates,
+            api::hook_list_order_titles,
+            api::hook_list_vins,
             api::release_hook,
             api::release_all_hooks,
             // expedients

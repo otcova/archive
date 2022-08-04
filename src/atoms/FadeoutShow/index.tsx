@@ -10,17 +10,19 @@ export function FadeoutShow(props: Props) {
 	const [render, setRender] = createSignal(false)
 	const [show, setShow] = createSignal(props.when)
 
-	let disableTimeout = 0
+	let disableRenderTimeout = 0
+	let disableShowTimeout = 0
 
 	createEffect(() => {
-		clearTimeout(disableTimeout)
+		clearTimeout(disableRenderTimeout)
+		clearTimeout(disableShowTimeout)
 		if (props.when) {
 			setRender(true)
-			setTimeout(() => setShow(true))
+			disableShowTimeout = setTimeout(() => setShow(true))
 		}
 		else {
 			setShow(false)
-			disableTimeout = setTimeout(() => setRender(false), 1000)
+			disableRenderTimeout = setTimeout(() => setRender(false), 100)
 		}
 	})
 

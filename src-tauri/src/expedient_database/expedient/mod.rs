@@ -38,15 +38,18 @@ impl Expedient {
     pub fn license_is_complete(&self) -> bool {
         self.license_plate.len() >= 7
     }
-}
-
-impl chunked_database::Item for Expedient {
-    fn date(&self) -> i64 {
+    pub fn newest_date(&self) -> UtcDate {
         self.orders
             .iter()
             .map(|order| order.date.date_hash())
             .max()
-            .unwrap_or(self.date.date_hash())
+            .map_or(self.date, |hash| UtcDate::from_hash(hash))
+    }
+}
+
+impl chunked_database::Item for Expedient {
+    fn date(&self) -> i64 {
+        self.newest_date().date_hash()
     }
 }
 

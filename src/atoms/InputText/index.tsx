@@ -1,4 +1,5 @@
-import { createSignal, For } from "solid-js"
+import { createSignal, For, onMount } from "solid-js"
+import { bindKey } from "../../utils/bindKey"
 import { FadeoutShow } from "../FadeoutShow"
 import style from "./InputText.module.sass"
 
@@ -15,7 +16,10 @@ type Props = {
 }
 
 export default function InputText(props: Props) {
-	const [showSuggestions, setShowSuggestions] = createSignal(false)
+	const [showSuggestions, _setShowSuggestions] = createSignal(false)
+	const setShowSuggestions = v => {
+		_setShowSuggestions(v)
+	}
 
 	const forcePattern = event => {
 		if (!event.data) return
@@ -54,11 +58,13 @@ export default function InputText(props: Props) {
 			})
 		}
 		props.onChange?.(input.value)
-		requestAnimationFrame(() => setShowSuggestions(input.value.length > 0))
+		// requestAnimationFrame(() => 
+		setShowSuggestions(input.value.length > 0)
 	}
 
 	const onFocus = event => {
-		requestAnimationFrame(() => setShowSuggestions(input.value.length > 0))
+		// requestAnimationFrame(() => 
+		setShowSuggestions(input.value.length > 0)
 		if (props.selectOnFocus) event.target.select()
 	}
 
@@ -70,6 +76,14 @@ export default function InputText(props: Props) {
 
 	const suggestions = () =>
 		(props.suggestions ?? []).filter(user => input.value != user)
+
+	onMount(() => bindKey(input, "Enter", () => {
+		if (suggestions().length) {
+			input.value = suggestions()[0]
+			onInput()
+			input.blur()
+		}
+	}))
 
 
 	// Input have to be inside a div to be detected when window.getSelection() on ctrl+z
@@ -88,7 +102,7 @@ export default function InputText(props: Props) {
 			spellcheck={false}
 		/>
 		<FadeoutShow when={showSuggestions() && suggestions().length} >
-			<div class={style.dropbox_container}>
+			<div class={props.noStyle ? style.dropbox_container_minimal : style.dropbox_container}>
 				<div class={style.dropbox}>
 					<For each={suggestions()}>{(suggestion) =>
 						<div class={style.row}

@@ -85,21 +85,7 @@ pub fn hook_list_users(
 }
 
 #[tauri::command]
-pub fn hook_list_vin(
-    state: tauri::State<ApiState>,
-    window: tauri::Window,
-    filter: String,
-    js_callback: JsCallback,
-) -> Option<HookId> {
-    let mut database = state.database_mutex.lock().unwrap();
-
-    Some(database.as_mut()?.hook_list_vin(filter, move |expedients| {
-        js_callback.call(&window, expedients)
-    }))
-}
-
-#[tauri::command]
-pub fn hook_list_license_plate(
+pub fn hook_list_models(
     state: tauri::State<ApiState>,
     window: tauri::Window,
     filter: String,
@@ -110,7 +96,61 @@ pub fn hook_list_license_plate(
     Some(
         database
             .as_mut()?
-            .hook_list_license_plate(filter, move |expedients| {
+            .hook_list_models(filter, move |expedients| {
+                js_callback.call(&window, expedients)
+            }),
+    )
+}
+
+#[tauri::command]
+pub fn hook_list_vins(
+    state: tauri::State<ApiState>,
+    window: tauri::Window,
+    filter: String,
+    js_callback: JsCallback,
+) -> Option<HookId> {
+    let mut database = state.database_mutex.lock().unwrap();
+
+    Some(
+        database
+            .as_mut()?
+            .hook_list_vins(filter, move |expedients| {
+                js_callback.call(&window, expedients)
+            }),
+    )
+}
+
+#[tauri::command]
+pub fn hook_list_license_plates(
+    state: tauri::State<ApiState>,
+    window: tauri::Window,
+    filter: String,
+    js_callback: JsCallback,
+) -> Option<HookId> {
+    let mut database = state.database_mutex.lock().unwrap();
+
+    Some(
+        database
+            .as_mut()?
+            .hook_list_license_plates(filter, move |expedients| {
+                js_callback.call(&window, expedients)
+            }),
+    )
+}
+
+#[tauri::command]
+pub fn hook_list_order_titles(
+    state: tauri::State<ApiState>,
+    window: tauri::Window,
+    filter: String,
+    js_callback: JsCallback,
+) -> Option<HookId> {
+    let mut database = state.database_mutex.lock().unwrap();
+
+    Some(
+        database
+            .as_mut()?
+            .hook_list_order_titles(filter, move |expedients| {
                 js_callback.call(&window, expedients)
             }),
     )
