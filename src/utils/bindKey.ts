@@ -3,7 +3,7 @@ import { onCleanup, onMount } from "solid-js"
 export type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 export type Letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L"
 	| "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
-export type Key = "Enter" | "Tab" | Letter | Digit
+export type Key = "Escape" | "Enter" | "Tab" | Letter | Digit
 
 export type KeyMap = Key | `Ctrl ${Key}` | `Alt ${Key}` | `Shift ${Key}`
 	| `Ctrl Alt ${Key}` | `Ctrl Shift ${Key}`

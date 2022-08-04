@@ -20,10 +20,12 @@ export function ConfirmationPanel(props: Props) {
 					{props.text}
 				</div>
 				<div class={style.buttons_row}>
-					<Button text={"Cancelar"} red
+					<Button text="Cancelar" red
+						keyMap="Escape"
 						action={() => props.response(false)}
 					/>
-					<Button text={"Confirmar"}
+					<Button text="Confirmar"
+						keyMap="Enter"
 						action={() => props.response(true)}
 					/>
 				</div>

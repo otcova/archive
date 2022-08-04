@@ -47,3 +47,21 @@ addEventListener("keydown", event => {
     if (event.code == "Escape")
         document.activeElement["blur"]?.()
 })
+
+/*
+
+- New Tab: `Ctrl T`
+- Close Tab: `Ctrl W`
+- Focus Tab: `Ctrl number`
+- Focus Next Tab: `Ctrl Tab`
+- Focus Previous Tab: `Ctrl Shift Tab`  
+- Exit / Cancel / Revert changes: `Esc`
+- Copy: `Ctrl C`
+- Paste: `Ctrl V`
+- Cut: `Ctrl X`
+- Focus Next InputText: `Tab`
+- Focus Previous InputText: `Shift Tab`
+- Autocomplete Suggestion: `Enter`
+- Choose Suggestion: `Up / Down`
+
+*/

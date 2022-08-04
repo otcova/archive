@@ -1,10 +1,10 @@
 
 import { createEffect, createSignal, Show, untrack } from "solid-js"
-import { jsDateToUtc, UtcDate, utcToJsDate } from "../../database/date"
 import Button from "../../atoms/Button"
 import SelectionButtons from "../../atoms/SelectionButtons"
-import style from "./AwaitDateSelectorPanel.module.sass"
+import { jsDateToUtc, UtcDate, utcToJsDate } from "../../database/date"
 import DateEditor from "../DateEditor"
+import style from "./AwaitDateSelectorPanel.module.sass"
 
 type Props = {
 	show: boolean
@@ -41,9 +41,11 @@ export function AwaitDateSelectorPanel(props: Props) {
 				</div>
 				<div class={style.buttons_row}>
 					<Button text={"Cancelar"} red
+						keyMap="Escape"
 						action={() => props.response(null)}
 					/>
 					<Button text={"Confirmar"}
+						keyMap="Enter"
 						action={() => props.response(jsDateToUtc(date()))}
 					/>
 				</div>
