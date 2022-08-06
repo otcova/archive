@@ -1,11 +1,13 @@
 mod expedient;
 mod filter;
 mod hooks;
+mod restore_data_from_arxivador;
 use crate::chunked_database::*;
 pub use crate::collections::UtcDate;
 use crate::error::*;
 pub use expedient::*;
 pub use hooks::*;
+use restore_data_from_arxivador::*;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
@@ -29,13 +31,15 @@ impl<'a> ExpedientDatabase<'a> {
     }
 
     pub fn create(path: &PathBuf) -> Result<Self> {
-        Ok(Self {
+        let mut database = Self {
             database: Arc::new(RwLock::new(ChunkedDatabase::create(
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
             hook_pool: Default::default(),
-        })
+        };
+        restore_data_from_arxivador(&mut database).ok().unwrap();
+        Ok(database)
     }
 
     pub fn rollback(path: &PathBuf) -> Result<Self> {

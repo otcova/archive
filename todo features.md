@@ -10,7 +10,7 @@ It will be posible to merge the expedient of the list.
 ## Automerge expedients
 Two expedients with the same license plate or vin
 will be merge without user confirmation.
----
+
 # Additional
 
 - Link pending -> done with Gaudi list
