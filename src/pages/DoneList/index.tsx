@@ -12,7 +12,7 @@ export default function DoneList() {
 	const [inputBody, setInputBody] = createSignal<string>("")
 
 	const [orderList, setHookOptions] = createHook("list_orders", {
-		sort_by: "Oldest",
+		sort_by: "Newest",
 		from_date: utcDateFuture(),
 		max_list_len: 70,
 		show_done: true,
