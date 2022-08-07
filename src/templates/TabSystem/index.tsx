@@ -61,14 +61,15 @@ export default function TabSystem() {
 			})
 		},
 		closeTab: () => {
+			const activeTabIndex = activeTab()
 			const index = tabIndex()
 			if (staticTabs.length > index) return
 			batch(() => {
 				// Change selected tab
-				if (index + 1 >= tabs.length) {
+				if (activeTabIndex + 1 >= tabs().length) {
 					// Default first static tab
-					if (index == 3) setActiveTab(0)
-					else setActiveTab(index - 1)
+					if (activeTabIndex == 3) setActiveTab(0)
+					else setActiveTab(activeTabIndex - 1)
 				}
 				setTabs(tabs => [...tabs.slice(0, index), ...tabs.slice(index + 1, tabs.length)])
 			})
@@ -122,7 +123,7 @@ function TabTitle() {
 
 	const onClick = (event: MouseEvent) => {
 		if (event.button == 1) closeTab()
-		else focusTab()
+		else if (event.button == 0) focusTab()
 	}
 
 	return <div
