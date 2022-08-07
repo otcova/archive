@@ -74,7 +74,7 @@ pub fn restore_data_from_arxivador(database: &mut ExpedientDatabase) -> Result<(
                     vin: expedient.vin.to_uppercase(),
                     license_plate: format_license_plate(&expedient.matricula),
                     description: expedient.cos.clone(),
-                    model: titlecase(&expedient.model),
+                    model: titlecase(&expedient.model.to_lowercase()),
                     orders: vec![Order {
                         date,
                         description: "".into(),
@@ -95,7 +95,6 @@ pub fn restore_data_from_arxivador(database: &mut ExpedientDatabase) -> Result<(
 
         for (_, (src_path, hash)) in expedient_ids {
             let dst_path = expedients_master_folder.join(&compress_date_hash(hash));
-            println!("COPY: {:?} -> {:?}", &src_path, &dst_path);
             copy_content(src_path, dst_path)?;
         }
         //Expedients Folder
@@ -119,18 +118,26 @@ fn compress_date_hash(mut x: i64) -> String {
 }
 
 fn format_license_plate(license: &String) -> String {
-    let mut license = license.trim().to_uppercase();
-    if license.len() > 4 {
-        let chars = license.as_bytes();
-        if (chars[4] as char).is_digit(10) && (chars[5] as char).is_alphabetic() {
-            license.insert(5, ' ');
-        }
-    }
-    license
+    let mut formated = license.trim().to_uppercase();
+    insert_space_after_digit(&mut formated);
+    formated
 }
 
 fn format_user(user: &String) -> String {
-    titlecase(user)
+    let mut formated = titlecase(&user.to_lowercase());
+    insert_space_after_digit(&mut formated);
+    formated
+}
+
+fn insert_space_after_digit(text: &mut String) {
+    if text.len() > 0 {
+        for i in 0..text.len() - 1 {
+            let chars = text.as_bytes();
+            if (chars[i] as char).is_digit(10) && (chars[i + 1] as char).is_alphabetic() {
+                text.insert(4, ' ');
+            }
+        }
+    }
 }
 
 fn titlecase(text: &String) -> String {
