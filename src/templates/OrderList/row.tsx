@@ -17,7 +17,7 @@ export function Row(props: { data: [ExpedientId, number, Expedient] }) {
 		<Checkbox expedient={expedient} expedientId={expedientId} orderIndex={orderIndex} />
 		<div class={style.grow}>{expedient.user}</div>
 		<div class={style.grow}>{order.title}</div>
-		<div class={style.grow}>{expedient.model}</div>
+		<div class={style.grow_model}>{expedient.model}</div>
 		<div class={style.license_plate}>{expedient.license_plate}</div>
 	</div>
 }
