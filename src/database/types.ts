@@ -65,3 +65,12 @@ export function sortOrdersByPriority(orders: Order[]): [Order, number][] {
 
 	return arrangedOrders
 }
+
+export function userFirstName(user: User): string {
+	for (const word of user.split(/\s/)) {
+		if (word.trim().match(/^[a-z]+$/i)) {
+			return word.trim()
+		}
+	}
+	return user.split(/\s/)[0].trim()
+}

@@ -5,7 +5,7 @@ import InputTextArea from '../../atoms/InputTextArea'
 import { createHook } from '../../database/expedientHook'
 import { deleteExpedient } from '../../database/expedientState'
 import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
-import { Expedient, ExpedientId, newBlankOrder, Order, sortOrdersByPriority } from '../../database/types'
+import { Expedient, ExpedientId, newBlankOrder, Order, sortOrdersByPriority, userFirstName } from '../../database/types'
 import { ConfirmationPanel } from '../../templates/ConfirmationPanel'
 import ExpedientFolderIcons from '../../templates/ExpedientFolderIcons'
 import { OrderEditor } from '../../templates/OrderEditor'
@@ -30,7 +30,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	const updateTabName = () => {
 		if (!expedient()) return closeTab()
 
-		const user = expedient().user.split(/\s/)[0].trim()
+		const user = userFirstName(expedient().user)
 		const orderTitles = orders()
 			.filter(([order]) => order.state != "Done" && order.title)
 			.map(([order]) => order.title.trim())
