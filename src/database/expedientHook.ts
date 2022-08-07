@@ -51,7 +51,8 @@ export function createHook(hook_name: "list_orders", options: ListOrdersHookOpti
 export function createHook(hook_name: string, options: {}, deferOptions?: { defer: true }) {
 	const [hookData, setHookData] = createSignal(null)
 	const [hookOptions, setHookOptions] = createSignal(options)
-	const [hookId, setHookId] = createSignal(null)
+	let hookId = null
+	let cleaned = false
 
 	const jsCallback = createCallback(setHookData)
 
@@ -61,16 +62,22 @@ export function createHook(hook_name: string, options: {}, deferOptions?: { defe
 		else if (typeof hookOptions() == "string") params = { jsCallback, filter: hookOptions() }
 		else params = { jsCallback, options: hookOptions() }
 
-		const hookId = await invoke("hook_" + hook_name, params)
+		const newHookId = await invoke("hook_" + hook_name, params)
 
-		setHookId(pastHookId => {
-			if (pastHookId) invoke("release_hook", { hookId: pastHookId })
-			return hookId
-		})
+		if (hookId) invoke("release_hook", { hookId })
+		hookId = newHookId
+		if (cleaned) releaseHook({ jsCallback, hookId })
+
 	}, deferOptions))
 
 
-	onCleanup(() => releaseHook({ jsCallback, hookId: hookId() }))
+	onCleanup(() => {
+		cleaned = true
+		if (hookId) {
+			releaseHook({ jsCallback, hookId })
+			hookId = null
+		}
+	})
 
 	return [hookData, setHookOptions]
 }
