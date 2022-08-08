@@ -13,16 +13,17 @@ type Listener = {
 	removeEventListener: (type: "keydown", listener: (event: KeyboardEvent) => void) => void,
 }
 
-export function bindKey(element: Listener, keymap: KeyMap, listener: () => void) {
+export function bindKey(element: Listener, keymap: KeyMap, listener: () => "propagate" | void) {
 	const onKeyDown = (event: KeyboardEvent) => {
 		if (keymap.includes("Ctrl") != event.ctrlKey) return
 		if (keymap.includes("Shift") != event.shiftKey) return
 		if (keymap.includes("Alt") != event.altKey) return
 		const key = keymap.split(" ").pop()
 		if (event.code == key || event.code == "Key" + key || event.code == "Digit" + key) {
-			listener()
-			event.stopPropagation()
-			event.preventDefault()
+			if (!listener()) {
+				event.stopPropagation()
+				event.preventDefault()
+			}
 		}
 	}
 	onMount(() => element.addEventListener("keydown", onKeyDown))

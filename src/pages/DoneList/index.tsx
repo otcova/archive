@@ -1,8 +1,9 @@
-import { createEffect, createSignal } from 'solid-js'
+import { createEffect, createSignal, onMount } from 'solid-js'
 import InputText from '../../atoms/InputText'
 import { utcDateFuture } from '../../database/date'
 import { createHook } from '../../database/expedientHook'
 import OrderList, { lableOrderListByDate } from '../../templates/OrderList'
+import { bindKey } from '../../utils/bindKey'
 import style from "./DoneList.module.sass"
 
 export default function DoneList() {
@@ -42,18 +43,30 @@ export default function DoneList() {
 		}
 	})
 
+	let top_row
+	onMount(() =>
+		bindKey(top_row, "Escape", () => {
+			if (!inputUser() && !inputBody() && !inputVIN())
+				return "propagate"
+			setInputUser("")
+			setInputBody("")
+			setInputVin("")
+		})
+	)
+
 	return <>
-		<div class={style.input_row}>
+		<div class={style.input_row} ref={top_row}>
 			<div class={style.input_user}>
-				<InputText placeholder='Usuari' onChange={setInputUser} />
+				<InputText placeholder='Usuari' value={inputUser()} onChange={setInputUser} />
 			</div>
 			<div class={style.input_body}>
-				<InputText placeholder='Cos' onChange={setInputBody} />
+				<InputText placeholder='Cos' value={inputBody()} onChange={setInputBody} />
 			</div>
 			<div class={style.input_vin}>
 				<InputText
 					placeholder='Matricula / VIN'
 					autoFormat={['spaceAfterNumber', 'allCapital']}
+					value={inputVIN()}
 					onChange={setInputVin}
 				/>
 			</div>
