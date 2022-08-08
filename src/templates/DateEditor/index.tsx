@@ -13,16 +13,20 @@ export default function DateEditor(props: Props) {
 			<InputText noStyle selectOnFocus
 				maxLen={2}
 				charRegex={/\d/}
-				onChange={day => props.setDate(new Date(props.date().setDate(Number(day))))}
+				onChange={day => props.setDate(new Date(props.date().setDate(Number(day) || 1)))}
 				value={"" + props.date().getDate()}
 			/>
 		</div>
 		{"  -  "}
 		<div class={style.month}>
 			<InputText noStyle selectOnFocus
-				maxLen={1}
+				maxLen={2}
 				charRegex={/\d/}
-				onChange={month => props.setDate(new Date(props.date().setMonth(Number(month) - 1)))}
+				onChange={month => props.setDate(new Date(
+					props.date().setMonth(
+						Math.min(12, (Number(month) || 1)) - 1
+					)
+				))}
 				value={"" + (props.date().getMonth() + 1)}
 			/>
 		</div >
