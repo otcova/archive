@@ -79,7 +79,11 @@ pub fn restore_data_from_arxivador(database: &mut ExpedientDatabase) -> Result<(
                         date,
                         description: "".into(),
                         title: "Antic".into(),
-                        state: OrderState::Done,
+                        state: if expedient.process == 2 {
+                            OrderState::Done
+                        } else {
+                            OrderState::Todo
+                        },
                     }],
                 });
 
