@@ -2,14 +2,14 @@
 ///
 /// | Filter | Matches          |
 /// | ------ | ---------------- |
-/// | a B    | A; B; A B; B A C |
+/// | a B    | A B; B A C       |
 /// | A_B    | A B              |
-/// | A b +C | B A C            |
-/// | +A B   | A B; B A C       |
+/// | A +b C | A B; B A C       |
+/// | +A B   | A; B; A B; B A C |
 
 pub struct Filter {
     keywords: Vec<String>,
-    mandatory_keywords: Vec<String>,
+    optional_keywords: Vec<String>,
 }
 
 impl Filter {
@@ -25,7 +25,7 @@ impl Filter {
             .map(|str| str.into())
             .collect();
 
-        let mandatory_keywords = if let Some(mandatory_filter) = iter.next() {
+        let optional_keywords = if let Some(mandatory_filter) = iter.next() {
             mandatory_filter
                 .split_whitespace()
                 .map(|str| str.replace("_", " "))
@@ -37,21 +37,21 @@ impl Filter {
 
         Self {
             keywords,
-            mandatory_keywords,
+            optional_keywords,
         }
     }
 
     pub fn test<S: AsRef<str>>(&self, text: S) -> bool {
         let subject = text.as_ref().to_lowercase().replace("_", " ");
 
-        self.mandatory_keywords
+        self.keywords
             .iter()
-            .all(|word| subject.contains(word))
-            && (self.keywords.len() == 0
+            .all(|keyword| subject.contains(keyword))
+            && (self.optional_keywords.len() == 0
                 || self
-                    .keywords
+                    .optional_keywords
                     .iter()
-                    .find(|word| subject.contains(*word))
+                    .find(|keyword| subject.contains(*keyword))
                     .is_some())
     }
 }
@@ -63,8 +63,8 @@ mod tests {
     #[test]
     fn filter() {
         let filter = Filter::new("a B");
-        assert!(filter.test("A"));
-        assert!(filter.test("B"));
+        assert!(!filter.test("A"));
+        assert!(!filter.test("B"));
         assert!(!filter.test("C"));
         assert!(filter.test("A B"));
         assert!(filter.test("B A C"));
@@ -76,16 +76,16 @@ mod tests {
         assert!(filter.test("A B"));
         assert!(!filter.test("B A C"));
 
-        let filter = Filter::new("A b +C");
+        let filter = Filter::new("A +b C");
         assert!(!filter.test("A"));
         assert!(!filter.test("B"));
         assert!(!filter.test("C"));
-        assert!(!filter.test("A B"));
+        assert!(filter.test("A B"));
         assert!(filter.test("B A C"));
 
         let filter = Filter::new("+A B");
-        assert!(!filter.test("A"));
-        assert!(!filter.test("B"));
+        assert!(filter.test("A"));
+        assert!(filter.test("B"));
         assert!(!filter.test("C"));
         assert!(filter.test("A B"));
         assert!(filter.test("B A C"));
