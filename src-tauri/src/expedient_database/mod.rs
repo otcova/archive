@@ -31,15 +31,17 @@ impl<'a> ExpedientDatabase<'a> {
     }
 
     pub fn create(path: &PathBuf) -> Result<Self> {
-        let mut database = Self {
+        Ok(Self {
             database: Arc::new(RwLock::new(ChunkedDatabase::create(
                 path,
                 CHUNKED_DATABASE_DYNAMIC_SIZE,
             )?)),
             hook_pool: Default::default(),
-        };
-        restore_data_from_arxivador(&mut database).ok().unwrap();
-        Ok(database)
+        })
+    }
+
+    pub fn get_data_from_arxivador(&mut self) {
+        restore_data_from_arxivador(self).expect("Coud not recover data from arxivador");
     }
 
     pub fn rollback(path: &PathBuf) -> Result<Self> {
@@ -348,7 +350,7 @@ mod test {
                 assert_eq!(expedient_1, *filter[2].1);
             },
         );
-        sleep_for(20);
+        sleep_for(50);
         drop(db);
 
         assert!(hook_has_triggered);

@@ -33,9 +33,11 @@ pub fn open_database(state: tauri::State<ApiState>, path: PathBuf) -> Result<()>
 
 #[tauri::command]
 pub fn create_database(state: tauri::State<ApiState>, path: PathBuf) -> Result<()> {
-    let mut database = state.database_mutex.lock().unwrap();
-    if database.is_none() {
-        *database = Some(ExpedientDatabase::create(&path)?);
+    let mut database_guard = state.database_mutex.lock().unwrap();
+    if database_guard.is_none() {
+        let mut database = ExpedientDatabase::create(&path)?;
+        database.get_data_from_arxivador();
+        *database_guard = Some(database);
         Ok(())
     } else {
         ErrorKind::AlreadyOpen.into()

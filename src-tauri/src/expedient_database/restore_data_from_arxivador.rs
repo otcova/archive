@@ -79,7 +79,7 @@ pub fn restore_data_from_arxivador(database: &mut ExpedientDatabase) -> Result<(
                         date,
                         description: "".into(),
                         title: "Antic".into(),
-                        state: if expedient.process == 2 {
+                        state: if expedient.process == 2 || date.date_hash() < 1658237320603 {
                             OrderState::Done
                         } else {
                             OrderState::Todo
