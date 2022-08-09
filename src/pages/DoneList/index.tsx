@@ -65,7 +65,7 @@ export default function DoneList() {
 			<div class={style.input_vin}>
 				<InputText
 					placeholder='Matricula / VIN'
-					autoFormat={['spaceAfterNumber', 'allCapital']}
+					autoFormat={['allCapital']}
 					value={inputVIN()}
 					onChange={setInputVin}
 				/>
