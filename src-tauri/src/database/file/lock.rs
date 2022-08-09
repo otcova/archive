@@ -9,8 +9,12 @@ pub struct Lock {
 
 impl Lock {
     pub fn directory(path: &PathBuf) -> Result<Self> {
+        if !path.exists() {
+            return ErrorKind::NotFound.into();
+        }
+        let lock_file_path = path.join(".lock");
         let lock_file =
-            File::create(path.join(".lock")).map_err::<Error, _>(|error| match error.kind() {
+            File::create(lock_file_path).map_err::<Error, _>(|error| match error.kind() {
                 std::io::ErrorKind::NotFound => ErrorKind::NotFound.into(),
                 _ => ErrorKind::Collision.into(),
             })?;
