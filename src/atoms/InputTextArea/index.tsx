@@ -61,6 +61,7 @@ export default function InputTextArea(props: Props) {
 }
 
 function paste_format(text: string): string {
+	text = text.replace("\r", "")
 	if (text.includes("\t")) {
 		let lines = text.split("\n")
 		let convertedCount = 0
@@ -114,7 +115,7 @@ function format_textarea(element: HTMLElement, placeholder: string) {
 		line.className = ""
 	}
 
-	// Set cdd: bold
+	// Set css: bold
 	for (const line of element.children) {
 		if (line.textContent.startsWith("# ")) {
 			line.classList.add(style.bold)
