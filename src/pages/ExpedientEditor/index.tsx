@@ -67,6 +67,19 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		}
 	}
 
+	const detect_vin = (event: ClipboardEvent) => {
+		if (!expedient()?.vin) {
+			let pasted_text = event.clipboardData.getData("text")
+			let founded_vins = pasted_text.match(/[A-HJ-NPR-Z\d]{8}[\dX][A-HJ-NPR-Z\d]{8}/gi)
+			let unique_items = new Set(founded_vins)
+			if (unique_items.size == 1) {
+				setTimeout(() =>
+					updateExpedient(founded_vins[0], "vin")
+				)
+			}
+		}
+	}
+
 	// const [similarsList, setSimilarsHookOptions] = createHook("list_expedients", {
 	// 	filter: expedient(),
 	// 	max_list_len: 10,
@@ -78,7 +91,6 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	// createEffect(on(similarsList, () => {
 	// 	console.log(similarsList())
 	// }, { defer: true }))
-
 
 	const [userSuggestions, setUserFilter] = createHook("list_users", "", { defer: true })
 	createEffect(() => setUserFilter(expedient()?.user ?? ""))
@@ -95,7 +107,8 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	return <div class={style.container} ref={setupUndo}>
 		<Show when={expedient()}>
 			<div class={style.expedient_container}>
-				<div class={style.expedient_column_left}>
+				<div class={style.expedient_column_left}
+					ref={elem => elem.addEventListener("paste", detect_vin)}>
 					<InputText
 						placeholder='Usuari'
 						value={expedient().user}

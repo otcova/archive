@@ -18,7 +18,6 @@ will be merge without user confirmation.
 - User panel/tab to change user on multiple expedients at once
 - Similar panel with merge option
 - Change max date on order list
-- detect vin and license plate on description
 - focus expedient insted of opening twice
 
 
