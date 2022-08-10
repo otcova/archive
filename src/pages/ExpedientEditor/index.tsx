@@ -70,7 +70,9 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	const detect_vin = (event: ClipboardEvent) => {
 		if (!expedient()?.vin) {
 			let pasted_text = event.clipboardData.getData("text")
-			let founded_vins = pasted_text.match(/[A-HJ-NPR-Z\d]{8}[\dX][A-HJ-NPR-Z\d]{8}/gi)
+			let founded_vins = Array.from(pasted_text.matchAll(
+				/(?=([A-HJ-NPR-Z\d]{8}[\dX][A-HJ-NPR-Z\d]{8}))/gi
+			), x => x[1])
 			let unique_items = new Set(founded_vins)
 			if (unique_items.size == 1) {
 				setTimeout(() =>
