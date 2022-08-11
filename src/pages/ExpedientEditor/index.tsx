@@ -6,6 +6,8 @@ import { createHook } from '../../database/expedientHook'
 import { deleteExpedient } from '../../database/expedientState'
 import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
 import { Expedient, ExpedientId, newBlankOrder, Order, sortOrdersByPriority, userFirstName } from '../../database/types'
+import { verifyVIN } from '../../database/vin/verify'
+import { modelName } from '../../database/vin/wmi'
 import { ConfirmationPanel } from '../../templates/ConfirmationPanel'
 import ExpedientFolderIcons from '../../templates/ExpedientFolderIcons'
 import { OrderEditor } from '../../templates/OrderEditor'
@@ -71,12 +73,15 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		if (!expedient()?.vin) {
 			let pasted_text = event.clipboardData.getData("text")
 			let founded_vins = Array.from(pasted_text.matchAll(
-				/(?=([A-HJ-NPR-Z\d]{8}[\dX][A-HJ-NPR-Z\d]{8}))/gi
+				/(?=(?:^|:|\s)([A-HJ-NPR-Z\d]{17})(?:\s|$))/gi
 			), x => x[1])
 			let unique_items = new Set(founded_vins)
 			if (unique_items.size == 1) {
 				setTimeout(() =>
 					updateExpedient(founded_vins[0], "vin")
+				)
+				if (!expedient()?.model && modelName(founded_vins[0])) setTimeout(() =>
+					updateExpedient(modelName(founded_vins[0]), "model")
 				)
 			}
 		}
@@ -137,6 +142,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 								autoFormat={['allCapital']}
 								suggestions={vinSuggestions()}
 								placeholder='VIN'
+								validate={verifyVIN}
 								value={expedient().vin}
 								onChange={data => updateExpedient(data, "vin")}
 							/>

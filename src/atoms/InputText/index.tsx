@@ -1,4 +1,4 @@
-import { createSignal, For, onMount } from "solid-js"
+import { createEffect, createSignal, For, on, onMount } from "solid-js"
 import { bindKey } from "../../utils/bindKey"
 import { FadeoutShow } from "../FadeoutShow"
 import style from "./InputText.module.sass"
@@ -11,6 +11,7 @@ type Props = {
 	charRegex?: RegExp,
 	maxLen?: number,
 	noStyle?: boolean,
+	validate?: (text: string) => boolean,
 	selectOnFocus?: boolean,
 	suggestions?: string[]
 }
@@ -58,6 +59,7 @@ export default function InputText(props: Props) {
 			})
 		}
 		props.onChange?.(input.value)
+		validate()
 		// requestAnimationFrame(() => 
 		setShowSuggestions(input.value.length > 0)
 	}
@@ -68,7 +70,6 @@ export default function InputText(props: Props) {
 		if (props.selectOnFocus) event.target.select()
 	}
 
-	if (props.value) props.onChange?.(props.value)
 
 	const onMouseDown = (event: MouseEvent) => {
 		if (event.button == 2) event.preventDefault()
@@ -85,6 +86,18 @@ export default function InputText(props: Props) {
 		}
 	}))
 
+	const validate = () => {
+		input.classList.remove(style.error)
+		if (props.validate && !props.validate(input.value.trim())) {
+			input.classList.add(style.error)
+			console.log("Validate ERROR")
+		}
+	}
+
+	if (props.value) {
+		props.onChange?.(props.value)
+		createEffect(on(() => props.value, validate))
+	}
 
 	// Input have to be inside a div to be detected when window.getSelection() on ctrl+z
 	return <div class={style.container}>
