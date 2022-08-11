@@ -139,7 +139,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 						/>
 						<div class={style.vin_expand_more}>
 							<InputText
-								autoFormat={['allCapital']}
+								autoFormat={['allCapital', 'confusingLettersToNumbers']}
 								suggestions={vinSuggestions()}
 								placeholder='VIN'
 								validate={verifyVIN}

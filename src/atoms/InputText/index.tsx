@@ -7,7 +7,8 @@ type Props = {
 	placeholder?: string,
 	value?: string,
 	onChange?: (data: string) => void,
-	autoFormat?: ("startWordCapital" | "firstCapital" | "allCapital" | "spaceAfterNumber")[]
+	autoFormat?: ("startWordCapital" | "firstCapital" | "allCapital"
+		| "spaceAfterNumber" | "confusingLettersToNumbers")[]
 	charRegex?: RegExp,
 	maxLen?: number,
 	noStyle?: boolean,
@@ -54,6 +55,11 @@ export default function InputText(props: Props) {
 						arroundCursor[1].match(/[a-zA-Z]/)) {
 						cursorOffset -= 1
 					}
+				} if (props.autoFormat.includes("confusingLettersToNumbers")) {
+					input.value = input.value
+						.replaceAll(/q/ig, "9")
+						.replaceAll(/o/ig, "0")
+						.replaceAll(/i/ig, "1")
 				}
 				return input.value.length - initialValueLength
 			})

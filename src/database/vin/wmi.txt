@@ -1,4 +1,4 @@
-AAV	Volkswagen South Africa
+AAV	Vw South Africa
 AC5	Hyundai South Africa
 ADD	Hyundai South Africa
 AFA	Ford South Africa
@@ -82,7 +82,7 @@ LFB	FAW, China (busses)
 LFG	Taizhou Chuanl Motorcycle Manufacturing
 LFP	FAW, China (passenger vehicles)
 LFT	FAW, China (trailers)
-LFV	FAW-Volkswagen, China
+LFV	FAW-Vw, China
 LFW	FAW JieFang, China
 LFY	Changshu Light Motorcycle Factory
 LGB	Dong Feng (DFM), China
@@ -101,7 +101,7 @@ LPS	Polestar (Volvo) (Sweden)
 LRW	Tesla, Inc. (Gigafactory Shanghai)
 LSG	Shanghai General Motors, China
 LSJ	MG Motor UK Limited - SAIC Motor, Shanghai, China
-LSV	Shanghai Volkswagen, China
+LSV	Shanghai Vw, China
 LSY	Brilliance Zhonghua
 LTP	National Electric Vehicle Sweden AB (NEVS)
 LTV	Toyota Tian Jin
@@ -146,7 +146,7 @@ MD2	Bajaj Auto
 MD9	Shuttle Cars India
 MEC	Daimler India Commercial Vehicles
 MEE	Renault India
-MEX	Volkswagen India
+MEX	Vw India
 MHF	Toyota Indonesia
 MHR	Honda Indonesia
 MLC	Suzuki Thailand
@@ -286,7 +286,7 @@ VTL	Yamaha Spain (motorcycles)
 VTT	Suzuki Spain (motorcycles)
 VV9	TAURO Spain
 VWA	Nissan Spain
-VWV	Volkswagen Spain
+VWV	Vw Spain
 VX1	Zastava / Yugo Serbia
 WAG	Neoplan
 WAU	Audi
@@ -318,11 +318,11 @@ W09	RUF
 W0L	Opel
 W0V	Opel (since 2017)
 WUA	Audi Sport GmbH (formerly quattro GmbH)
-WVG	Volkswagen MPV/SUV
-WVW	Volkswagen
-WV1	Volkswagen Commercial Vehicles
-WV2	Volkswagen Bus/Van
-WV3	Volkswagen Trucks
+WVG	Vw MPV/SUV
+WVW	Vw
+WV1	Vw Commercial Vehicles
+WV2	Vw Bus/Van
+WV3	Vw Trucks
 XLB	Volvo (NedCar)
 XLE	Scania Netherlands
 XLR	DAF (trucks)
@@ -339,14 +339,14 @@ XTU	Trolza (Russia)
 XTY	LiAZ (Russia)
 XUF	General Motors Russia
 XUU	AvtoTor (Russia, General Motors SKD)
-XW8	Volkswagen Group Russia
+XW8	Vw Group Russia
 XWB	UZ-Daewoo (Uzbekistan)
 XWE	AvtoTor (Russia, Hyundai-Kia SKD)
 X1M	PAZ (Russia)
 X4X	AvtoTor (Russia, BMW SKD)
 X7L	Renault AvtoFramos (Russia)
 X7M	Hyundai TagAZ (Russia)
-YBW	Volkswagen Belgium
+YBW	Vw Belgium
 YB1	Volvo Trucks Belgium
 YCM	Mazda Belgium
 YE2	Van Hool (buses)
@@ -435,7 +435,7 @@ Z8M	Marussia (Russia)
 1P3	Plymouth USA
 1PY	John Deere USA
 1R9	Roadrunner Hay Squeeze USA
-1VW	Volkswagen USA
+1VW	Vw USA
 1XK	Kenworth USA
 1XP	Peterbilt USA
 1YV	Mazda USA (AutoAlliance International)
@@ -470,8 +470,8 @@ Z8M	Marussia (Russia)
 2P3	Plymouth Canada
 2T	Toyota Canada
 2TP	Triple E Canada LTD
-2V4	Volkswagen Canada
-2V8	Volkswagen Canada
+2V4	Vw Canada
+2V8	Vw Canada
 2WK	Western Star
 2WL	Western Star
 2WM	Western Star
@@ -491,7 +491,7 @@ Z8M	Marussia (Russia)
 3NS	Polaris Industries USA
 3NE	Polaris Industries USA
 3P3	Plymouth Mexico
-3VW	Volkswagen Mexico
+3VW	Vw Mexico
 46J	Federal Motors Inc. USA
 4EN	Emergency One USA
 4F	Mazda USA
@@ -541,7 +541,7 @@ Z8M	Marussia (Russia)
 8AJ	Toyota Argentina
 8AK	Suzuki Argentina
 8AP	Fiat Argentina
-8AW	Volkswagen Argentina
+8AW	Vw Argentina
 8A1	Renault Argentina
 8GD	Peugeot Chile
 8GG	Chevrolet Chile
@@ -562,6 +562,6 @@ Z8M	Marussia (Russia)
 9BM	Mercedes-Benz Brazil
 9BR	Toyota Brazil
 9BS	Scania Brazil
-9BW	Volkswagen Brazil
+9BW	Vw Brazil
 9FB	Renault Colombia
 9GA	Chevrolet Colombia
