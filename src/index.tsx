@@ -3,6 +3,7 @@ import { databaseError } from './database'
 import { saveDatabase } from './database/databaseState'
 import './globalStyle/index.sass'
 import ErrorPanel from './pages/ErrorPanel'
+import { showUpdatePanel, UpdatePanel } from './pages/UpdatePanel'
 import TabSystem from './templates/TabSystem'
 import WindowButtons from './templates/WindowButtons'
 
@@ -10,7 +11,8 @@ function App() {
     return <>
         <WindowButtons />
         {
-            databaseError() ? <ErrorPanel /> : <TabSystem />
+            showUpdatePanel() ? <UpdatePanel /> :
+                (databaseError() ? <ErrorPanel /> : <TabSystem />)
         }
     </>
 }

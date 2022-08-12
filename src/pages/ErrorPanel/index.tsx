@@ -3,7 +3,7 @@ import { databaseError } from "../../database"
 import style from "./ErrorPanel.module.sass"
 
 export default function ErrorPanel() {
-	return <div class={style.container}  data-tauri-drag-region>
+	return <div class={style.container} data-tauri-drag-region>
 		<div class={style.panel}>
 			{
 				databaseError().error &&
