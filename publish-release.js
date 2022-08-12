@@ -40,7 +40,7 @@ const version_report = {
 	version,
 	pub_date: new Date().toISOString(),
 	platforms: {
-		"windows-x64": {
+		"windows-x86_64": {
 			signature,
 			url: `https://raw.githubusercontent.com/otcova/archive/main${artifact_path}`
 		}
