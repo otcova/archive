@@ -8,7 +8,7 @@
     "check": "tsc --project tsconfig.json --noEmit",
     "d": "tauri dev",
     "dev": "tauri dev",
-    "build": "tauri build",
+    "build": "set /P TAURI_PRIVATE_KEY=<private/tauri.key && tauri build && node publish-release.js",
     "test": "cd src-tauri && cargo test"
   },
   "license": "MIT",

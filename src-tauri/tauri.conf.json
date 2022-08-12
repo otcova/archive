@@ -1,75 +1,80 @@
 {
-  "$schema": "..\\node_modules/@tauri-apps/cli\\schema.json",
-  "build": {
-    "beforeBuildCommand": "pnpm frontend-build",
-    "beforeDevCommand": "pnpm frontend-dev",
-    "devPath": "http://localhost:3000",
-    "distDir": "../dist"
-  },
-  "package": {
-    "productName": "archive",
-    "version": "1.0.4"
-  },
-  "tauri": {
-    "allowlist": {
-      "fs": {
-        "scope": [
-          "$DOCUMENT/Archive",
-          "$DOCUMENT/Archive/*"
-        ]
-      },
-      "all": true
-    },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "dev.otcova.archive",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [],
-      "shortDescription": "",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      }
-    },
-    "security": {
-      "csp": null
-    },
-    "updater": {
-      "active": false
-    },
-    "windows": [
-      {
-        "title": "Archive",
-        "minWidth": 800,
-        "minHeight": 500,
-        "width": 1000,
-        "height": 700,
-        "resizable": true,
-        "fullscreen": false,
-        "decorations": false
-      }
-    ]
-  }
+	"$schema": "..\\node_modules/@tauri-apps/cli\\schema.json",
+	"build": {
+		"beforeBuildCommand": "pnpm frontend-build",
+		"beforeDevCommand": "pnpm frontend-dev",
+		"devPath": "http://localhost:3000",
+		"distDir": "../dist"
+	},
+	"package": {
+		"productName": "archive",
+		"version": "1.0.5"
+	},
+	"tauri": {
+		"allowlist": {
+			"fs": {
+				"scope": [
+					"$DOCUMENT/Archive",
+					"$DOCUMENT/Archive/*"
+				]
+			},
+			"all": true
+		},
+		"bundle": {
+			"active": true,
+			"category": "DeveloperTool",
+			"copyright": "",
+			"deb": {
+				"depends": []
+			},
+			"externalBin": [],
+			"icon": [
+				"icons/32x32.png",
+				"icons/128x128.png",
+				"icons/128x128@2x.png",
+				"icons/icon.icns",
+				"icons/icon.ico"
+			],
+			"identifier": "dev.otcova.archive",
+			"longDescription": "",
+			"macOS": {
+				"entitlements": null,
+				"exceptionDomain": "",
+				"frameworks": [],
+				"providerShortName": null,
+				"signingIdentity": null
+			},
+			"resources": [],
+			"shortDescription": "",
+			"targets": "all",
+			"windows": {
+				"certificateThumbprint": null,
+				"digestAlgorithm": "sha256",
+				"timestampUrl": ""
+			}
+		},
+		"security": {
+			"csp": null
+		},
+		"updater": {
+			"active": true,
+			"endpoints": [
+				"https://releases.myapp.com/{{target}}/{{current_version}}"
+			],
+			"dialog": true,
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFFRkU4RTVDNzg1MEJGRjEKUldUeHYxQjRYSTcrcmlUWXphVXlyZ0pJaU8yUWxxamI1UVdkQjFOb00zcnNqUUFhUTh1WnZpVnYK"
+		},
+		"windows": [
+			{
+				"title": "Archive",
+				"minWidth": 800,
+				"minHeight": 500,
+				"width": 1000,
+				"height": 700,
+				"resizable": true,
+				"fullscreen": false,
+				"decorations": false
+			}
+		]
+	}
 }
