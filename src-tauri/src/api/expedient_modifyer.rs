@@ -40,3 +40,21 @@ pub fn read_expedient(state: tauri::State<ApiState>, id: Uid) -> Option<Expedien
         None
     }
 }
+
+#[tauri::command]
+pub fn count_expedients(state: tauri::State<ApiState>) -> usize {
+    if let Some(database) = state.database_mutex.lock().unwrap().as_mut() {
+        database.count_expedients()
+    } else {
+        0
+    }
+}
+
+#[tauri::command]
+pub fn count_orders(state: tauri::State<ApiState>) -> usize {
+    if let Some(database) = state.database_mutex.lock().unwrap().as_mut() {
+        database.count_orders()
+    } else {
+        0
+    }
+}

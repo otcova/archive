@@ -58,6 +58,18 @@ impl<'a> ExpedientDatabase<'a> {
         ChunkedDatabase::<Expedient>::rollback_info(path)
     }
 
+    pub fn count_expedients(&self) -> usize {
+        self.database.read().unwrap().len()
+    }
+    pub fn count_orders(&self) -> usize {
+        self.database
+            .read()
+            .unwrap()
+            .iter_all()
+            .map(|(_, expedient)| expedient.orders.len())
+            .sum()
+    }
+
     pub fn read_expedient(&self, id: Uid) -> Option<Expedient> {
         self.database
             .read()

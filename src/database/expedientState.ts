@@ -16,3 +16,11 @@ export async function deleteExpedient(id: ExpedientId) {
 export async function readExpedient(id: ExpedientId): Promise<Expedient | undefined> {
 	return await invoke("read_expedient", { id }) as Expedient | undefined
 }
+
+export async function countExpedients(): Promise<number> {
+	return await invoke("count_expedients")
+}
+
+export async function countOrders(): Promise<number> {
+	return await invoke("count_orders")
+}

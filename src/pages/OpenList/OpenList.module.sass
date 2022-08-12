@@ -1,0 +1,25 @@
+@use '../../globalStyle/theme'
+@use '../../globalStyle/layout'
+
+.satisfaction_container
+	@include layout.column
+	@include layout.grow
+	font-size: 30px
+	color: #888
+	width: 100%
+	height: 100%
+	gap: 40px
+
+.row
+	@include layout.row
+	gap: 20px
+
+.left, .right
+	font-size: 20px
+	gap: 10px
+
+.left
+	@include layout.column-left
+
+.right
+	@include layout.column-right

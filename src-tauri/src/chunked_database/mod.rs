@@ -86,6 +86,10 @@ impl<T: Item + Send + Sync> ChunkedDatabase<T> {
         iter.map(|item| (Uid::ANCIENT(item.id), item.data))
     }
 
+    pub fn iter_all<'a>(&'a self) -> impl Iterator<Item = (Uid, &'a T)> + 'a {
+        self.iter().chain(self.iter_ancient())
+    }
+
     pub fn delete(&mut self, id: Uid) {
         match id {
             Uid::DYNAMIC(id) => self.dynamic.delete(id),
