@@ -5,10 +5,10 @@
   "scripts": {
     "frontend-dev": "vite",
     "frontend-build": "vite build",
-    "check": "tsc --project tsconfig.json --noEmit",
     "d": "tauri dev",
-    "dev": "tauri dev",
-    "build": "set /P TAURI_PRIVATE_KEY=<private/tauri.key && tauri build && node publish-release.js",
+    "build": "set /P TAURI_PRIVATE_KEY=<private/tauri.key && tauri build",
+    "publish": "pnpm build && node publish-release.js",
+    "check": "tsc --project tsconfig.json --noEmit",
     "test": "cd src-tauri && cargo test"
   },
   "license": "MIT",
