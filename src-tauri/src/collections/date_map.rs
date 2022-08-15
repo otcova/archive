@@ -6,8 +6,6 @@ pub struct UtcDate {
     timespan: i64,
 }
 
-pub type DayHash = i32;
-
 impl UtcDate {
     pub fn ymdh(year: i32, month: u32, day: u32, hour: u32) -> Self {
         let date = Utc.ymd(year, month, day).and_hms(hour, 0, 0);

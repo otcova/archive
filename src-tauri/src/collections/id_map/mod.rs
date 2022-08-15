@@ -118,22 +118,6 @@ impl<T> IdMap<T> {
             index: 0,
         }
     }
-
-    pub fn take_into_iter<'a>(&mut self) -> impl Iterator<Item = T> {
-        self.empty_indexes = vec![];
-        let data = std::mem::replace(&mut self.data, vec![]);
-        data.into_iter().filter_map(|mut item| item.take())
-    }
-}
-
-impl<T: Clone + Send + Sync> IdMap<T> {
-    pub fn clone_data(&self, id: Id) -> Option<T> {
-        if self.exists(id) {
-            self.data[id.index].clone_data()
-        } else {
-            None
-        }
-    }
 }
 
 pub struct IdMapIter<'a, T> {
@@ -336,23 +320,6 @@ mod test {
         assert_eq!(*map.get_ref(id_a).unwrap(), 2);
         assert_eq!(*map.get_ref(id_b).unwrap(), 2314);
         assert_eq!(*map.get_ref(id_c).unwrap(), 14);
-
-        assert_eq!(map.len(), 3);
-    }
-
-    #[test]
-    fn clone_updated_pushed_items() {
-        let mut map = IdMap::<i32>::default();
-
-        let id_a = map.push(2);
-        let id_b = map.push(5325);
-        let id_c = map.push(14);
-
-        map.update(id_b, 2314);
-
-        assert_eq!(map.clone_data(id_a).unwrap(), 2);
-        assert_eq!(map.clone_data(id_b).unwrap(), 2314);
-        assert_eq!(map.clone_data(id_c).unwrap(), 14);
 
         assert_eq!(map.len(), 3);
     }

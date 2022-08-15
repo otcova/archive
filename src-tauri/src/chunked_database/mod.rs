@@ -22,15 +22,6 @@ pub enum Uid {
     ANCIENT(chunk::Id),
 }
 
-impl Uid {
-    pub fn is_ancient(&self) -> bool {
-        match self {
-            Self::DYNAMIC(_) => false,
-            Self::ANCIENT(_) => true,
-        }
-    }
-}
-
 #[derive(Debug)]
 pub struct ChunkedDatabase<T: Item + Send + Sync> {
     dynamic: Chunk<T>,
@@ -212,19 +203,5 @@ mod test {
         assert_eq!(4, db.len());
         assert_eq!(2, db.iter().count());
         assert_eq!(2, db.iter_ancient().count());
-    }
-
-    #[test]
-    fn uid_is_ancient() {
-        assert!(!Uid::DYNAMIC(Id {
-            index: 123,
-            identifier: 21
-        })
-        .is_ancient());
-        assert!(Uid::ANCIENT(Id {
-            index: 2,
-            identifier: 123
-        })
-        .is_ancient());
     }
 }

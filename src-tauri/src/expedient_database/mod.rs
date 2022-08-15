@@ -94,9 +94,6 @@ impl<'a> ExpedientDatabase<'a> {
         self.database.write().unwrap().delete(id);
         self.dispatch_change();
     }
-    pub fn merge_expedient(&self, _id_a: Uid, _id_b: Uid) {
-        todo!()
-    }
 
     pub fn save(&mut self) -> Result<()> {
         self.database.write().unwrap().save()?;

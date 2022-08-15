@@ -32,12 +32,6 @@ pub enum OrderState {
 }
 
 impl Expedient {
-    pub fn vin_is_complete(&self) -> bool {
-        self.vin.len() >= 17
-    }
-    pub fn license_is_complete(&self) -> bool {
-        self.license_plate.len() >= 7
-    }
     pub fn newest_date(&self) -> UtcDate {
         self.orders
             .iter()
