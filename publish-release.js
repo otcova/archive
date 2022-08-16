@@ -49,7 +49,7 @@ const version_report = {
 try { fs.writeFileSync("./releases/version_report.json", JSON.stringify(version_report, null, "\t")) }
 catch (error) { exitWithError("could not write version_report.json because: " + error) }
 
-////////////  Increasing Version  /////////////////////////////////////////////////
+////////////  Increase Version  /////////////////////////////////////////////////
 
 let [major, median, minor] = config.package?.version.split(".").map(n => Number(n))
 if (Number.isNaN(major) || Number.isNaN(median) || Number.isNaN(minor))
@@ -61,7 +61,21 @@ config.package.version = new_version
 try { fs.writeFileSync("./src-tauri/tauri.conf.json", JSON.stringify(config, null, "\t")) }
 catch (error) { exitWithError("could not write to tauri.conf.json because: " + error) }
 
-////////////  Clean artifacts from target/bundle  /////////////////////////////////////////////////
+////////////  Clean artifacts from target/bundle  /////////////////////////////////////
 
 try { fs.rmSync("./src-tauri/target/release/bundle", { recursive: true, force: true }) }
 catch (error) { exitWithError("could not clean releases because: " + error) }
+
+
+///////////  Publish new version on Git /////////////////////////////////////////////// 
+
+const { execSync } = require("child_process");
+
+try { execSync("git add .") }
+catch(error) { exitWithError("could not 'git add .' because: " + error) }
+
+try { execSync(`git commit -m "release v${version}"`) }
+catch(error) { exitWithError("could not 'git add .' because: " + error) }
+
+try { execSync("git push") }
+catch(error) { exitWithError("could not 'git add .' because: " + error) }
