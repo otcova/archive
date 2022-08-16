@@ -7,7 +7,7 @@
     "frontend-build": "vite build",
     "d": "tauri dev",
     "build": "set /P TAURI_PRIVATE_KEY=<private/tauri.key && tauri build",
-    "publish": "pnpm build && node publish-release.js",
+    "release": "pnpm build && node publish-release.js",
     "check": "tsc --project tsconfig.json --noEmit",
     "test": "cd src-tauri && cargo test"
   },
