@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, on, Show } from 'solid-js'
+import { createEffect, createSignal, For, on, Show, untrack } from 'solid-js'
 import Button from '../../atoms/Button'
 import InputText from '../../atoms/InputText'
 import InputTextArea from '../../atoms/InputTextArea'
@@ -77,15 +77,21 @@ export default function ExpedientEditor({ expedientId }: Props) {
 			), x => x[1])
 			let unique_items = new Set(founded_vins)
 			if (unique_items.size == 1) {
-				setTimeout(() =>
-					updateExpedient(founded_vins[0], "vin")
-				)
-				if (!expedient()?.model && modelName(founded_vins[0])) setTimeout(() =>
-					updateExpedient(modelName(founded_vins[0]), "model")
-				)
+				updateExpedient(founded_vins[0], "vin")
 			}
 		}
 	}
+	
+	let pastVin = null;
+	createEffect(() => {
+		if (expedient() && expedient().vin !== pastVin) {
+			if (pastVin != null && !untrack(() => expedient().model)) {
+				let suggestedModel = modelName(expedient().vin)
+				if (suggestedModel) updateExpedient(suggestedModel, "model")
+			}
+			pastVin = expedient().vin
+		}
+	})
 
 	// const [similarsList, setSimilarsHookOptions] = createHook("list_expedients", {
 	// 	filter: expedient(),
