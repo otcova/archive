@@ -43,13 +43,13 @@ export default function OpenList() {
 		}
 	})
 
-	return <Show when={urgentList()?.length || todoList()?.length}
-		fallback={SatisfactionFallback}>
-		<OrderList orderList={() =>
-			[...lableOrderListByDate(urgentList()), ...lableOrderListByDate(todoList())]
-		} />
-	</ Show>
-
+	return <Show when={urgentList() && todoList()}>
+		<Show when={urgentList()?.length || todoList()?.length} fallback={SatisfactionFallback}>
+			<OrderList orderList={() =>
+				[...lableOrderListByDate(urgentList()), ...lableOrderListByDate(todoList())]
+			} />
+		</ Show>
+	</Show>
 }
 
 function SatisfactionFallback() {
