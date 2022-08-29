@@ -28,8 +28,8 @@ JH5	Honda Motor
 2HH	Acura Honda Canada
 2HN	Acura Honda Canada
 2HU	Acura Honda Truck Canada
-3HG	Honda México
-3H1	Honda Motorcycle México
+3HG	Honda Mexico
+3H1	Honda Motorcycle Mexico
 478	Honda All-Terrain America
 5J6	Honda America
 5J7	Honda Truck America
@@ -43,7 +43,7 @@ JH5	Honda Motor
 5FS	Acura Honda Truck USA-Alabama
 7FA	Honda America
 8CH	Honda Motor Motorcycle Argentina
-9C2	Moto Honda Motorcycle Amazônia.
+9C2	Moto Honda Motorcycle Amazonia.
 JK	Kawasaki (motorcycles)
 JL5	Mitsubishi Fuso
 JM1	Mazda
@@ -169,17 +169,17 @@ MRH	Honda Thailand
 MR0	Toyota Thailand
 MS0	SSS MOTORS Myanmar
 MS3	Suzuki Myanmar Motor Co.,Ltd.
-NLA	Honda Türkiye
-NLE	Mercedes-Benz Türk Truck
+NLA	Honda Turkiye
+NLE	Mercedes-Benz Turk Truck
 NLH	Hyundai Assan
 NLN	Karsan
 NLR	OTOKAR
 NLT	TEMSA
-NMB	Mercedes-Benz Türk Buses
+NMB	Mercedes-Benz Turk Buses
 NMC	BMC
 NM0	Ford Turkey
-NM4	Tofaş Türk
-NMT	Toyota Türkiye
+NM4	Tofaş Turk
+NMT	Toyota Turkiye
 NNA	Isuzu Turkey
 PE1	Ford Philippines
 PE3	Mazda Philippines
@@ -264,7 +264,7 @@ VF2	Renault
 VF3	Peugeot
 VF4	Talbot
 VF6	Renault (Trucks & Buses)
-VF7	Citroën
+VF7	Citroen
 VF8	Matra
 VF9	Bugatti
 VG5	MBK (motorcycles)
@@ -279,7 +279,7 @@ VSK	Nissan Spain
 VSS	SEAT
 VSX	Opel Spain
 VS6	Ford Spain
-VS7	Citroën Spain
+VS7	Citroen Spain
 VS9	Carrocerias Ayats (Spain)
 VTH	Derbi (motorcycles)
 VTL	Yamaha Spain (motorcycles)
@@ -305,7 +305,7 @@ WEB	Evobus GmbH (Mercedes-Bus)
 WJM	Iveco Magirus
 WF0	Ford Germany
 WKE	Fahrzeugwerk Bernard Krone (truck trailers)
-WKK	Kässbohrer/Setra
+WKK	Kassbohrer/Setra
 WMA	MAN Germany
 WME	smart
 WMW	MINI
@@ -546,7 +546,7 @@ Z8M	Marussia (Russia)
 8GD	Peugeot Chile
 8GG	Chevrolet Chile
 8LD	Chevrolet Ecuador
-935	Citroën Brazil
+935	Citroen Brazil
 936	Peugeot Brazil
 92H	Origem Brazil
 93H	Honda Brazil
