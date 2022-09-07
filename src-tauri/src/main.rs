@@ -1,9 +1,4 @@
-#![feature(
-    thread_spawn_unchecked,
-    thread_is_running,
-    bool_to_option,
-    iter_intersperse
-)]
+#![feature(thread_spawn_unchecked)]
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
