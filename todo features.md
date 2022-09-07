@@ -13,6 +13,7 @@ will be merge without user confirmation.
 
 # Additional
 
+- Escape full list to delete filters
 - Link pending -> done with Gaudi list
 - Store backups on a diferent drive
 - User panel/tab to change user on multiple expedients at once
@@ -20,4 +21,6 @@ will be merge without user confirmation.
 - Change max date on order list
 - focus expedient insted of opening twice
 
+# Fixes / Upgrades
 
+- Better Paste (ctrl + V) on TextArea
