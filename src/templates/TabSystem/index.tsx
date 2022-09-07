@@ -3,8 +3,8 @@ import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
 import IconButton from '../../atoms/IconButton'
 import { createExpedient } from '../../database/expedientState'
 import { newBlankExpedient } from '../../database/types'
-import DoneList from '../../pages/DoneList'
 import ExpedientEditor from '../../pages/ExpedientEditor'
+import FullList from '../../pages/FullList'
 import OpenList from '../../pages/OpenList'
 import PendingList from '../../pages/PendingList'
 import { bindKey, Key } from '../../utils/bindKey'
@@ -32,7 +32,7 @@ export default function TabSystem() {
 	const staticTabs = [
 		{ name: "", componentClass: OpenList, props: {} },
 		{ name: "", componentClass: PendingList, props: {} },
-		{ name: <StaticCheckbox state={"Done"} />, componentClass: DoneList, props: {} },
+		{ name: <StaticCheckbox state={"Done"} />, componentClass: FullList, props: {} },
 	]
 
 	const [tabs, setTabs] = createSignal<Tab[]>([...staticTabs])

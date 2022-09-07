@@ -4,9 +4,9 @@ import { utcDateFuture } from '../../database/date'
 import { createHook } from '../../database/expedientHook'
 import OrderList, { lableOrderListByDate } from '../../templates/OrderList'
 import { bindKey } from '../../utils/bindKey'
-import style from "./DoneList.module.sass"
+import style from "./FullList.module.sass"
 
-export default function DoneList() {
+export default function FullList() {
 
 	const [inputVIN, setInputVin] = createSignal<string>("")
 	const [inputUser, setInputUser] = createSignal<string>("")
@@ -17,10 +17,10 @@ export default function DoneList() {
 		from_date: utcDateFuture(),
 		max_list_len: 70,
 		show_done: true,
-		show_todo: false,
-		show_awaiting: false,
-		show_instore: false,
-		show_urgent: false,
+		show_todo: true,
+		show_awaiting: true,
+		show_instore: true,
+		show_urgent: true,
 	})
 
 	createEffect(() => {
