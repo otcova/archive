@@ -23,4 +23,3 @@ will be merge without user confirmation.
 
 # Fixes / Upgrades
 
-- Better Paste (ctrl + V) on TextArea

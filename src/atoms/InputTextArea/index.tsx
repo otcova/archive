@@ -28,11 +28,29 @@ export default function InputTextArea(props: Props) {
 		editableDiv.addEventListener('paste', (event) => {
 			event.preventDefault()
 			let paste = paste_format(event.clipboardData.getData("text"))
-			const selection = window.getSelection()
+			
+			if (!getSelection().rangeCount) return
+			const range = getSelection().getRangeAt(0)
+			// if select multiple lines
+			if (range.startContainer.parentElement != range.endContainer.parentElement) {
+				// if first line is empty delete the line
+				if (range.startContainer.parentElement.innerText.length == range.startOffset) {
+					range.startContainer.parentElement.remove()
+				}
+				// if last line is empty delete the line
+				if (range.endContainer.parentElement.innerText.length == range.endOffset) {
+					range.endContainer.parentElement.remove()
+				}
+			}
+			getSelection().deleteFromDocument()
+			moveCaretPositionToChildren(editableDiv)
+			scopeCaretPosition(format)
+
+			const selection = getSelection()
 			if (!selection.rangeCount) return
-			selection.deleteFromDocument()
 			selection.getRangeAt(0).insertNode(document.createTextNode(paste))
 			selection.collapseToEnd()
+			scopeCaretPosition(format)
 		})
 
 		createEffect(() => {
@@ -80,7 +98,6 @@ function paste_format(text: string): string {
 }
 
 function format_textarea(element: HTMLElement, placeholder: string) {
-
 	merge_inline_elements(element)
 	wrap_text_inside_span(element)
 	merge_inline_elements(element)
@@ -136,6 +153,9 @@ function format_textarea(element: HTMLElement, placeholder: string) {
 		(element.children[0] as HTMLElement).innerText == "")) {
 		placeholder = placeholder.replaceAll("'", "\\'")
 		element.innerHTML = `<div class="${style.placeholder}" data-placeholder='${placeholder}'></div>`
+
+		moveCaretPositionToChildren(element);
+
 		return
 	}
 }
@@ -207,4 +227,39 @@ function group_into_fragment(nodes) {
 
 function readInnerText(element: Element): string {
 	return [...element.children].map(line => line.textContent).join("\n")
+}
+
+
+declare global {
+	interface Window {
+		find: (text: string) => void
+	}
+}
+
+function scopeCaretPosition(scope) {
+	const cursorUUID = `🖱${Math.random()}${Date()}🖱`
+
+	const selection = window.getSelection()
+	if (!selection.rangeCount) return scope()
+	const range = selection.getRangeAt(0)
+	range.insertNode(document.createTextNode(cursorUUID))
+
+	scope()
+
+	window.find(cursorUUID)
+	window.getSelection().deleteFromDocument()
+}
+
+function moveCaretPositionToChildren(element: Element) {
+	const selection = getSelection()
+	if (selection.rangeCount) {
+		const range = selection.getRangeAt(0)
+		if (range.commonAncestorContainer == element) {
+			selection.removeRange(range)
+			const newRange = new Range()
+			newRange.setStart(element.children[0], 0)
+			newRange.setEnd(element.children[0], 0)
+			selection.addRange(newRange)
+		}
+	}
 }
