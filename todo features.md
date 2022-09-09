@@ -13,7 +13,6 @@ will be merge without user confirmation.
 
 # Additional
 
-- Escape full list to delete filters
 - Link pending -> done with Gaudi list
 - Store backups on a diferent drive
 - User panel/tab to change user on multiple expedients at once
