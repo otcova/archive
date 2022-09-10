@@ -13,8 +13,9 @@ will be merge without user confirmation.
 
 # Additional
 
+- Restore old Version (usefull if an actualization has breaking changes)
 - Link pending -> done with Gaudi list
-- Store backups on a diferent drive
+- Store backups on a diferent drive or path
 - User panel/tab to change user on multiple expedients at once
 - Similar panel with merge option
 - Change max date on order list
