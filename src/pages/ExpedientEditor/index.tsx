@@ -43,23 +43,28 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	createEffect(on(expedient, updateTabName, { defer: true }))
 
 	const updateExpedient = (data, path: keyof Expedient) => {
-		const exp: Expedient = JSON.parse(JSON.stringify(expedient()))
-		if (exp[path] == data) return
-		exp[path] = data
-		setExpedient(exp)
+		setExpedient(oldExpedient => {
+			const expedient: Expedient = JSON.parse(JSON.stringify(oldExpedient))
+			console.log(path, "<-", data)
+			expedient[path] = data
+			return expedient
+		})
 	}
 
 	const updateOrder = (data, index: number, path: keyof Order) => {
-		const exp: Expedient = JSON.parse(JSON.stringify(expedient()))
-		if (exp.orders[index][path] == data) return
-		exp.orders[index][path] = data
-		setExpedient(exp)
+		setExpedient(oldExpedient => {
+			const expedient: Expedient = JSON.parse(JSON.stringify(oldExpedient))
+			expedient.orders[index][path] = data
+			return expedient
+		})
 	}
 
 	const createOrder = () => {
-		const exp: Expedient = JSON.parse(JSON.stringify(expedient()))
-		exp.orders.push(newBlankOrder())
-		setExpedient(exp)
+		setExpedient(oldExpedient => {
+			const expedient: Expedient = JSON.parse(JSON.stringify(oldExpedient))
+			expedient.orders.push(newBlankOrder())
+			return expedient
+		})
 	}
 
 	const deleteExpedientResponse = (confirmedAction) => {
