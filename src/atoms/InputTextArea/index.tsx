@@ -51,6 +51,7 @@ export default function InputTextArea(props: Props) {
 			selection.getRangeAt(0).insertNode(document.createTextNode(paste))
 			selection.collapseToEnd()
 			scopeCaretPosition(format)
+			updateData()
 		})
 
 		createEffect(() => {
