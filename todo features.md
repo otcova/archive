@@ -1,5 +1,7 @@
 # Fundamental
 
+## Create Expedient from filter
+
 ## Similars Panel
 On the expedient editor,
 it will be posible to open a list
@@ -20,6 +22,6 @@ will be merge without user confirmation.
 - Similar panel with merge option
 - Change max date on order list
 - focus expedient insted of opening twice
+- Escriure a la llista de gaudi el nom de usuari
 
 # Fixes / Upgrades
-
