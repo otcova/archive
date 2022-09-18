@@ -45,7 +45,6 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	const updateExpedient = (data, path: keyof Expedient) => {
 		setExpedient(oldExpedient => {
 			const expedient: Expedient = JSON.parse(JSON.stringify(oldExpedient))
-			console.log(path, "<-", data)
 			expedient[path] = data
 			return expedient
 		})

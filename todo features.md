@@ -23,4 +23,6 @@ will be merge without user confirmation.
 - focus expedient insted of opening twice
 - Escriure a la llista de gaudi el nom de usuari
 
+- License plate filter numbers + space + letters
+
 # Fixes / Upgrades

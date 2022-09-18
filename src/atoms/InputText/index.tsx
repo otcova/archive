@@ -29,6 +29,35 @@ export default function InputText(props: Props) {
 			event.preventDefault()
 	}
 
+	const format = () => {
+		maintainCursorPosition(input, (cursorPos: number) => {
+			let cursorOffset = 0
+			const initialValueLength = input.value.length
+			input.value = input.value.trimStart().replace(/\s+/g, " ")
+
+			if (props.autoFormat.includes("startWordCapital")) {
+				input.value = capitalizeFirstLetterOfWord(input.value)
+			} if (props.autoFormat.includes("firstCapital")) {
+				input.value = capitalizeFirstLetter(input.value)
+			} if (props.autoFormat.includes("allCapital")) {
+				input.value = input.value.toUpperCase()
+			} if (props.autoFormat.includes("spaceAfterNumber")) {
+				const arroundCursor = input.value.substring(cursorPos - 1, cursorPos + 1)
+				input.value = input.value.replace(/(?<=\d)(?=[a-zA-Z])/g, " ")
+				if (arroundCursor.length == 2 && arroundCursor[0].match(/\d/) &&
+					arroundCursor[1].match(/[a-zA-Z]/)) {
+					cursorOffset -= 1
+				}
+			} if (props.autoFormat.includes("confusingLettersToNumbers")) {
+				input.value = input.value
+					.replaceAll(/q/ig, "9")
+					.replaceAll(/o/ig, "0")
+					.replaceAll(/i/ig, "1")
+			}
+			return input.value.length - initialValueLength
+		})
+	}
+
 	let input: HTMLInputElement
 	const onInput = () => {
 		if (props.maxLen) {
@@ -36,34 +65,7 @@ export default function InputText(props: Props) {
 				input.value = input.value.slice(0, props.maxLen)
 			})
 		}
-		if (props.autoFormat) {
-			maintainCursorPosition(input, (cursorPos: number) => {
-				let cursorOffset = 0
-				const initialValueLength = input.value.length
-				input.value = input.value.trimStart().replace(/\s+/g, " ")
-
-				if (props.autoFormat.includes("startWordCapital")) {
-					input.value = capitalizeFirstLetterOfWord(input.value)
-				} if (props.autoFormat.includes("firstCapital")) {
-					input.value = capitalizeFirstLetter(input.value)
-				} if (props.autoFormat.includes("allCapital")) {
-					input.value = input.value.toUpperCase()
-				} if (props.autoFormat.includes("spaceAfterNumber")) {
-					const arroundCursor = input.value.substring(cursorPos - 1, cursorPos + 1)
-					input.value = input.value.replace(/(?<=\d)(?=[a-zA-Z])/g, " ")
-					if (arroundCursor.length == 2 && arroundCursor[0].match(/\d/) &&
-						arroundCursor[1].match(/[a-zA-Z]/)) {
-						cursorOffset -= 1
-					}
-				} if (props.autoFormat.includes("confusingLettersToNumbers")) {
-					input.value = input.value
-						.replaceAll(/q/ig, "9")
-						.replaceAll(/o/ig, "0")
-						.replaceAll(/i/ig, "1")
-				}
-				return input.value.length - initialValueLength
-			})
-		}
+		if (props.autoFormat) format()
 		props.onChange?.(input.value)
 		validate()
 		// requestAnimationFrame(() => 
@@ -104,6 +106,15 @@ export default function InputText(props: Props) {
 		props.onChange?.(props.value)
 		createEffect(on(() => props.value, validate))
 	}
+
+	// Initial format
+	onMount(() => {
+		if (props.autoFormat) {
+			let before = input.value
+			format()
+			if (before != input.value) props.onChange?.(input.value)
+		}
+	})
 
 	// Input have to be inside a div to be detected when window.getSelection() on ctrl+z
 	return <div class={style.container}>
