@@ -1,6 +1,5 @@
 # Fundamental
 
-## Create Expedient from filter
 
 ## Similars Panel
 On the expedient editor,

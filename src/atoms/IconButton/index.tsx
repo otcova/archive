@@ -1,8 +1,9 @@
-import { JSXElement, onCleanup, onMount } from "solid-js"
+import { JSXElement } from "solid-js"
 import { bindKey, KeyMap } from "../../utils/bindKey"
 import style from "./IconButton.module.sass"
 
-export type IconType = "folder" | "document" | "image" | "pdf" | "close" | "minimize" | "create"
+export type IconType = "folder" | "document" | "image" | "pdf"
+	| "close" | "minimize" | "create" | "create from filters"
 
 type Props = {
 	icon: IconType,
@@ -45,3 +46,4 @@ icons.set("image", () => <svg width="27" height="23" style="fill:#fff;stroke:#5c
 icons.set("close", () => <div class={style.close}></div>);
 icons.set("minimize", () => <div class={style.minimize}></div>);
 icons.set("create", () => <div class={style.create}></div>);
+icons.set("create from filters", () => <div class={style.create_from_filters}></div>);

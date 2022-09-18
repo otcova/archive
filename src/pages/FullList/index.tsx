@@ -1,9 +1,15 @@
 import { createEffect, createSignal, onMount } from 'solid-js'
+import IconButton from '../../atoms/IconButton'
 import InputText from '../../atoms/InputText'
 import { utcDateFuture } from '../../database/date'
 import { createHook } from '../../database/expedientHook'
+import { createExpedient } from '../../database/expedientState'
+import { newBlankExpedient } from '../../database/types'
+import { verifyVIN } from '../../database/vin/verify'
 import OrderList, { lableOrderListByDate } from '../../templates/OrderList'
+import { useTab } from '../../templates/TabSystem'
 import { bindKey } from '../../utils/bindKey'
+import ExpedientEditor from '../ExpedientEditor'
 import style from "./FullList.module.sass"
 
 export default function FullList() {
@@ -54,6 +60,18 @@ export default function FullList() {
 		})
 	)
 
+	const { createTab } = useTab()
+	const create_expedient_from_filters = async () => {
+		let expedient = newBlankExpedient()
+		expedient.user = inputUser()
+		if (inputVIN().length == 17 && verifyVIN(inputVIN())) expedient.vin = inputVIN()
+		else expedient.license_plate = inputVIN()
+		
+		createTab("Nou Expedient", ExpedientEditor, {
+			expedientId: await createExpedient(expedient)
+		})
+	}
+
 	return <>
 		<div class={style.input_row} ref={top_row}>
 			<div class={style.input_user}>
@@ -70,6 +88,7 @@ export default function FullList() {
 					onChange={setInputVin}
 				/>
 			</div>
+			<IconButton icon='create from filters' keyMap="Enter" action={create_expedient_from_filters} />
 		</div>
 		<OrderList orderList={() => [...lableOrderListByDate(orderList())]} />
 	</>
