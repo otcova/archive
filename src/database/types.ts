@@ -50,6 +50,20 @@ export function newBlankOrder(): Order {
 	}
 }
 
+export function expedientIsBlank(expedient: Expedient): boolean {
+	return expedient.vin == ""
+		&& expedient.description == ""
+		&& expedient.license_plate == ""
+		&& expedient.model == ""
+		&& expedient.user == ""
+		&& (expedient.orders.length == 0 ||
+			(expedient.orders.length == 1 && orderIsBlank(expedient.orders[0])))
+}
+
+export function orderIsBlank(order: Order): boolean {
+	return order.description == "" && order.title == ""
+}
+
 export function sortOrdersByPriority(orders: Order[]): [Order, number][] {
 	const arrangedOrders: [Order, number][] = []
 

@@ -5,7 +5,7 @@ import InputTextArea from '../../atoms/InputTextArea'
 import { createHook } from '../../database/expedientHook'
 import { deleteExpedient } from '../../database/expedientState'
 import { realTimeDatabaseExpedientEditor } from '../../database/realTimeEdit'
-import { Expedient, ExpedientId, newBlankOrder, Order, sortOrdersByPriority, userFirstName } from '../../database/types'
+import { Expedient, ExpedientId, expedientIsBlank, newBlankOrder, Order, sortOrdersByPriority, userFirstName } from '../../database/types'
 import { verifyVIN } from '../../database/vin/verify'
 import { modelName } from '../../database/vin/wmi'
 import { ConfirmationPanel } from '../../templates/ConfirmationPanel'
@@ -71,6 +71,11 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		if (confirmedAction) {
 			deleteExpedient(expedientId)
 		}
+	}
+	
+	const triggerDeleteSequence = () => {
+		if (!expedientIsBlank(expedient())) setShowConfirmationPanel(true)
+		else deleteExpedientResponse(true)
 	}
 
 	const detect_vin = (event: ClipboardEvent) => {
@@ -178,7 +183,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 			<div class={style.bottom_bar}>
 				<ExpedientFolderIcons expedient={expedient()} />
 				<div class={style.bottom_bar_buttons}>
-					<Button text="Eliminar" red action={() => setShowConfirmationPanel(true)} />
+					<Button text="Eliminar" red action={triggerDeleteSequence} />
 					<Button text="Nova Comanda" action={createOrder} />
 					<Button text="Arxivar" action={closeTab} />
 				</div>
