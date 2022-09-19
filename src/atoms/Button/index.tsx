@@ -1,5 +1,6 @@
-import { bindKey, KeyMap } from "../../utils/bindKey"
-import style from "./Button.module.sass"
+import { useTab } from "../../templates/TabSystem";
+import { bindKey, KeyMap } from "../../utils/bindKey";
+import style from "./Button.module.sass";
 
 type Props = {
 	text: string,
@@ -10,7 +11,12 @@ type Props = {
 }
 
 export default function Button(props: Props) {
-	if (props.keyMap) bindKey(document, props.keyMap, props.action)
+
+	const tabCtx = useTab()
+	if (props.keyMap) bindKey(document, props.keyMap, () => {
+		if (!tabCtx || tabCtx.isActive()) props.action()
+		else return "propagate"
+	})
 
 	return <div class={props.red ? style.button_red : style.button} onMouseUp={props.action}>
 		{props.text}

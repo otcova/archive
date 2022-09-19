@@ -91,6 +91,8 @@ export default function InputText(props: Props) {
 			input.value = suggestions()[0]
 			onInput()
 			input.blur()
+		} else {
+			return "propagate"
 		}
 	}))
 

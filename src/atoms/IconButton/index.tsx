@@ -1,4 +1,5 @@
 import { JSXElement } from "solid-js"
+import { useTab } from "../../templates/TabSystem"
 import { bindKey, KeyMap } from "../../utils/bindKey"
 import style from "./IconButton.module.sass"
 
@@ -14,7 +15,12 @@ type Props = {
 
 export default function IconButton(props: Props) {
 
-	if (props.keyMap) bindKey(document, props.keyMap, props.action)
+	const tabCtx = useTab()
+	if (props.keyMap) bindKey(document, props.keyMap, () => {
+		console.log("Do: ", props.icon, "  ", (!tabCtx || tabCtx.isActive()));
+		if (!tabCtx || tabCtx.isActive()) props.action()
+		else return "propagate"
+	})
 
 	return <div class={style.container} onMouseUp={props.action}>
 		{icons.get(props.icon)()}
