@@ -14,6 +14,8 @@ import style from "./FullList.module.sass"
 
 export default function FullList() {
 
+	const { createTab, isActive } = useTab()
+
 	const [inputVIN, setInputVin] = createSignal<string>("")
 	const [inputUser, setInputUser] = createSignal<string>("")
 	const [inputBody, setInputBody] = createSignal<string>("")
@@ -49,31 +51,29 @@ export default function FullList() {
 		}
 	})
 
-	let top_row
-	onMount(() =>
-		bindKey(top_row, "Escape", () => {
-			if (!inputUser() && !inputBody() && !inputVIN())
+	onMount(() => {
+		bindKey(document, "Escape", () => {
+			if (!isActive() || (!inputUser() && !inputBody() && !inputVIN()))
 				return "propagate"
 			setInputUser("")
 			setInputBody("")
 			setInputVin("")
 		})
-	)
+	})
 
-	const { createTab } = useTab()
 	const create_expedient_from_filters = async () => {
 		let expedient = newBlankExpedient()
 		expedient.user = inputUser()
 		if (inputVIN().length == 17 && verifyVIN(inputVIN())) expedient.vin = inputVIN()
 		else expedient.license_plate = inputVIN()
-		
+
 		createTab("Nou Expedient", ExpedientEditor, {
 			expedientId: await createExpedient(expedient)
 		})
 	}
 
 	return <>
-		<div class={style.input_row} ref={top_row}>
+		<div class={style.input_row}>
 			<div class={style.input_user}>
 				<InputText placeholder='Usuari' value={inputUser()} onChange={setInputUser} />
 			</div>
