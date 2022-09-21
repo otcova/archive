@@ -118,12 +118,22 @@ export default function InputText(props: Props) {
 		}
 	})
 
+	const onKeyDown = (event: KeyboardEvent) => {
+		if (event.key == "Escape" && showSuggestions()) {
+			setShowSuggestions(false)
+			event.preventDefault()
+			event.stopImmediatePropagation()
+			event.stopPropagation()
+		}
+	}
+
 	// Input have to be inside a div to be detected when window.getSelection() on ctrl+z
-	return <div class={style.container}>
+	return <div class={style.container} onKeyDown={onKeyDown}>
 		<input
 			type="text"
 			ref={input}
 			onMouseDown={onMouseDown}
+
 			value={props.value ?? ""}
 			onInput={onInput}
 			onFocus={onFocus}

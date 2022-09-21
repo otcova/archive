@@ -22,7 +22,8 @@ will be merge without user confirmation.
 - Change max date on order list
 - focus expedient insted of opening twice
 - Escriure a la llista de gaudi el nom de usuari
-
+- Clean filters after create_expedient_from_filters
+- Monospaced font for vin and license plate
 - License plate filter numbers + space + letters
 
 # Fixes / Upgrades

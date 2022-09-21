@@ -53,6 +53,7 @@ export default function FullList() {
 
 	onMount(() => {
 		bindKey(document, "Escape", () => {
+			console.log(event)
 			if (!isActive() || (!inputUser() && !inputBody() && !inputVIN()))
 				return "propagate"
 			setInputUser("")
@@ -71,17 +72,41 @@ export default function FullList() {
 			expedientId: await createExpedient(expedient)
 		})
 	}
+	
+
+	const [userSuggestions, setUserFilter] = createHook("list_users", "", { defer: true })
+	createEffect(() => setUserFilter(inputUser()))
+
+	const [modelSuggestions, setModelFilter] = createHook("list_models", "", { defer: true })
+	createEffect(() => setModelFilter(inputBody()))
+
+	const [licenseSuggestions, setLicenseFilter] = createHook("list_license_plates", "", { defer: true })
+	createEffect(() => setLicenseFilter(inputVIN()))
+
+	const [vinSuggestions, setvinFilter] = createHook("list_vins", "", { defer: true })
+	createEffect(() => setvinFilter(inputVIN()))
 
 	return <>
 		<div class={style.input_row}>
 			<div class={style.input_user}>
-				<InputText placeholder='Usuari' value={inputUser()} onChange={setInputUser} />
+				<InputText 
+					suggestions={userSuggestions()}
+					placeholder='Usuari'
+					value={inputUser()}
+					onChange={setInputUser}
+				/>
 			</div>
 			<div class={style.input_body}>
-				<InputText placeholder='Cos' value={inputBody()} onChange={setInputBody} />
+				<InputText 
+					suggestions={modelSuggestions()}
+					placeholder='Cos'
+					value={inputBody()}
+					onChange={setInputBody}
+				/>
 			</div>
 			<div class={style.input_vin}>
 				<InputText
+					suggestions={[...(licenseSuggestions() ?? []), ...(vinSuggestions() ?? [])].splice(0, 4)}
 					placeholder='Matricula / VIN'
 					autoFormat={['allCapital']}
 					value={inputVIN()}
