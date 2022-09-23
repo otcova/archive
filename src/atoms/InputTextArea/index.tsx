@@ -6,6 +6,7 @@ type Props = {
 	onChange?: (data: string) => void,
 	placeholder?: string,
 	noStyle?: boolean,
+	ref?: (container: HTMLDivElement) => void,
 }
 export default function InputTextArea(props: Props) {
 	let pastValue = props.value
@@ -65,7 +66,7 @@ export default function InputTextArea(props: Props) {
 		if (event.button == 2) event.preventDefault()
 	}
 
-	return <div class={props.noStyle ? style.container_minimal : style.container}>
+	return <div class={props.noStyle ? style.container_minimal : style.container} ref={props.ref}>
 		<div
 			class={style.editor + (props.noStyle ? " " + style.editor_minimal : "")}
 			contentEditable={true}

@@ -129,8 +129,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 	return <div class={style.container} ref={setupUndo}>
 		<Show when={expedient()}>
 			<div class={style.expedient_container}>
-				<div class={style.expedient_column_left}
-					ref={elem => elem.addEventListener("paste", detect_vin)}>
+				<div class={style.expedient_column_left}>
 					<InputText
 						placeholder='Usuari'
 						value={expedient().user}
@@ -167,6 +166,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 						placeholder='Descripció'
 						value={expedient().description}
 						onChange={data => updateExpedient(data, "description")}
+						ref={elem => elem.addEventListener("paste", detect_vin)}
 					/>
 				</div>
 				<div class={style.expedient_column_right}>
