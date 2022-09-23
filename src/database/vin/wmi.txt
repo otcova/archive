@@ -396,6 +396,7 @@ Z8M	Marussia (Russia)
 1C3	Chrysler
 1C4	Chrysler
 1C6	Chrysler
+1C8	Chrysler
 1D3	Dodge
 1FA	Ford Motor Company
 1FB	Ford Motor Company
