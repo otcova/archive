@@ -152,11 +152,12 @@ impl<'a> ExpedientDatabase<'a> {
         let mut filtered_expedients: Box<dyn Iterator<Item = _>> = Box::new(expedients);
 
         if let Some(ref filter) = options.filter {
-            let car_code_filter = Filter::new(&filter.car_code);
+            let car_code_filter = Filter::new(&filter.car_code.replace("_", "").replace(" ", ""));
 
             if filter.car_code != "" {
                 filtered_expedients = Box::new(filtered_expedients.filter(move |(_, exp)| {
-                    car_code_filter.test(&exp.license_plate) || car_code_filter.test(&exp.vin)
+                    car_code_filter.test(&exp.license_plate.replace("_", "").replace(" ", ""))
+                        || car_code_filter.test(&exp.vin.replace("_", "").replace(" ", ""))
                 }))
             }
         }
