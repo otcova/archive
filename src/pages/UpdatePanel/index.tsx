@@ -1,3 +1,4 @@
+import { getVersion } from '@tauri-apps/api/app'
 import { relaunch } from '@tauri-apps/api/process'
 import { checkUpdate, installUpdate } from '@tauri-apps/api/updater'
 import { createSignal, Show } from 'solid-js'
@@ -5,6 +6,9 @@ import Button from '../../atoms/Button'
 import style from "./UpdatePanel.module.sass"
 
 export const [showUpdatePanel, setShowUpdatePanel] = createSignal(true)
+export const [currentVersion, setCurrentVersion] = createSignal("...")
+
+getVersion().then(setCurrentVersion);
 
 const [shouldUpdate, setShouldUpdate] = createSignal<boolean | string>(false)
 checkUpdate().then(({ shouldUpdate, manifest }) => {
@@ -17,7 +21,7 @@ export function UpdatePanel() {
 	return <div class={style.container} data-tauri-drag-region>
 		<div class={style.panel}>
 			<Show when={shouldUpdate()} fallback={"Buscant actualització..."}>
-				{`Nova versió ${shouldUpdate()} !!!`}
+				{`Vesió actual: ${currentVersion()}  ->  Nova versió ${shouldUpdate()}`}
 				<div class={style.buttons}>
 					<Button text='Cancelar' red keyMap='Escape' action={() => setShowUpdatePanel(false)} />
 					<Button text='Actualitzar' keyMap='Enter' action={async () => {
