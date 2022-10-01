@@ -7,7 +7,7 @@ JA3	Mitsubishi
 JA4	Mitsubishi
 JA	Isuzu
 JD	Daihatsu
-JF	Fuji Heavy Industries (Subaru)
+JF	Subaru (Fuji Heavy Industries)
 JHA	Hino
 JHB	Hino
 JHC	Hino
