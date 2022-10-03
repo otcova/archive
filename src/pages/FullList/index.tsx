@@ -71,8 +71,12 @@ export default function FullList() {
 		createTab("Nou Expedient", ExpedientEditor, {
 			expedientId: await createExpedient(expedient)
 		})
+
+		setInputVin("")
+		setInputBody("")
+		setInputUser("")
 	}
-	
+
 
 	const [userSuggestions, setUserFilter] = createHook("list_users", "", { defer: true })
 	createEffect(() => setUserFilter(inputUser()))
@@ -89,7 +93,7 @@ export default function FullList() {
 	return <>
 		<div class={style.input_row}>
 			<div class={style.input_user}>
-				<InputText 
+				<InputText
 					suggestions={userSuggestions()}
 					placeholder='Usuari'
 					value={inputUser()}
@@ -97,7 +101,7 @@ export default function FullList() {
 				/>
 			</div>
 			<div class={style.input_body}>
-				<InputText 
+				<InputText
 					suggestions={modelSuggestions()}
 					placeholder='Cos'
 					value={inputBody()}

@@ -6,5 +6,3 @@
 - Store backups on multiple drives (in case one of them corrupts)
 
 - focus expedient insted of opening twice
-
-- Clean filters after create_expedient_from_filters?
