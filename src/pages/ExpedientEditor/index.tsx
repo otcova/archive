@@ -35,8 +35,8 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		const user = userFirstName(expedient().user)
 		const orderTitles = orders()
 			.filter(([order]) => order.state != "Done" && order.title)
-			.map(([order]) => order.title.trim())
-		const newName = [user, ...orderTitles].join("  -  ")
+			.map(([order]) => userFirstName(order.title))
+		const newName = (user ? [user, ...orderTitles] : orderTitles).join("  -  ")
 
 		rename(newName || "Expedient")
 	}
@@ -72,7 +72,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 			deleteExpedient(expedientId)
 		}
 	}
-	
+
 	const triggerDeleteSequence = () => {
 		if (!expedientIsBlank(expedient())) setShowConfirmationPanel(true)
 		else deleteExpedientResponse(true)
@@ -90,7 +90,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 			}
 		}
 	}
-	
+
 	let pastVin = null;
 	createEffect(() => {
 		if (expedient() && expedient().vin !== pastVin) {

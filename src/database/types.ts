@@ -86,5 +86,5 @@ export function userFirstName(user: User): string {
 			return word.trim()
 		}
 	}
-	return user.split(/\s/)[0].trim()
+	return ""
 }
