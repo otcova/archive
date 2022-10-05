@@ -3,7 +3,7 @@
 
 .container
 	@include layout.column
-	position: absolute
+	position: fixed
 	top: 0px
 	bottom: 0px
 	left: 0px
@@ -15,22 +15,26 @@
 	@include layout.column
 	// gap: 20px
 	border-radius: 1px
-	width: 300px
-	height: 140px
-	outline: theme.$stroke
+	min-width: 300px
+	// height: 140px
 	background: theme.$background
 
 .text
 	@include layout.column
 	@include layout.grow
+	// @include theme.font-mono-light
 	background: #fff
 	border-radius: 1px
 	outline: theme.$stroke
 	width: 100%
+	white-space: break-spaces
+	padding: 20px
+	line-height: 2rem
+	user-select: text
 
 .buttons_row
 	@include layout.row
 	flex-shrink: 0
-	width: 100%
-	padding: 10px
+	gap: 20px
+	padding: 10px 20px 10px 20px
 	justify-content: space-around

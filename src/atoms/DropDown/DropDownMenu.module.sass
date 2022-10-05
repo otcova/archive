@@ -1,0 +1,49 @@
+@use '../../globalStyle/layout'
+@use '../../globalStyle/theme'
+
+.container
+	@include layout.column-right
+	z-index: 10
+	
+.button
+	@include layout.row
+	height: 40px
+	cursor: pointer
+	padding: 10px
+	gap: 10px
+
+.button:hover, .button_active
+	background: #fffa
+	
+.button::after
+	font: normal normal normal 16px/1 codicon
+	text-shadow: 0px 0px #000A
+	content: '\eab4'
+	margin: -3px
+	
+	
+.option_container
+	@include layout.column-top
+	cursor: pointer
+	background: #f8f8f8
+	margin-top: -3px
+	height: 0px
+	overflow: hidden
+	transition: height 200ms, border-width 200ms
+	border: theme.$stroke
+	border-width: 0px
+	
+
+// .option_active
+// 	height: 100vh
+	
+.option
+	@include layout.row-left
+	width: 100%
+	padding: 6px 12px 6px 12px
+	border: 1px solid #fff0
+
+.option:hover
+	// background: #eee
+	background: theme.$active-color
+	color: #fff

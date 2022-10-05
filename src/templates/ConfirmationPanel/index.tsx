@@ -1,12 +1,14 @@
 
-import { Show } from "solid-js"
+import { For, Show } from "solid-js"
 import Button from "../../atoms/Button"
 import style from "./ConfirmationPanel.module.sass"
 
 type Props = {
 	show: boolean
 	text: string,
-	response: (date: boolean) => void
+	red_buttons?: string[],
+	buttons: string[],
+	response: (date: string) => void
 }
 
 export function ConfirmationPanel(props: Props) {
@@ -20,14 +22,17 @@ export function ConfirmationPanel(props: Props) {
 					{props.text}
 				</div>
 				<div class={style.buttons_row}>
-					<Button text="Cancelar" red
-						keyMap="Escape"
-						action={() => props.response(false)}
-					/>
-					<Button text="Confirmar"
-						keyMap="Enter"
-						action={() => props.response(true)}
-					/>
+					<For each={props.red_buttons ?? []}>{text =>
+						<Button text={text} red
+							action={() => props.response(text)}
+						/>
+					}</For>
+					<For each={props.buttons}>{text =>
+						<Button text={text}
+							{...(props.buttons.length == 1 ? { keyMap: "Enter" } : {})}
+							action={() => props.response(text)}
+						/>
+					}</For>
 				</div>
 			</div>
 		</div>

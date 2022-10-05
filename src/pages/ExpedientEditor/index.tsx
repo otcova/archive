@@ -68,14 +68,14 @@ export default function ExpedientEditor({ expedientId }: Props) {
 
 	const deleteExpedientResponse = (confirmedAction) => {
 		setShowConfirmationPanel(false)
-		if (confirmedAction) {
+		if (confirmedAction == "Confirmar") {
 			deleteExpedient(expedientId)
 		}
 	}
 
 	const triggerDeleteSequence = () => {
 		if (!expedientIsBlank(expedient())) setShowConfirmationPanel(true)
-		else deleteExpedientResponse(true)
+		else deleteExpedientResponse("Confirmar")
 	}
 
 	const detect_vin = (event: ClipboardEvent) => {
@@ -190,6 +190,8 @@ export default function ExpedientEditor({ expedientId }: Props) {
 			</div>
 			<ConfirmationPanel text="Eliminar Expedient"
 				show={showConfirmationPanel()}
+				red_buttons={["Cancelar"]}
+				buttons={["Confirmar"]}
 				response={deleteExpedientResponse}
 			/>
 		</Show >

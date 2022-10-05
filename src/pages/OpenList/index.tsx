@@ -1,8 +1,7 @@
-import { createEffect, createSignal, Show } from 'solid-js'
+import { createEffect, Show } from 'solid-js'
 import StaticCheckbox from '../../atoms/Checkbox/StaticCheckbox'
 import { utcDateFuture } from '../../database/date'
 import { createHook } from '../../database/expedientHook'
-import { countExpedients, countOrders } from '../../database/expedientState'
 import OrderList, { lableOrderListByDate } from '../../templates/OrderList'
 import { useTab } from '../../templates/TabSystem'
 import style from "./OpenList.module.sass"
@@ -53,23 +52,7 @@ export default function OpenList() {
 }
 
 function SatisfactionFallback() {
-	const [expedientsCount, setExpedientsCount] = createSignal<string | number>("...")
-	const [ordersCount, setOrdersCount] = createSignal<string | number>("...")
-
-	countExpedients().then(n => setExpedientsCount(n))
-	countOrders().then(n => setOrdersCount(n))
-
 	return <div class={style.satisfaction_container}>
 		:D
-		<div class={style.row}>
-			<div class={style.left}>
-				<div>Expedients:</div>
-				<div>Commandas:</div>
-			</div>
-			<div class={style.right}>
-				<div>{expedientsCount()}</div>
-				<div>{ordersCount()}</div>
-			</div>
-		</div>
 	</div>
 }

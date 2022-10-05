@@ -10,7 +10,7 @@ export const [currentVersion, setCurrentVersion] = createSignal("...")
 
 getVersion().then(setCurrentVersion);
 
-const [shouldUpdate, setShouldUpdate] = createSignal<boolean | string>(false)
+export const [shouldUpdate, setShouldUpdate] = createSignal<boolean | string>(false)
 checkUpdate().then(({ shouldUpdate, manifest }) => {
 	if (shouldUpdate) setShouldUpdate(manifest.version)
 	else setShouldUpdate(false)
@@ -21,19 +21,21 @@ export function UpdatePanel() {
 	return <div class={style.container} data-tauri-drag-region>
 		<div class={style.panel}>
 			<Show when={shouldUpdate()} fallback={"Buscant actualització..."}>
-				{`Vesió actual: ${currentVersion()}  ->  Nova versió ${shouldUpdate()}`}
+				{`Vesió actual:  ${currentVersion()}\nNova versió:   ${shouldUpdate()}`}
 				<div class={style.buttons}>
 					<Button text='Cancelar' red keyMap='Escape' action={() => setShowUpdatePanel(false)} />
-					<Button text='Actualitzar' keyMap='Enter' action={async () => {
-						try {
-							await installUpdate()
-							await relaunch()
-						} catch (error) {
-							console.error(error)
-						}
-					}} />
+					<Button text='Actualitzar' keyMap='Enter' action={updateApp} />
 				</div>
 			</Show>
 		</div>
 	</div>
+}
+
+export async function updateApp() {
+	try {
+		await installUpdate()
+		await relaunch()
+	} catch (error) {
+		console.error(error)
+	}
 }
