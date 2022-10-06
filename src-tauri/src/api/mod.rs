@@ -1,8 +1,10 @@
+mod statistics;
 mod expedient_hooks;
 mod expedient_modifyer;
 
 pub use expedient_hooks::*;
 pub use expedient_modifyer::*;
+pub use statistics::*;
 
 pub use crate::expedient_database::*;
 use crate::{

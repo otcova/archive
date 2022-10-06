@@ -48,6 +48,8 @@ fn main() {
             api::read_expedient,
             api::count_expedients,
             api::count_orders,
+            // statistics
+            api::done_commands_count_vs_days,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

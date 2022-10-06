@@ -1,6 +1,7 @@
 mod expedient;
 mod filter;
 mod hooks;
+mod statistics;
 mod restore_data_from_arxivador;
 use crate::chunked_database::*;
 pub use crate::collections::UtcDate;
