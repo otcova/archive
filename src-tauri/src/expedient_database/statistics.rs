@@ -22,6 +22,7 @@ impl<'a> ExpedientDatabase<'a> {
 				day_count_list[index] += 1;
 			});
 
-        day_count_list
+        day_count_list.reverse();
+		day_count_list
     }
 }
