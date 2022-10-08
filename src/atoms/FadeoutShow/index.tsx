@@ -22,7 +22,7 @@ export function FadeoutShow(props: Props) {
 		}
 		else {
 			setShow(false)
-			disableRenderTimeout = setTimeout(() => setRender(false), 100)
+			disableRenderTimeout = setTimeout(() => setRender(false), 200)
 		}
 	})
 
