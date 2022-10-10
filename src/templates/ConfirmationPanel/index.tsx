@@ -1,11 +1,11 @@
 
-import { For, Show } from "solid-js"
+import { Component, For, Show } from "solid-js"
 import Button from "../../atoms/Button"
 import style from "./ConfirmationPanel.module.sass"
 
 type Props = {
 	show: boolean
-	text: string,
+	text: Component | string,
 	red_buttons?: string[],
 	buttons: string[],
 	response: (date: string) => void
@@ -19,7 +19,7 @@ export function ConfirmationPanel(props: Props) {
 		<div class={style.container} onClick={stopPropagation} data-tauri-drag-region>
 			<div class={style.panel}>
 				<div class={style.text}>
-					{props.text}
+					{typeof props.text == "string"? props.text : <props.text />}
 				</div>
 				<div class={style.buttons_row}>
 					<For each={props.red_buttons ?? []}>{text =>

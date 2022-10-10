@@ -1,16 +1,26 @@
 import { appWindow } from "@tauri-apps/api/window"
-import { createEffect, createSignal } from "solid-js"
+import { Component, createEffect, createSignal } from "solid-js"
 import DropDownMenu from "../../atoms/DropDown"
 import IconButton from "../../atoms/IconButton"
 import { databaseDir, saveAndCloseApp } from "../../database/databaseState"
 import { countOrders } from "../../database/expedientState"
 import { currentVersion, shouldUpdate } from "../../pages/UpdatePanel"
 import { ConfirmationPanel } from "../ConfirmationPanel"
+import Statistics from "./Statistics"
 import style from "./WindowButtons.module.sass"
+
+
+type PanelConfig = {
+    show: boolean;
+    text: Component | string;
+    red_buttons: string[];
+    buttons: string[];
+    response: () => void;
+};
 
 export default function WindowButtons() {
 
-	const [panel, setPanel] = createSignal({
+	const [panel, setPanel] = createSignal<PanelConfig>({
 		show: false,
 		text: "...",
 		red_buttons: ["Cancelar"],
@@ -49,7 +59,7 @@ export default function WindowButtons() {
 		createEffect(() => {
 			setPanel(panel => ({
 				show: true,
-				text: `Comandes:  ${ordersCount()}`,
+				text: Statistics,//<div>`Comandes:  ${ordersCount()}`</div>,
 				red_buttons: [],
 				buttons: ["Continuar"],
 				response: () => setPanel({ ...panel, show: false }),

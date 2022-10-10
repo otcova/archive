@@ -16,11 +16,12 @@
 	// gap: 20px
 	border-radius: 1px
 	min-width: 300px
+	max-width: 80vw
 	// height: 140px
 	background: theme.$background
 
 .text
-	@include layout.column
+	@include layout.column-top
 	@include layout.grow
 	// @include theme.font-mono-light
 	background: #fff
@@ -30,11 +31,14 @@
 	white-space: break-spaces
 	padding: 20px
 	line-height: 2rem
+	max-height: 80vh
+	overflow-y: auto
+	overflow-x: hidden
 	user-select: text
 
 .buttons_row
 	@include layout.row
-	flex-shrink: 0
+	width: 100%
 	gap: 20px
 	padding: 10px 20px 10px 20px
 	justify-content: space-around
