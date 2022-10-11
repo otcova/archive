@@ -50,6 +50,9 @@ fn main() {
             api::count_orders,
             // statistics
             api::done_commands_count_vs_days,
+            //utils
+            utils::download_previous_version,
+            utils::install_archive_msi,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
@@ -60,4 +63,44 @@ fn main() {
                 }
             }
         });
+}
+
+mod utils {
+    use std::fs::{File, remove_file};
+    use std::io::{copy, Cursor};
+    use std::path::Path;
+    use std::process::Command;
+
+    #[tauri::command]
+    pub async fn download_previous_version(download_path: &str) -> Result<(), ()> {
+        let target = "https://raw.githubusercontent.com/otcova/archive/main/releases/past-msi/archive.msi";
+        let response = reqwest::get(target).await.map_err(|_| ())?;
+
+        let mut dest = {
+            let fname = response
+                .url()
+                .path_segments()
+                .and_then(|segments| segments.last())
+                .and_then(|name| if name.is_empty() { None } else { Some(name) })
+                .unwrap_or("tmp.bin");
+
+            let fname = Path::new(download_path);
+            File::create(fname).map_err(|_| ())
+        }?;
+        let mut content = Cursor::new(response.bytes().await.map_err(|_| ())?);
+        copy(&mut content, &mut dest).map_err(|_| ())?;
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub async fn install_archive_msi(path: &str) -> Result<(), ()> {
+        let output = Command::new("cmd")
+            .arg("/C")
+            .arg(path)
+            .arg("/quiet")
+            .output()
+            .map_err(|_| ())?;
+        remove_file(path);
+        Ok(())
+    }
 }
