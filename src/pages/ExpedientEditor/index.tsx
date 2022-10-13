@@ -102,18 +102,6 @@ export default function ExpedientEditor({ expedientId }: Props) {
 		}
 	})
 
-	// const [similarsList, setSimilarsHookOptions] = createHook("list_expedients", {
-	// 	filter: expedient(),
-	// 	max_list_len: 10,
-	// }, { defer: true })
-	// createEffect(on(expedient, () => setSimilarsHookOptions(options => (
-	// 	{ ...options, filter: expedient() }
-	// )), { defer: true }))
-
-	// createEffect(on(similarsList, () => {
-	// 	console.log(similarsList())
-	// }, { defer: true }))
-
 	const [userSuggestions, setUserFilter] = createHook("list_users", "", { defer: true })
 	createEffect(() => setUserFilter(expedient()?.user ?? ""))
 
@@ -190,7 +178,7 @@ export default function ExpedientEditor({ expedientId }: Props) {
 			</div>
 			<ConfirmationPanel text="Eliminar Expedient"
 				show={showConfirmationPanel()}
-				red_buttons={["Cancelar"]}
+				redButtons={["Cancelar"]}
 				buttons={["Confirmar"]}
 				response={deleteExpedientResponse}
 			/>

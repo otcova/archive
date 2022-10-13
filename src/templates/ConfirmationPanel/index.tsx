@@ -3,15 +3,15 @@ import { Component, For, Show } from "solid-js"
 import Button from "../../atoms/Button"
 import style from "./ConfirmationPanel.module.sass"
 
-type Props = {
+export type ConfirmationPanelProps = {
 	show: boolean
 	text: Component | string,
-	red_buttons?: string[],
+	redButtons?: string[],
 	buttons: string[],
 	response: (date: string) => void
 }
 
-export function ConfirmationPanel(props: Props) {
+export function ConfirmationPanel(props: ConfirmationPanelProps) {
 
 	const stopPropagation = event => event.stopPropagation()
 
@@ -22,7 +22,7 @@ export function ConfirmationPanel(props: Props) {
 					{typeof props.text == "string"? props.text : <props.text />}
 				</div>
 				<div class={style.buttons_row}>
-					<For each={props.red_buttons ?? []}>{text =>
+					<For each={props.redButtons ?? []}>{text =>
 						<Button text={text} red
 							action={() => props.response(text)}
 						/>

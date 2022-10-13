@@ -68,12 +68,10 @@ export default function InputText(props: Props) {
 		if (props.autoFormat) format()
 		props.onChange?.(input.value)
 		validate()
-		// requestAnimationFrame(() => 
 		setShowSuggestions(input.value.length > 0)
 	}
 
 	const onFocus = event => {
-		// requestAnimationFrame(() => 
 		setShowSuggestions(input.value.length > 0)
 		if (props.selectOnFocus) event.target.select()
 	}
@@ -100,7 +98,6 @@ export default function InputText(props: Props) {
 		input.classList.remove(style.error)
 		if (props.validate && !props.validate(input.value.trim())) {
 			input.classList.add(style.error)
-			console.log("Validate ERROR")
 		}
 	}
 

@@ -211,7 +211,6 @@ function divide_data(data: number[], zoom: number): DataDivison[] {
 	date = new Date(now.getTime())
 	date.setDate(date.getDate() - data.length + 1)
 
-	console.log("==========")
 	while (date < zoomed_date) {
 		let after_delete_date = new Date(date.getTime())
 		after_delete_date.setDate(after_delete_date.getDate() + divisions[0].data.length)

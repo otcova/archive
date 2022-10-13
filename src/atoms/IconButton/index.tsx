@@ -17,7 +17,6 @@ export default function IconButton(props: Props) {
 
 	const tabCtx = useTab()
 	if (props.keyMap) bindKey(document, props.keyMap, () => {
-		console.log("Do: ", props.icon, "  ", (!tabCtx || tabCtx.isActive()));
 		if (!tabCtx || tabCtx.isActive()) props.action()
 		else return "propagate"
 	})

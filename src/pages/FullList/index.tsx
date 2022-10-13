@@ -53,7 +53,6 @@ export default function FullList() {
 
 	onMount(() => {
 		bindKey(document, "Escape", () => {
-			console.log(event)
 			if (!isActive() || (!inputUser() && !inputBody() && !inputVIN()))
 				return "propagate"
 			setInputUser("")

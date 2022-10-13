@@ -1,16 +1,28 @@
 import { getVersion } from '@tauri-apps/api/app'
-import { relaunch } from '@tauri-apps/api/process'
-import { checkUpdate, installUpdate } from '@tauri-apps/api/updater'
-import { createSignal, Show } from 'solid-js'
-import Button from '../../atoms/Button'
-import style from "./UpdatePanel.module.sass"
+import { checkUpdate } from '@tauri-apps/api/updater'
+import { createEffect, createSignal } from 'solid-js'
+import { installPreviousVersion, updateApp } from '../../database/update'
+import { ConfirmationPanel, ConfirmationPanelProps } from '../../templates/ConfirmationPanel'
 
-export const [showUpdatePanel, setShowUpdatePanel] = createSignal(true)
+
+const [_canLoadApp, setCanLoadApp] = createSignal(false)
+export const canLoadApp = _canLoadApp
+
 export const [currentVersion, setCurrentVersion] = createSignal("...")
 
 getVersion().then(setCurrentVersion);
 
-export const [shouldUpdate, setShouldUpdate] = createSignal<boolean | string>(false)
+export const [shouldUpdate, setShouldUpdate] = createSignal<boolean | string>(null)
+export const [showUpdatePanel, _setShowUpdatePanel] = createSignal(true)
+
+export const setShowUpdatePanel = (show: boolean) => {
+	if (show) _setShowUpdatePanel(show)
+	else {
+		setCanLoadApp(true)
+		_setShowUpdatePanel(false)
+	}
+}
+
 checkUpdate().then(({ shouldUpdate, manifest }) => {
 	if (shouldUpdate) setShouldUpdate(manifest.version)
 	else setShouldUpdate(false)
@@ -18,24 +30,49 @@ checkUpdate().then(({ shouldUpdate, manifest }) => {
 })
 
 export function UpdatePanel() {
-	return <div class={style.container} data-tauri-drag-region>
-		<div class={style.panel}>
-			<Show when={shouldUpdate()} fallback={"Buscant actualització..."}>
-				{`Vesió actual:  ${currentVersion()}\nNova versió:   ${shouldUpdate()}`}
-				<div class={style.buttons}>
-					<Button text='Cancelar' red keyMap='Escape' action={() => setShowUpdatePanel(false)} />
-					<Button text='Actualitzar' keyMap='Enter' action={updateApp} />
-				</div>
-			</Show>
-		</div>
-	</div>
-}
+	const [panel, setPanel] = createSignal<ConfirmationPanelProps>({
+		show: true,
+		text: "Comprobant versió actual...",
+		buttons: [],
+		response: () => { },
+	})
+	const [installing, setInstalling] = createSignal<false | string>(false)
 
-export async function updateApp() {
-	try {
-		await installUpdate()
-		await relaunch()
-	} catch (error) {
-		console.error(error)
-	}
+	createEffect(() => {
+		let instalLog = installing()
+		if (instalLog) {
+			setPanel({
+				show: true,
+				text: instalLog,
+				buttons: [],
+				response: () => { },
+			})
+		} else if (shouldUpdate()) {
+			setPanel({
+				show: true,
+				text: `Vesió actual:  ${currentVersion()}\nNova versió:   ${shouldUpdate()}`,
+				redButtons: ["Cancelar"],
+				buttons: ["Actualitzar"],
+				response: button => {
+					if (button == "Cancelar") setShowUpdatePanel(false)
+					else updateApp()
+				}
+			})
+		} else if (shouldUpdate() === false) {
+			setPanel({
+				show: true,
+				text: `Vesió actual:  ${currentVersion()}`,
+				redButtons: ["Instalar versio anterior"],
+				buttons: ["Continuar"],
+				response: button => {
+					if (button == "Continuar") setShowUpdatePanel(false)
+					else {
+						installPreviousVersion(setInstalling)
+							.then(() => setShowUpdatePanel(false))
+					}
+				}
+			})
+		}
+	})
+	return <ConfirmationPanel {...panel()} />
 }
