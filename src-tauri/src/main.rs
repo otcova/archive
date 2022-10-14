@@ -77,15 +77,14 @@ mod utils {
         let response = reqwest::get(target).await.map_err(|_| ())?;
 
         let mut dest = {
-            let fname = response
+            response
                 .url()
                 .path_segments()
                 .and_then(|segments| segments.last())
                 .and_then(|name| if name.is_empty() { None } else { Some(name) })
                 .unwrap_or("tmp.bin");
 
-            let fname = Path::new(download_path);
-            File::create(fname).map_err(|_| ())
+            File::create(Path::new(download_path)).map_err(|_| ())
         }?;
         let mut content = Cursor::new(response.bytes().await.map_err(|_| ())?);
         copy(&mut content, &mut dest).map_err(|_| ())?;
@@ -94,13 +93,13 @@ mod utils {
 
     #[tauri::command]
     pub async fn install_archive_msi(path: &str) -> Result<(), ()> {
-        let output = Command::new("cmd")
+        Command::new("cmd")
             .arg("/C")
             .arg(path)
             .arg("/quiet")
             .output()
             .map_err(|_| ())?;
-        remove_file(path);
+        remove_file(path).map_err(|_| ())?;
         Ok(())
     }
 }
