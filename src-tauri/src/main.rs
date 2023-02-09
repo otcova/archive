@@ -66,14 +66,17 @@ fn main() {
 }
 
 mod utils {
-    use std::fs::{File, remove_file};
+    use std::env::current_exe;
+    use std::fs::{remove_file, File};
     use std::io::{copy, Cursor};
     use std::path::Path;
     use std::process::Command;
 
     #[tauri::command]
     pub async fn download_previous_version(download_path: &str) -> Result<(), ()> {
-        let target = "https://raw.githubusercontent.com/otcova/archive/main/releases/past-msi/archive.msi";
+        let _ = remove_file(download_path);
+        let target =
+            "https://raw.githubusercontent.com/otcova/archive/main/releases/past-msi/archive.msi";
         let response = reqwest::get(target).await.map_err(|_| ())?;
 
         let mut dest = {
@@ -93,13 +96,12 @@ mod utils {
 
     #[tauri::command]
     pub async fn install_archive_msi(path: &str) -> Result<(), ()> {
-        Command::new("cmd")
-            .arg("/C")
-            .arg(path)
-            .arg("/quiet")
-            .output()
-            .map_err(|_| ())?;
-        remove_file(path).map_err(|_| ())?;
+        let cmd = format!(
+            r#"start-process powershell -verb runas -ArgumentList "-C","{}","/quiet",";","timeout -t 2",";","start","'{}'""#,
+            path,
+            current_exe().map_err(|_| ())?.as_os_str().to_string_lossy()
+        );
+        let _ = Command::new("powershell").arg("-C").arg(cmd).output();
         Ok(())
     }
 }
