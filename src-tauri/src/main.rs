@@ -97,7 +97,7 @@ mod utils {
     #[tauri::command]
     pub async fn install_archive_msi(path: &str) -> Result<(), ()> {
         let cmd = format!(
-            r#"start-process powershell -verb runas -ArgumentList "-C","{}","/quiet",";","timeout -t 2",";","start","'{}'""#,
+            r#"start-process powershell -verb runas -ArgumentList "-C","{}","/quiet",";","timeout -t 1",";","start","'{}'""#,
             path,
             current_exe().map_err(|_| ())?.as_os_str().to_string_lossy()
         );

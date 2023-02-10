@@ -99,14 +99,23 @@ async function loadRollback() {
 	}
 }
 
+export async function trySaveDatabase() {
+	try {
+		await invoke('store_database')
+		return true
+	}
+	catch (error) { return error }
+}
+
 export async function saveDatabase() {
 	if (!databaseError()) {
-		try { await invoke('store_database') }
-		catch (error) {
-			try { await invoke('store_database') }
-			catch (error) { criticalError("Error en guardar les dades!!!", error) }
+		if (!await trySaveDatabase()) {
+			let error = await trySaveDatabase();
+			if (error !== true) criticalError("Error en guardar les dades!!!", error)
 		}
 	}
+
+
 }
 
 export async function saveAndCloseApp() {
