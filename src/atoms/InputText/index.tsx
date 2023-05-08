@@ -15,6 +15,7 @@ type Props = {
 	validate?: (text: string) => boolean,
 	selectOnFocus?: boolean,
 	suggestions?: string[]
+	escape?: "clear",
 }
 
 export default function InputText(props: Props) {
@@ -116,11 +117,17 @@ export default function InputText(props: Props) {
 	})
 
 	const onKeyDown = (event: KeyboardEvent) => {
-		if (event.key == "Escape" && showSuggestions()) {
-			setShowSuggestions(false)
-			event.preventDefault()
-			event.stopImmediatePropagation()
-			event.stopPropagation()
+		if (event.key == "Escape") {
+			if (showSuggestions()) {
+				setShowSuggestions(false)
+				event.preventDefault()
+				event.stopImmediatePropagation()
+				event.stopPropagation()
+			}
+			if (props?.escape == "clear" && input.value != "") {
+				input.value = ""
+				props.onChange?.(input.value)
+			}
 		}
 	}
 

@@ -1,4 +1,4 @@
-import { createEffect, createSignal, onMount } from 'solid-js'
+import { Show, createEffect, createSignal, onMount } from 'solid-js'
 import IconButton from '../../atoms/IconButton'
 import InputText from '../../atoms/InputText'
 import { utcDateFuture } from '../../database/date'
@@ -16,9 +16,11 @@ export default function FullList() {
 
 	const { createTab, isActive } = useTab()
 
-	const [inputVIN, setInputVin] = createSignal<string>("")
+	const [userPopularoty, setUserPopularoty] = createSignal<number>(10)
 	const [inputUser, setInputUser] = createSignal<string>("")
 	const [inputBody, setInputBody] = createSignal<string>("")
+	const [inputVIN, setInputVin] = createSignal<string>("")
+
 
 	const [orderList, setHookOptions] = createHook("list_orders", {
 		sort_by: "Newest",
@@ -53,11 +55,22 @@ export default function FullList() {
 
 	onMount(() => {
 		bindKey(document, "Escape", () => {
-			if (!isActive() || (!inputUser() && !inputBody() && !inputVIN()))
-				return "propagate"
-			setInputUser("")
-			setInputBody("")
-			setInputVin("")
+			if (!isActive()) return "propagate"
+			if (userPopularoty()) setUserPopularoty(0)
+			else {
+				if (!inputUser() && !inputBody() && !inputVIN()) return "propagate"
+				setInputUser("")
+				setInputBody("")
+				setInputVin("")
+			}
+		})
+		bindKey(document, "+", () => {
+			if (!isActive()) return "propagate"
+			setUserPopularoty(p => p + 10)
+		})
+		bindKey(document, "-", () => {
+			if (!isActive()) return "propagate"
+			setUserPopularoty(p => p - 10)
 		})
 	})
 
@@ -89,14 +102,24 @@ export default function FullList() {
 	const [vinSuggestions, setvinFilter] = createHook("list_vins", "", { defer: true })
 	createEffect(() => setvinFilter(inputVIN()))
 
+	const displayPopularity = () => {
+		let n = userPopularoty()
+		if (n == 0) return ""
+		return (n > 0 ? "+" : "-") + Math.abs(userPopularoty())
+	}
+
 	return <>
 		<div class={style.input_row}>
 			<div class={style.input_user}>
+				<Show when={userPopularoty() != 0}>
+					<div class={style.popularity}>{displayPopularity()}</div>
+				</Show>
 				<InputText
 					suggestions={userSuggestions()}
 					placeholder='Usuari'
 					value={inputUser()}
 					onChange={setInputUser}
+					escape="clear"
 				/>
 			</div>
 			<div class={style.input_body}>
@@ -105,6 +128,7 @@ export default function FullList() {
 					placeholder='Cos'
 					value={inputBody()}
 					onChange={setInputBody}
+					escape="clear"
 				/>
 			</div>
 			<div class={style.input_vin}>
@@ -114,6 +138,7 @@ export default function FullList() {
 					autoFormat={['allCapital']}
 					value={inputVIN()}
 					onChange={setInputVin}
+					escape="clear"
 				/>
 			</div>
 			<IconButton icon='create from filters' keyMap="Enter" action={create_expedient_from_filters} />
