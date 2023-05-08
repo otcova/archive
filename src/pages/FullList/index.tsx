@@ -16,7 +16,7 @@ export default function FullList() {
 
 	const { createTab, isActive } = useTab()
 
-	const [userPopularoty, setUserPopularoty] = createSignal<number>(10)
+	const [userPopularity, setUserPopularity] = createSignal<number>(0)
 	const [inputUser, setInputUser] = createSignal<string>("")
 	const [inputBody, setInputBody] = createSignal<string>("")
 	const [inputVIN, setInputVin] = createSignal<string>("")
@@ -34,7 +34,7 @@ export default function FullList() {
 	})
 
 	createEffect(() => {
-		const filter = inputVIN() + inputUser() + inputBody() != ""
+		const filter = inputVIN() + inputUser() + inputBody() + userPopularity() != ""
 		if (!filter) {
 			setHookOptions(options => {
 				delete options.filter
@@ -47,6 +47,7 @@ export default function FullList() {
 						car_code: inputVIN().replaceAll(" ", "_"),
 						user: inputUser(),
 						body: inputBody(),
+						popularity: userPopularity(),
 					}
 				}
 			})
@@ -56,7 +57,7 @@ export default function FullList() {
 	onMount(() => {
 		bindKey(document, "Escape", () => {
 			if (!isActive()) return "propagate"
-			if (userPopularoty()) setUserPopularoty(0)
+			if (userPopularity()) setUserPopularity(0)
 			else {
 				if (!inputUser() && !inputBody() && !inputVIN()) return "propagate"
 				setInputUser("")
@@ -66,11 +67,21 @@ export default function FullList() {
 		})
 		bindKey(document, "+", () => {
 			if (!isActive()) return "propagate"
-			setUserPopularoty(p => p + 10)
+			setUserPopularity(p => {
+				if (p == -5) return 0;
+				if (p < 0) return p / 2;
+				if (p == 0) return 5;
+				return Math.min(80, 2 * p);
+			})
 		})
 		bindKey(document, "-", () => {
 			if (!isActive()) return "propagate"
-			setUserPopularoty(p => p - 10)
+			setUserPopularity(p => {
+				if (p == 5) return 0;
+				if (p > 0) return p / 2;
+				if (p == 0) return -5;
+				return Math.max(-80, 2 * p);
+			})
 		})
 	})
 
@@ -103,15 +114,15 @@ export default function FullList() {
 	createEffect(() => setvinFilter(inputVIN()))
 
 	const displayPopularity = () => {
-		let n = userPopularoty()
+		let n = userPopularity()
 		if (n == 0) return ""
-		return (n > 0 ? "+" : "-") + Math.abs(userPopularoty())
+		return (n > 0 ? "+ " : "- ") + Math.abs(userPopularity())
 	}
 
 	return <>
 		<div class={style.input_row}>
 			<div class={style.input_user}>
-				<Show when={userPopularoty() != 0}>
+				<Show when={userPopularity() != 0}>
 					<div class={style.popularity}>{displayPopularity()}</div>
 				</Show>
 				<InputText

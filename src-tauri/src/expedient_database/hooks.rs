@@ -1,7 +1,10 @@
 use super::filter::Filter;
 use super::*;
 use crate::{chunked_database::*, observable::*};
-use std::sync::{Arc, Mutex, RwLock};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex, RwLock},
+};
 
 #[derive(Default)]
 pub struct HookPool<'a> {
@@ -59,6 +62,7 @@ pub struct ListOrdersHookFilter {
     pub car_code: String,
     pub user: String,
     pub body: String,
+    pub popularity: i32,
 }
 
 impl ListOrdersHookFilter {
@@ -146,10 +150,10 @@ impl<'a> ExpedientDatabase<'a> {
         expedients: impl Iterator<Item = (Uid, &'b Expedient)>,
         concat_with: &mut Vec<(Uid, usize, &'b Expedient)>,
         process: &AsyncCallbackProcess,
+        user_occurrences: &HashMap<String, i32>,
     ) -> Option<Vec<(Uid, usize, &'b Expedient)>> {
-        process.terminate_if_requested()?;
-
         let mut filtered_expedients: Box<dyn Iterator<Item = _>> = Box::new(expedients);
+        process.terminate_if_requested()?;
 
         if let Some(ref filter) = options.filter {
             let car_code_filter = Filter::new(&filter.car_code.replace("_", "").replace(" ", ""));
@@ -203,19 +207,32 @@ impl<'a> ExpedientDatabase<'a> {
                         || body_filter.test(&expedient.description)
                         || body_filter.test(&expedient.orders[*index].title)
                         || body_filter.test(&expedient.orders[*index].description)
-                }))
+                }));
+                process.terminate_if_requested()?;
             }
         }
 
-        process.terminate_if_requested()?;
-
         let mut list_orders: Vec<_> = orders.collect();
-
         process.terminate_if_requested()?;
 
         list_orders.append(concat_with);
-
         process.terminate_if_requested()?;
+
+        if let Some(ref filter) = options.filter {
+            if filter.popularity != 0 {
+                list_orders.drain_filter(|(_, _, expedient)| {
+                    let mut username = expedient.user.to_lowercase();
+                    username.remove_matches(" ");
+                    let occurrances = user_occurrences[&username];
+                    if filter.popularity > 0 {
+                        occurrances < filter.popularity
+                    } else {
+                        occurrances > -filter.popularity
+                    }
+                });
+                process.terminate_if_requested()?;
+            }
+        }
 
         match options.sort_by {
             ListOrdersHookOptionsSortBy::Newest => {
@@ -229,6 +246,8 @@ impl<'a> ExpedientDatabase<'a> {
                 })
             }
         };
+
+        process.terminate_if_requested()?;
 
         list_orders.truncate(options.max_list_len);
 
@@ -256,11 +275,25 @@ impl<'a> ExpedientDatabase<'a> {
                 |context, process| {
                     let database = context.database.read().unwrap();
 
+                    // This way of counting user_occurrences can be improved
+                    let mut user_occurrences = HashMap::<String, i32>::new();
+                    if let Some(ref filter) = context.options.filter {
+                        if filter.popularity != 0 {
+                            for (_, expedient) in database.iter_all() {
+                                let mut username = expedient.user.to_lowercase();
+                                username.remove_matches(" ");
+                                *user_occurrences.entry(username).or_insert(1) += 1;
+                            }
+                            process.terminate_if_requested()?;
+                        }
+                    }
+
                     let mut dynamic_list = Self::list_orders(
                         &context.options,
                         database.iter(),
                         &mut vec![],
                         &process,
+                        &user_occurrences,
                     )?;
                     (context.callback.lock().unwrap())(&dynamic_list);
 
@@ -269,6 +302,7 @@ impl<'a> ExpedientDatabase<'a> {
                         database.iter_ancient(),
                         &mut dynamic_list,
                         &process,
+                        &user_occurrences,
                     )?;
                     (context.callback.lock().unwrap())(&full_list);
 

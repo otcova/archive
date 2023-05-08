@@ -118,7 +118,6 @@ where
             let newest_backup_day = newest_backup_instant.truncate_time();
             let mut past_year_month = (0, 0);
             let mut files_to_delete = vec![];
-            files_to_delete.reserve(20);
 
             file::select_backup::<(), _>(&self.path, |(file, instant)| {
                 if instant < newest_backup_day {
