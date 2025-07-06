@@ -95,7 +95,7 @@ pub enum ListOrdersHookOptionsSortBy {
 #[derive(Clone)]
 struct ListFilterHookContext<'a> {
     pub database: Arc<RwLock<ChunkedDatabase<Expedient>>>,
-    pub callback: Arc<Mutex<Box<dyn for<'r> FnMut(&Vec<&String>) + Send + Sync + 'a>>>,
+    pub callback: Arc<Mutex<Box<dyn for<'r> FnMut(&Vec<&str>) + Send + Sync + 'a>>>,
     pub filter: String,
 }
 
@@ -160,8 +160,8 @@ impl<'a> ExpedientDatabase<'a> {
 
             if filter.car_code != "" {
                 filtered_expedients = Box::new(filtered_expedients.filter(move |(_, exp)| {
-                    car_code_filter.test(&exp.license_plate.replace("_", "").replace(" ", ""))
-                        || car_code_filter.test(&exp.vin.replace("_", "").replace(" ", ""))
+                    car_code_filter.test(&exp.license_plate.replace("_", "").replace(" ", "")) > 0
+                        || car_code_filter.test(&exp.vin.replace("_", "").replace(" ", "")) > 0
                 }))
             }
         }
@@ -173,7 +173,7 @@ impl<'a> ExpedientDatabase<'a> {
 
             if filter.user != "" {
                 filtered_expedients = Box::new(
-                    filtered_expedients.filter(move |(_, exp)| user_filter.test(&exp.user)),
+                    filtered_expedients.filter(move |(_, exp)| user_filter.test(&exp.user) > 0),
                 )
             }
         }
@@ -203,10 +203,10 @@ impl<'a> ExpedientDatabase<'a> {
 
             if filter.body != "" {
                 orders = Box::new(orders.filter(move |(_, index, expedient)| {
-                    body_filter.test(&expedient.model)
-                        || body_filter.test(&expedient.description)
-                        || body_filter.test(&expedient.orders[*index].title)
-                        || body_filter.test(&expedient.orders[*index].description)
+                    body_filter.test(expedient.model.as_str()) > 0
+                        || body_filter.test(&expedient.description) > 0
+                        || body_filter.test(&expedient.orders[*index].title) > 0
+                        || body_filter.test(&expedient.orders[*index].description) > 0
                 }));
                 process.terminate_if_requested()?;
             }
@@ -361,17 +361,17 @@ impl<'a> ExpedientDatabase<'a> {
 
     fn list_filter<'b>(
         filter: &Filter,
-        expedients: impl Iterator<Item = (&'b String, UtcDate)>,
-        concat_with: &mut Vec<(&'b String, UtcDate)>,
+        expedients: impl Iterator<Item = (&'b str, UtcDate)>,
+        concat_with: &mut Vec<(&'b str, UtcDate)>,
         process: &AsyncCallbackProcess,
-    ) -> Option<Vec<(&'b String, UtcDate)>> {
+    ) -> Option<Vec<(&'b str, UtcDate)>> {
         const MAX_LIST_LEN: usize = 5;
 
         process.terminate_if_requested()?;
 
         let mut list: Vec<_> = expedients
-            .filter(|(data, _)| data.len() > 0)
-            .filter_map(|(data, date)| filter.test(data).then_some((data, date)))
+            .map(|(data, date)| (data.trim(), date))
+            .filter(|(data, _)| !data.is_empty() && filter.test(data) > 0)
             .collect();
 
         process.terminate_if_requested()?;
@@ -386,7 +386,7 @@ impl<'a> ExpedientDatabase<'a> {
 
         process.terminate_if_requested()?;
 
-        list.sort_unstable_by_key(|(_, date)| -date.date_hash());
+        list.sort_unstable_by_key(|(data, date)| (-(filter.test(data) as i32), -date.date_hash()));
         list.truncate(MAX_LIST_LEN);
 
         process.terminate_if_requested()?;
@@ -397,7 +397,7 @@ impl<'a> ExpedientDatabase<'a> {
     pub fn hook_list_users(
         &mut self,
         filter: String,
-        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+        callback: impl for<'r> FnMut(&Vec<&str>) -> () + Send + Sync + 'a,
     ) -> HookId {
         HookId::ListFilter(self.hook_pool.list_filter.subscrive(
             AsyncCallback::new(
@@ -412,9 +412,9 @@ impl<'a> ExpedientDatabase<'a> {
 
                     let mut dynamic_list = Self::list_filter(
                         &user_filter,
-                        database
-                            .iter()
-                            .map(|(_, expedient)| (&expedient.user, expedient.newest_date())),
+                        database.iter().map(|(_, expedient)| {
+                            (expedient.user.as_str(), expedient.newest_date())
+                        }),
                         &mut vec![],
                         &process,
                     )?;
@@ -424,9 +424,9 @@ impl<'a> ExpedientDatabase<'a> {
 
                     let full_list = Self::list_filter(
                         &user_filter,
-                        database
-                            .iter_ancient()
-                            .map(|(_, expedient)| (&expedient.user, expedient.newest_date())),
+                        database.iter_ancient().map(|(_, expedient)| {
+                            (expedient.user.as_str(), expedient.newest_date())
+                        }),
                         &mut dynamic_list,
                         &process,
                     )?;
@@ -444,7 +444,7 @@ impl<'a> ExpedientDatabase<'a> {
     pub fn hook_list_models(
         &mut self,
         filter: String,
-        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+        callback: impl for<'r> FnMut(&Vec<&str>) -> () + Send + Sync + 'a,
     ) -> HookId {
         HookId::ListFilter(self.hook_pool.list_filter.subscrive(
             AsyncCallback::new(
@@ -459,9 +459,9 @@ impl<'a> ExpedientDatabase<'a> {
 
                     let mut dynamic_list = Self::list_filter(
                         &model_filter,
-                        database
-                            .iter()
-                            .map(|(_, expedient)| (&expedient.model, expedient.newest_date())),
+                        database.iter().map(|(_, expedient)| {
+                            (expedient.model.as_str(), expedient.newest_date())
+                        }),
                         &mut vec![],
                         &process,
                     )?;
@@ -471,9 +471,9 @@ impl<'a> ExpedientDatabase<'a> {
 
                     let full_list = Self::list_filter(
                         &model_filter,
-                        database
-                            .iter_ancient()
-                            .map(|(_, expedient)| (&expedient.model, expedient.newest_date())),
+                        database.iter_ancient().map(|(_, expedient)| {
+                            (expedient.model.as_str(), expedient.newest_date())
+                        }),
                         &mut dynamic_list,
                         &process,
                     )?;
@@ -491,7 +491,7 @@ impl<'a> ExpedientDatabase<'a> {
     pub fn hook_list_license_plates(
         &mut self,
         filter: String,
-        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+        callback: impl for<'r> FnMut(&Vec<&str>) -> () + Send + Sync + 'a,
     ) -> HookId {
         HookId::ListFilter(self.hook_pool.list_filter.subscrive(
             AsyncCallback::new(
@@ -507,7 +507,7 @@ impl<'a> ExpedientDatabase<'a> {
                     let mut dynamic_list = Self::list_filter(
                         &license_plate_filter,
                         database.iter().map(|(_, expedient)| {
-                            (&expedient.license_plate, expedient.newest_date())
+                            (expedient.license_plate.as_str(), expedient.newest_date())
                         }),
                         &mut vec![],
                         &process,
@@ -519,7 +519,7 @@ impl<'a> ExpedientDatabase<'a> {
                     let full_list = Self::list_filter(
                         &license_plate_filter,
                         database.iter_ancient().map(|(_, expedient)| {
-                            (&expedient.license_plate, expedient.newest_date())
+                            (expedient.license_plate.as_str(), expedient.newest_date())
                         }),
                         &mut dynamic_list,
                         &process,
@@ -538,7 +538,7 @@ impl<'a> ExpedientDatabase<'a> {
     pub fn hook_list_vins(
         &mut self,
         filter: String,
-        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+        callback: impl for<'r> FnMut(&Vec<&str>) -> () + Send + Sync + 'a,
     ) -> HookId {
         HookId::ListFilter(self.hook_pool.list_filter.subscrive(
             AsyncCallback::new(
@@ -553,9 +553,9 @@ impl<'a> ExpedientDatabase<'a> {
 
                     let mut dynamic_list = Self::list_filter(
                         &vin_filter,
-                        database
-                            .iter()
-                            .map(|(_, expedient)| (&expedient.vin, expedient.newest_date())),
+                        database.iter().map(|(_, expedient)| {
+                            (expedient.vin.as_str(), expedient.newest_date())
+                        }),
                         &mut vec![],
                         &process,
                     )?;
@@ -565,9 +565,9 @@ impl<'a> ExpedientDatabase<'a> {
 
                     let full_list = Self::list_filter(
                         &vin_filter,
-                        database
-                            .iter_ancient()
-                            .map(|(_, expedient)| (&expedient.vin, expedient.newest_date())),
+                        database.iter_ancient().map(|(_, expedient)| {
+                            (expedient.vin.as_str(), expedient.newest_date())
+                        }),
                         &mut dynamic_list,
                         &process,
                     )?;
@@ -585,7 +585,7 @@ impl<'a> ExpedientDatabase<'a> {
     pub fn hook_list_order_titles(
         &mut self,
         filter: String,
-        callback: impl for<'r> FnMut(&Vec<&String>) -> () + Send + Sync + 'a,
+        callback: impl for<'r> FnMut(&Vec<&str>) -> () + Send + Sync + 'a,
     ) -> HookId {
         HookId::ListFilter(self.hook_pool.list_filter.subscrive(
             AsyncCallback::new(
@@ -601,7 +601,9 @@ impl<'a> ExpedientDatabase<'a> {
                     let mut dynamic_list = Self::list_filter(
                         &order_title_filter,
                         database.iter().flat_map(|(_, exp)| {
-                            exp.orders.iter().map(|order| (&order.title, order.date))
+                            exp.orders
+                                .iter()
+                                .map(|order| (order.title.as_str(), order.date))
                         }),
                         &mut vec![],
                         &process,
@@ -613,7 +615,9 @@ impl<'a> ExpedientDatabase<'a> {
                     let full_list = Self::list_filter(
                         &order_title_filter,
                         database.iter_ancient().flat_map(|(_, exp)| {
-                            exp.orders.iter().map(|order| (&order.title, order.date))
+                            exp.orders
+                                .iter()
+                                .map(|order| (order.title.as_str(), order.date))
                         }),
                         &mut dynamic_list,
                         &process,

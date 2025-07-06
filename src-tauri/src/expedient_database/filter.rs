@@ -9,50 +9,48 @@
 
 pub struct Filter {
     keywords: Vec<String>,
-    optional_keywords: Vec<String>,
 }
 
 impl Filter {
     pub fn new<S: AsRef<str>>(filter: S) -> Self {
         let lowercase = filter.as_ref().to_lowercase();
-        let mut iter = lowercase.splitn(2, "+");
 
-        let keywords = iter
-            .next()
-            .unwrap()
+        let keywords = lowercase
             .split_whitespace()
-            .map(|str| str.replace("_", " "))
-            .map(|str| str.into())
+            .map(|str| str.replace("_", " ").into())
             .collect();
 
-        let optional_keywords = if let Some(mandatory_filter) = iter.next() {
-            mandatory_filter
-                .split_whitespace()
-                .map(|str| str.replace("_", " "))
-                .map(|str| str.into())
-                .collect()
-        } else {
-            vec![]
-        };
-
-        Self {
-            keywords,
-            optional_keywords,
-        }
+        Self { keywords }
     }
 
-    pub fn test<S: AsRef<str>>(&self, text: S) -> bool {
+    /// Returns an index representing how much it matches the filter.
+    /// 0 means that it does not match
+    /// >0 means that it matches
+    pub fn test<S: AsRef<str>>(&self, text: S) -> u32 {
         let subject = text.as_ref().to_lowercase().replace("_", " ");
 
-        self.keywords
+        if !self
+            .keywords
             .iter()
             .all(|keyword| subject.contains(keyword))
-            && (self.optional_keywords.len() == 0
-                || self
-                    .optional_keywords
-                    .iter()
-                    .find(|keyword| subject.contains(*keyword))
-                    .is_some())
+        {
+            return 0;
+        }
+
+        let mut score = 1;
+
+        let subject_keywords = subject.split_whitespace().take(16);
+
+        for (subject, filter) in subject_keywords.zip(&self.keywords) {
+            if subject.starts_with(filter) {
+                score += 1;
+                if subject == filter {
+                    score += 2;
+                }
+            }
+        }
+
+        score
     }
 }
 
@@ -63,31 +61,17 @@ mod tests {
     #[test]
     fn filter() {
         let filter = Filter::new("a B");
-        assert!(!filter.test("A"));
-        assert!(!filter.test("B"));
-        assert!(!filter.test("C"));
-        assert!(filter.test("A B"));
-        assert!(filter.test("B A C"));
+        assert!(0 == filter.test("A"));
+        assert!(0 == filter.test("B"));
+        assert!(0 == filter.test("C"));
+        assert!(1 < filter.test("A B"));
+        assert!(0 < filter.test("B A C"));
 
         let filter = Filter::new("A_B");
-        assert!(!filter.test("A"));
-        assert!(!filter.test("B"));
-        assert!(!filter.test("C"));
-        assert!(filter.test("A B"));
-        assert!(!filter.test("B A C"));
-
-        let filter = Filter::new("A +b C");
-        assert!(!filter.test("A"));
-        assert!(!filter.test("B"));
-        assert!(!filter.test("C"));
-        assert!(filter.test("A B"));
-        assert!(filter.test("B A C"));
-
-        let filter = Filter::new("+A B");
-        assert!(filter.test("A"));
-        assert!(filter.test("B"));
-        assert!(!filter.test("C"));
-        assert!(filter.test("A B"));
-        assert!(filter.test("B A C"));
+        assert!(0 == filter.test("A"));
+        assert!(0 == filter.test("B"));
+        assert!(0 == filter.test("C"));
+        assert!(1 < filter.test("A B"));
+        assert!(0 < filter.test("B A C"));
     }
 }
