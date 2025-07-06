@@ -24,3 +24,7 @@ export async function countExpedients(): Promise<number> {
 export async function countOrders(): Promise<number> {
 	return await invoke("count_orders")
 }
+
+export async function deleteRepeated(): Promise<number> {
+	return await invoke("delete_repeated")
+}

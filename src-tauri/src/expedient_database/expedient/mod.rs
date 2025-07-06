@@ -3,7 +3,7 @@ use crate::{chunked_database, collections::UtcDate};
 use serde::{Deserialize, Serialize};
 pub use similarity::*;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Expedient {
     pub user: String,
     pub model: String,
@@ -14,12 +14,52 @@ pub struct Expedient {
     pub date: UtcDate,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+fn eq_ignore_whitespace_case(a: &str, b: &str) -> bool {
+    let mut ia = a.chars().filter_map(|c| {
+        if c.is_whitespace() {
+            None
+        } else {
+            Some(c.to_ascii_lowercase())
+        }
+    });
+    let mut ib = b.chars().filter_map(|c| {
+        if c.is_whitespace() {
+            None
+        } else {
+            Some(c.to_ascii_lowercase())
+        }
+    });
+
+    ia.eq(ib)
+}
+
+impl PartialEq for Expedient {
+    fn eq(&self, other: &Self) -> bool {
+        eq_ignore_whitespace_case(&self.user, &other.user)
+            && eq_ignore_whitespace_case(&self.model, &other.model)
+            && eq_ignore_whitespace_case(&self.license_plate, &other.license_plate)
+            && eq_ignore_whitespace_case(&self.vin, &other.vin)
+            && eq_ignore_whitespace_case(&self.description, &other.description)
+            && self.orders == other.orders
+            && self.date == other.date
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Order {
     pub date: UtcDate,
     pub title: String,
     pub description: String,
     pub state: OrderState,
+}
+
+impl PartialEq for Order {
+    fn eq(&self, other: &Self) -> bool {
+        self.date == other.date
+            && eq_ignore_whitespace_case(&self.title, &other.title)
+            && eq_ignore_whitespace_case(&self.description, &other.description)
+            && self.state == other.state
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Copy)]

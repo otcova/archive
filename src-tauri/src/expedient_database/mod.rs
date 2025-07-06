@@ -1,8 +1,8 @@
 mod expedient;
 mod filter;
 mod hooks;
-mod statistics;
 mod restore_data_from_arxivador;
+mod statistics;
 use crate::chunked_database::*;
 pub use crate::collections::UtcDate;
 use crate::error::*;
@@ -62,6 +62,58 @@ impl<'a> ExpedientDatabase<'a> {
     pub fn count_expedients(&self) -> usize {
         self.database.read().unwrap().len()
     }
+
+    pub fn delete_repeated(&self) -> usize {
+        let mut db = self.database.write().unwrap();
+        let mut ids_a: Vec<_> = db
+            .iter()
+            .map(|(id, exp)| (id.inner_chunk_id(), exp.clone()))
+            .collect();
+        ids_a.sort_unstable_by_key(|(id, _)| *id);
+
+        let mut ids_b: Vec<_> = db
+            .iter_ancient()
+            .map(|(id, exp)| (id.inner_chunk_id(), exp.clone()))
+            .collect();
+        ids_b.sort_unstable_by_key(|(id, _)| *id);
+
+        let mut idx_a = 0;
+        let mut idx_b = 0;
+
+        let mut repeated = 0;
+        println!(">>>> Not Equal:");
+
+        while idx_a < ids_a.len() && idx_b < ids_b.len() {
+            let a = &ids_a[idx_a];
+            let b = &ids_b[idx_b];
+
+            if a.0 == b.0 {
+                idx_a += 1;
+                idx_b += 1;
+                if a.1 != b.1 {
+                    if a.1.vin.is_empty() || b.1.vin.is_empty() {
+                        println!(
+                            "{}  {}    {}  {}",
+                            a.1.vin, a.1.license_plate, b.1.vin, b.1.license_plate
+                        );
+                    } else {
+                        println!("{}   {}", a.1.vin, b.1.vin);
+                    }
+                } else {
+                    db.delete(Uid::ANCIENT(a.0));
+                    repeated += 1;
+                }
+            } else if a.0 < b.0 {
+                idx_a += 1;
+            } else {
+                idx_b += 1;
+            }
+        }
+        println!("---------------");
+
+        repeated
+    }
+
     pub fn count_orders(&self) -> usize {
         self.database
             .read()

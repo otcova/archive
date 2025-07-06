@@ -3,7 +3,7 @@ import { Component, createEffect, createSignal, Show } from "solid-js"
 import DropDownMenu from "../../atoms/DropDown"
 import IconButton from "../../atoms/IconButton"
 import { databaseDir, saveAndCloseApp } from "../../database/databaseState"
-import { countOrders } from "../../database/expedientState"
+import { deleteRepeated } from "../../database/expedientState"
 import { canLoadApp, setShowUpdatePanel } from "../../pages/UpdatePanel"
 import { ConfirmationPanel } from "../ConfirmationPanel"
 import Statistics from "./Statistics"
@@ -28,12 +28,6 @@ export default function WindowButtons() {
 	})
 
 	function open_statistics() {
-		const [ordersCount, setOrdersCount] = createSignal<string | number>("...")
-		countOrders().then(count => {
-			let formated = count + ""
-			formated = formated.replace(/(.{1,3})(?=(...)+$)/g, "$1")
-			setOrdersCount(formated)
-		})
 		createEffect(() => {
 			setPanel(panel => ({
 				show: true,
@@ -55,12 +49,25 @@ export default function WindowButtons() {
 		})
 	}
 
+	function delete_repetits() {
+		deleteRepeated().then(count => {
+			setPanel({
+				show: true,
+				text: "Repetits: " + count + "\n",
+				red_buttons: [],
+				buttons: ["Continuar"],
+				response: () => setPanel({ ...panel(), show: false }),
+			})
+		})
+	}
+
 	return <div class={style.container}>
 		<Show when={canLoadApp()}>
 			<DropDownMenu options={[
 				["Versió", () => setShowUpdatePanel(true)],
 				["Estadístiques", open_statistics],
-				["Copies de seguretat", open_security_copies]
+				["Copies de seguretat", open_security_copies],
+				["Elimina Repetits", delete_repetits],
 			]} />
 		</Show>
 		<IconButton icon="minimize" action={() => appWindow.minimize()} />

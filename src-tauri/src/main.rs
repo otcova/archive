@@ -48,6 +48,7 @@ fn main() {
             api::read_expedient,
             api::count_expedients,
             api::count_orders,
+            api::delete_repeated,
             // statistics
             api::done_commands_count_vs_days,
             //utils

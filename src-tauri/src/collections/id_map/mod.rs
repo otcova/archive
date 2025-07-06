@@ -3,7 +3,6 @@ mod serializer;
 pub use item::Id;
 use item::*;
 use serde::Deserialize;
-pub use serializer::*;
 use std::slice::{Iter, IterMut};
 
 #[derive(Debug, Deserialize)]
@@ -105,14 +104,14 @@ impl<T> IdMap<T> {
         }
     }
 
-    pub fn iter(&self) -> IdMapIter<T> {
+    pub fn iter(&self) -> IdMapIter<'_, T> {
         IdMapIter {
             data_iter: self.data.iter(),
             index: 0,
         }
     }
 
-    pub fn iter_mut(&mut self) -> IdMapIterMut<T> {
+    pub fn iter_mut(&mut self) -> IdMapIterMut<'_, T> {
         IdMapIterMut {
             data_iter: self.data.iter_mut(),
             index: 0,

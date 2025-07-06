@@ -1,6 +1,6 @@
-mod statistics;
 mod expedient_hooks;
 mod expedient_modifyer;
+mod statistics;
 
 pub use expedient_hooks::*;
 pub use expedient_modifyer::*;

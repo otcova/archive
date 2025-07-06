@@ -22,6 +22,15 @@ pub enum Uid {
     ANCIENT(chunk::Id),
 }
 
+impl Uid {
+    pub fn inner_chunk_id(self) -> chunk::Id {
+        match self {
+            Uid::DYNAMIC(id) => id,
+            Uid::ANCIENT(id) => id,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ChunkedDatabase<T: Item + Send + Sync> {
     dynamic: Chunk<T>,

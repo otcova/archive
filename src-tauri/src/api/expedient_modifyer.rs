@@ -51,6 +51,15 @@ pub fn count_expedients(state: tauri::State<ApiState>) -> usize {
 }
 
 #[tauri::command]
+pub fn delete_repeated(state: tauri::State<ApiState>) -> usize {
+    if let Some(database) = state.database_mutex.lock().unwrap().as_mut() {
+        database.delete_repeated()
+    } else {
+        0
+    }
+}
+
+#[tauri::command]
 pub fn count_orders(state: tauri::State<ApiState>) -> usize {
     if let Some(database) = state.database_mutex.lock().unwrap().as_mut() {
         database.count_orders()

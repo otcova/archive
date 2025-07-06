@@ -18,7 +18,7 @@ impl UtcDate {
         const MS_ON_A_DAY: i64 = 1000 * 60 * 60 * 24;
         self.timespan / MS_ON_A_DAY
     }
-    
+
     pub fn date_hash(&self) -> i64 {
         self.timespan
     }
@@ -49,7 +49,7 @@ mod test {
         assert!(date_e < date_f);
         assert_eq!(date_f, date_g);
     }
-    
+
     #[test]
     fn ymd_hash_date_difference() {
         let date_a = UtcDate::ymdh(2010, 3, 4, 0).date_hash();

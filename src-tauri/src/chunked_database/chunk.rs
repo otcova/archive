@@ -82,7 +82,7 @@ impl<T: Item> Chunk<T> {
     }
 
     // Functions to modify data from database
-    pub fn iter(&self) -> IdMapIter<T> {
+    pub fn iter(&self) -> IdMapIter<'_, T> {
         self.database.data.items.iter()
     }
     pub fn push(&mut self, data: T) -> Id {
