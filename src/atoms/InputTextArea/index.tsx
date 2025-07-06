@@ -29,7 +29,7 @@ export default function InputTextArea(props: Props) {
 		editableDiv.addEventListener('paste', (event) => {
 			event.preventDefault()
 			let paste = paste_format(event.clipboardData.getData("text"))
-			
+
 			if (!getSelection().rangeCount) return
 			const range = getSelection().getRangeAt(0)
 			// if select multiple lines
@@ -140,6 +140,11 @@ function format_textarea(element: HTMLElement, placeholder: string) {
 			line.classList.add(style.bold)
 		} else {
 			line.classList.remove(style.bold)
+		}
+		if (line.textContent.startsWith("! ")) {
+			line.classList.add(style.warn)
+		} else {
+			line.classList.remove(style.warn)
 		}
 	}
 

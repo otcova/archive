@@ -58,3 +58,26 @@
 	left: 0px
 	color: theme.$active-color
 	content: "#"
+
+.warn
+	@include theme.font-normal
+	color: #820
+	padding-top: 5px
+	padding-bottom: 5px
+	position: relative
+
+.warn.not_first
+	padding-top: 5px
+
+.warn.not_first:after
+	top: 5px
+
+.warn:after
+	@include theme.font-normal
+	font-weight: bold
+	color: #f44
+	position: absolute
+	pointer-events: none
+	top: 5px
+	left: 0px
+	content: "!"
