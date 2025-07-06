@@ -220,14 +220,14 @@ impl<'a> ExpedientDatabase<'a> {
 
         if let Some(ref filter) = options.filter {
             if filter.popularity != 0 {
-                list_orders.drain_filter(|(_, _, expedient)| {
+                list_orders.retain(|(_, _, expedient)| {
                     let mut username = expedient.user.to_lowercase();
                     username.remove_matches(" ");
                     let occurrances = user_occurrences[&username];
                     if filter.popularity > 0 {
-                        occurrances < filter.popularity
+                        occurrances >= filter.popularity
                     } else {
-                        occurrances > -filter.popularity
+                        occurrances <= -filter.popularity
                     }
                 });
                 process.terminate_if_requested()?;

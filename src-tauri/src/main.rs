@@ -1,4 +1,4 @@
-#![feature(thread_spawn_unchecked, drain_filter, string_remove_matches, map_try_insert)]
+#![feature(string_remove_matches, map_try_insert)]
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
