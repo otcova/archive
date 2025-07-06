@@ -1,4 +1,4 @@
-import { Accessor, createEffect, For } from 'solid-js'
+import { Accessor, createEffect, createRenderEffect, For } from 'solid-js'
 import { UtcDate, utcDateToString } from '../../database/date'
 import { readExpedient, updateExpedient } from '../../database/expedientState'
 import { Expedient, ExpedientId, OrderState } from '../../database/types'
@@ -12,10 +12,24 @@ type Props = {
 }
 
 export default function OrderList(props: Props) {
+	const { isActive } = useTab()
+
+	let containerRef: HTMLDivElement | undefined;
+	let previousScrollTop = 0;
+
+	// Keep scroll when reintering the tab
+	let wasActive = false;
+	createRenderEffect(() => {
+		if (containerRef && !wasActive && isActive()) {
+			containerRef.scrollTop = previousScrollTop;
+		}
+
+		wasActive = isActive();
+	});
 
 	trackStateChanges(props.orderList)
 
-	return <div class={style.container}>
+	return <div ref={containerRef} class={style.container} on:scroll={() => previousScrollTop = containerRef?.scrollTop || 0}>
 		<For each={props.orderList()?.map(data => JSON.stringify(data))}>{(data, _) => {
 			const order = JSON.parse(data)
 			if (typeof order == "string") return <RowLable text={order} />

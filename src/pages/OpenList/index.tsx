@@ -6,6 +6,12 @@ import OrderList, { lableOrderListByDate } from '../../templates/OrderList'
 import { useTab } from '../../templates/TabSystem'
 import style from "./OpenList.module.sass"
 
+function SatisfactionFallback() {
+	return <div class={style.satisfaction_container}>
+		:D
+	</div>
+}
+
 export default function OpenList() {
 	const { rename } = useTab()
 
@@ -49,10 +55,4 @@ export default function OpenList() {
 			} />
 		</ Show>
 	</Show>
-}
-
-function SatisfactionFallback() {
-	return <div class={style.satisfaction_container}>
-		:D
-	</div>
 }
