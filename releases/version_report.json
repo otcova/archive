@@ -1,10 +1,10 @@
 {
-	"version": "1.0.21",
-	"pub_date": "2025-07-06T19:33:47.963Z",
+	"version": "1.0.22",
+	"pub_date": "2025-07-06T20:52:52.734Z",
 	"platforms": {
 		"windows-x86_64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUeHYxQjRYSTcrcnMyYWxzS2VnaXdFS3RQdjRabnRpL25NK25pSnBDMUhDVUw2eWpjaWRQbUNwd3B4REg2djFFY0pIRGFXcjBxQjRIZ0pNREtTZExUOVEvTXhwUTBjbkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzUxODI5NzU3CWZpbGU6YXJjaGl2ZV8xLjAuMjFfeDY0X2VuLVVTLm1zaS56aXAKelZ4di8zTTJPU2RSSHNYTWNocks2TGkreklXcVgyd3JlSUVYTUZYRUdyWFRBZElaVXUzb05NUTg4MmtINFI3N2greGxHMmNnMEN1UTdSMGt6QWNsREE9PQo=",
-			"url": "https://raw.githubusercontent.com/otcova/archive/main/releases/msi/archive_1.0.21_x64_en-US.msi.zip"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUeHYxQjRYSTcrcmczUHBRS2p2YjJ4NkpJVk5LR2paUlJpU2hLQ29MMEd6NHY2ZTJ0dXg3Q2hqUnFsUUc2Mjlrd2U1NmJFSlFYT2VsaGpOMVJiL0Y5ckQrbHdvM29Va0FjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzUxODM1MTY4CWZpbGU6YXJjaGl2ZV8xLjAuMjJfeDY0X2VuLVVTLm1zaS56aXAKbG1WWmlPdEo0V1lOZi80Zzlnb3l1VzlFT0o5T3RXOXQ5L2hqL2JENXlETUhYK2R0aU1nS1pSMGg3eExlUDdEMVdZVkV2bVp5VzkveUthY2lVQzN2Qnc9PQo=",
+			"url": "https://raw.githubusercontent.com/otcova/archive/main/releases/msi/archive_1.0.22_x64_en-US.msi.zip"
 		}
 	}
 }
