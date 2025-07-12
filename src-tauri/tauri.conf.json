@@ -8,14 +8,13 @@
 	},
 	"package": {
 		"productName": "archive",
-		"version": "1.0.23"
+		"version": "1.0.24"
 	},
 	"tauri": {
 		"allowlist": {
 			"fs": {
 				"scope": [
-					"$DOCUMENT/Archive",
-					"$DOCUMENT/Archive/*"
+					"**"
 				]
 			},
 			"all": true
