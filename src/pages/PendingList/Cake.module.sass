@@ -1,0 +1,284 @@
+@use '../../globalStyle/theme'
+@use '../../globalStyle/layout'
+
+$vanilla: #f0e4d0
+$chocolate: #553c13
+
+$scale: 0.1
+
+.cake_container
+	@include layout.column
+	@include layout.grow
+	color: #000
+	background: #0001
+	width: 100%
+	height: 100%
+	gap: 40px
+	padding-bottom: 40%
+
+.satisfaction_container
+	@include layout.column
+	@include layout.grow
+	font-size: 30px
+	color: #888
+	width: 100%
+	height: 100%
+	gap: 40px
+
+.row
+	@include layout.row
+	gap: 20px
+
+.left, .right
+	font-size: 20px
+	gap: 10px
+
+.left
+	@include layout.column-left
+
+.right
+	@include layout.column-right
+
+/* ------------------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------------ */
+
+@mixin foodColoring($color)
+	background-color: $color
+	box-shadow: 0 2px * $scale lighten($color, 5%), 0 4px * $scale darken($color, 8.2%), 0 6px * $scale darken($color, 8.4%), 0 8px * $scale darken($color, 8.6%), 0 10px * $scale darken($color, 8.8%), 0 12px * $scale darken($color, 9%), 0 14px * $scale darken($color, 9.2%), 0 16px * $scale darken($color, 9.4%), 0 18px * $scale darken($color, 9.6%), 0 20px * $scale darken($color, 9.8%), 0 22px * $scale darken($color, 10%), 0 24px * $scale darken($color, 10.2%), 0 26px * $scale darken($color, 10.4%), 0 28px * $scale darken($color, 10.6%), 0 30px * $scale darken($color, 10.8%)
+
+.cake
+	position: absolute
+	width: 250px * $scale
+	height: 200px * $scale
+	top: 50%
+	left: 50%
+	margin-top: -70px * $scale
+	margin-left: -125px * $scale
+
+.plate
+	width: 270px * $scale
+	height: 110px * $scale
+	position: absolute
+	bottom: -10px * $scale
+	left: -10px * $scale
+	background-color: #ccc
+	border-radius: 50%
+	box-shadow: 0 2px * $scale darken(#ccc, 10%), 0 4px * $scale darken(#ccc, 10%), 0 5px * $scale 40px * $scale rgba(black, 0.5)
+
+.cake > *
+	position: absolute
+
+.layer
+	width: 250px * $scale
+	height: 100px * $scale
+	border-radius: 50%
+	@include foodColoring($chocolate)
+
+.layer-top
+	top: 0px * $scale
+.layer-middle
+	top: 33px * $scale
+.layer-bottom
+	top: 66px * $scale
+
+.icing
+	top: 2px * $scale
+	left: 5px * $scale
+	background-color: $vanilla
+	width: 240px * $scale
+	height: 90px * $scale
+	border-radius: 50%
+	&:before
+		content: ""
+		position: absolute
+		top: 4px * $scale
+		right: 5px * $scale
+		bottom: 6px * $scale
+		left: 5px * $scale
+		background-color: lighten($vanilla, 3%)
+		box-shadow: 0 0 4px * $scale lighten($vanilla, 5%),0 0 4px * $scale lighten($vanilla, 5%),0 0 4px * $scale lighten($vanilla, 5%)
+		border-radius: 50%
+		z-index: 1
+
+.drip
+	width: 50px * $scale
+	height: 60px * $scale
+	border-bottom-left-radius: 25px * $scale
+	border-bottom-right-radius: 25px * $scale
+	background-color: $vanilla
+
+.drip1
+	top: 53px * $scale
+	left: 5px * $scale
+	transform: skewY(15deg)
+	height: 48px * $scale
+	width: 40px * $scale
+
+.drip2
+	top: 69px * $scale
+	left: 181px * $scale
+	transform: skewY(-15deg)
+
+.drip3
+	top: 54px * $scale
+	left: 90px * $scale
+	width: 80px * $scale
+	border-bottom-left-radius: 40px * $scale
+	border-bottom-right-radius: 40px * $scale
+
+.candle
+	background-color: #7B020B
+	width: 16px * $scale
+	height: 50px * $scale
+	border-radius: 8px * $scale / 4px * $scale
+	top: -20px * $scale
+	left: 50%
+	margin-left: -8px * $scale
+	z-index: 10
+
+	&:before
+		content: ""
+		position: absolute
+		top: 0
+		left: 0
+		width: 16px * $scale
+		height: 8px * $scale
+		border-radius: 50%
+		background-color: lighten(#7B020B, 10%)
+
+.flame
+	position: absolute
+	background-color: orange
+	width: 15px * $scale
+	height: 35px * $scale
+	border-radius: 10px 10px 10px 10px / 25px 25px 10px 10px
+	top: -34px * $scale
+	left: 50%
+	margin-left: -7.5px * $scale
+	z-index: 10
+	box-shadow: 0 0 10px * $scale rgba(orange, 0.5),0 0 20px * $scale rgba(orange, 0.5),0 0 60px * $scale rgba(orange, 0.5),0 0 80px * $scale rgba(orange, 0.5)
+	transform-origin: 50% 90%
+	animation: flicker 1s ease-in-out alternate infinite
+
+@keyframes flicker
+	0%
+		transform: skewX(5deg)
+	25%
+		transform: skewX(-5deg)
+	50%
+		transform: skewX(10deg)
+	75%
+		transform: skewX(-10deg)
+	100%
+		transform: skewX(5deg)
+
+/* ------------------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------------ */
+
+@import url(https://fonts.googleapis.com/css?family=Lato:300italic);
+
+html,
+body
+	width: 100%
+	height: 100%
+
+body
+	background: #ee9ca7
+
+#cake
+	display: block
+	position: relative
+	margin: -10em auto 0 auto
+
+/* ============================================== Candle*/
+
+.velas
+	background: #ffffff
+	border-radius: 10px
+	position: absolute
+	top: 228px
+	left: 50%
+	margin-left: -2.4px
+	margin-top: -8.33333333px
+	width: 5px
+	height: 35px
+	transform: translateY(-300px)
+	backface-visibility: hidden
+	animation: in 500ms 6s ease-out forwards
+
+.velas:after,
+.velas:before
+	background: rgba(255, 0, 0, 0.4)
+	content: ""
+	position: absolute
+	width: 100%
+	height: 2.22222222px
+
+.velas:after
+	top: 25%
+	left: 0
+
+.velas:before
+	top: 45%
+	left: 0
+
+/* ============================================== Fire*/
+
+.fuego
+	border-radius: 100%
+	position: absolute
+	top: -20px
+	left: 50%
+	margin-left: -2.6px
+	width: 6.66666667px
+	height: 18px
+
+.fuego:hover
+	top: -50px
+	left: -4px
+	width: 20px
+	height: 50px
+	pointer-events: none
+
+.fuego:nth-child(1)
+	animation: fuego 2s 6.5s infinite
+
+.fuego:nth-child(2)
+	animation: fuego 1.5s 6.5s infinite
+
+.fuego:nth-child(3)
+	animation: fuego 1s 6.5s infinite
+
+.fuego:nth-child(4)
+	animation: fuego 0.5s 6.5s infinite
+
+.fuego:nth-child(5)
+	animation: fuego 0.2s 6.5s infinite
+
+/* ============================================== Animation Fire*/
+
+@keyframes fuego
+	0%, 100%
+		background: rgba(254, 248, 97, 0.5)
+		box-shadow: 0 0 40px 10px rgba(248, 233, 209, 0.2)
+		transform: translateY(0) scale(1)
+
+	50%
+		background: rgba(255, 50, 0, 0.1)
+		box-shadow: 0 0 40px 20px rgba(248, 233, 209, 0.2)
+		transform: translateY(-20px) scale(0)
+
+@keyframes in
+	to
+		transform: translateY(0)
+
+.text
+	color: #8b6a60
+	font-family: 'Lato', sans-serif
+	font-weight: 300
+	font-style: italic
+	text-align: center
+h1
+	font-size: 1.4em
